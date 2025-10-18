@@ -1,31 +1,44 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
+
+// Import các component
+import Login from '../components/auth/login.vue';
+import Register from '../components/auth/register.vue';
+import AuthPage from '../components/auth/authPage.vue';
 
 // Khai báo routes
 const routes = [
-{
-  path: "/tai-khoan",
-  name: "AuthPage",
-  component: () => import("../components/auth/AuthPage.vue"),
-},
-{
-  path: "/dang-nhap",
-  name: "DangNhap",
-  component: () => import("../components/auth/DangNhap.vue"),
-},
-{
-  path: "/quen-mat-khau",
-  name: "QuenMatKhau",
-  component: () => import("../components/auth/DangKy.vue"),
-},
+  {
+    path: "/AuthPage",
+    name: "AuthPage",
+    component: AuthPage,
+  },
+  {
+    path: "/Login",
+    name: "Login",
+    component: Login,
+  },
+  {
+    path: "/Register",
+    name: "Register",
+    component: Register,
+  },
 ];
 
-// Tạo router
+// ✅ Tạo router đúng vị trí
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
-  scrollBehavior() {
-    return { top: 0 };
-  },
 });
 
-export default router
+// ✅ Navigation Guard (bảo vệ route có requiresAuth)
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+
+  if (to.meta.requiresAuth && !token) {
+    next("/dang-nhap");
+  } else {
+    next();
+  }
+});
+
+export default router;

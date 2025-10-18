@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import Header_Trangchu from "../src/components/Header/Header_Trangchu.vue";
+import Header_Trangchu from "../src/components/Header/header_Home.vue";
 </script>
 
 <style scoped></style>

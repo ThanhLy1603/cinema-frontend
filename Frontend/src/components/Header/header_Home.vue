@@ -21,7 +21,7 @@
         </nav>
 
         <div class="right-group">
-          <router-link to="/tai-khoan" class="login-btn" @click="closeMenu">ĐĂNG KÝ / ĐĂNG NHẬP</router-link>
+          <router-link to="/AuthPage" class="login-btn" @click="closeMenu">ĐĂNG KÝ / ĐĂNG NHẬP</router-link>
           <div class="menu-toggle" @click="toggleMenu">
             {{ menuOpen ? "✕" : "☰" }}
           </div>
@@ -40,4 +40,4 @@ const toggleMenu = () => (menuOpen.value = !menuOpen.value)
 const closeMenu = () => (menuOpen.value = false)
 </script>
 
-<style src="../../assets/style/Header_Trangchu.css"></style>
+<style src="../../assets/style/header_Home.css"></style>

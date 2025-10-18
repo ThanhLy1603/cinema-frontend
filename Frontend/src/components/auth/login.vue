@@ -50,29 +50,8 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-
-const form = reactive({
-  email: "",
-  password: "",
-});
-
-const login = () => {
-  if (!form.email || !form.password) {
-    alert("Vui lòng nhập đầy đủ thông tin!");
-    return;
-  }
-
-  // ✅ Gọi API hoặc dùng store xử lý login
-  auth.login({ email: form.email });
-  alert("Đăng nhập thành công!");
-  console.log("Login info:", form);
-
-  router.push("/"); // chuyển về trang chủ sau đăng nhập
-};
+import { useLogin } from "../../scripts/auth/useLogin";
+const { form, login } = useLogin();
 </script>
 
-<style src="../../assets/style/DangNhap.css"></style>
+<style src="../../assets/style/login.css"></style>
