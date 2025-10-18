@@ -50,8 +50,53 @@
 </template>
 
 <script setup>
-import { useLogin } from "../../scripts/auth/useLogin";
-const { form, login } = useLogin();
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const form = reactive({
+  email: "",
+  password: "",
+});
+
+const login = () => {
+  if (!form.email || !form.password) {
+    alert("Vui lòng nhập đầy đủ thông tin!");
+    return;
+  }
+
+  console.log("Thông tin đăng nhập:", form);
+
+  // Giả lập xử lý đăng nhập thành công
+  router.push("/home");
+};
 </script>
 
-<style src="../../assets/style/login.css"></style>
+<style scoped>
+.card {
+  border-radius: 10px;
+}
+
+.form-label {
+  font-weight: 600;
+}
+
+.btn-success {
+  background-color: #94e900;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #7ad000;
+}
+
+a.text-success:hover {
+  text-decoration: underline;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+</style>

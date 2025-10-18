@@ -108,8 +108,89 @@
 </template>
 
 <script setup>
-import { useRegister } from "../../scripts/auth/useRegister";
-const { form, years, submitForm } = useRegister();
+import { reactive, computed } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+// Biến reactive cho form
+const form = reactive({
+  ho: "",
+  ten: "",
+  gioitinh: "",
+  email: "",
+  password: "",
+  repassword: "",
+  phone: "",
+  ngay: "",
+  thang: "",
+  nam: "",
+  city: "",
+  agree: false,
+  promo: false,
+});
+// Danh sách năm sinh (100 năm gần nhất)
+const years = computed(() => {
+  const current = new Date().getFullYear();
+  return Array.from({ length: 100 }, (_, i) => current - i);
+});
+// Hàm submit form
+const submitForm = () => {
+  // Kiểm tra mật khẩu trùng khớp
+  if (form.password !== form.repassword) {
+    alert("Mật khẩu nhập lại không khớp!");
+    return;
+  }
+  // Kiểm tra đã đồng ý điều khoản
+  if (!form.agree) {
+    alert("Vui lòng đồng ý với điều khoản trước khi tiếp tục!");
+    return;
+  }
+  // In ra thông tin (test)
+  console.log("Thông tin đăng ký:", { ...form });
+  // Giả lập xử lý xong -> chuyển hướng sang trang đăng nhập
+  router.push("/dang-nhap");
+};
 </script>
 
-<style src="../../assets/style/register.css"></style>
+
+<style scoped>
+  .card {
+    border-radius: 10px;
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+.btn-success {
+    background-color: #94e900;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #7ad000;
+}
+
+a.text-success:hover {
+    text-decoration: underline;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.d-flex.gap-2 select.form-select {
+    min-width: 0;
+    /* Ngăn tràn */
+}
+
+@media (max-width: 576px) {
+    .d-flex.gap-2 {
+        flex-direction: column;
+        /* Mobile: tự xuống hàng */
+    }
+}
+</style>
