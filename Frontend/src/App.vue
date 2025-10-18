@@ -1,11 +1,10 @@
 <template>
-  <HelloWorld></HelloWorld>
+  <Header_Trangchu />
+  <router-view/>
 </template>
 
 <script setup>
-  import HelloWorld from './components/HelloWorld.vue';
+import Header_Trangchu from "../src/components/Header/Header_Trangchu.vue";
 </script>
 
-<style scoped>
-
-</style> 
+<style scoped></style>
