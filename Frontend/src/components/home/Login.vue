@@ -6,15 +6,15 @@
           <img src="/src/assets/header/Logo.png" alt="Logo" />
         </div>
         <h4 class="fw-bold mb-4 text-center">Đăng nhập tài khoản</h4>
-        <form @submit.prevent="login">
+        <form @submit.prevent="handleLogin()">
           <!-- Email -->
           <div class="mb-3">
             <label class="form-label">Email *</label>
             <input
-              v-model="form.email"
-              type="email"
+              v-model="form.username"
+              type="text"
               class="form-control"
-              placeholder="Nhập email"
+              placeholder="Nhập tài khoản"
               required
             />
           </div>
@@ -57,111 +57,145 @@
 <script setup>
   import { onMounted, ref } from "vue";
   import { useRouter } from "vue-router";
+  import { inject } from "vue";
+  import axios from "axios";
 
+  const $swal = inject('$swal');
   const router = useRouter();
 
   const form = ref({
-    email: "demo@vietcine.vn",
-    password: "123456"
+    username: "",
+    password: ""
   });
+
+  function showSuccessToast() {
+    const toastConfig = $swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 1500
+    });
+
+    toastConfig.fire({
+      icon: 'success',
+      title: "Đăng nhập thành công"
+    });
+  }
+
+  function showErrorAlert(message) {
+    $swal.fire({
+      icon: 'error',
+      title: "Đăng nhập thất bại",
+      text: message || "Sai tên đăng nhập hoặc mật khẩu",
+      confirmButtonText: 'OK',
+      customeClass: {
+        popup: 'text-alert'
+      }
+    })
+  }
 
   function goHome() {
     router.push('/')
   }
 
-  async function handleLogin() {
-    try {
-
-    } catch (error) {
-      console.error("Lỗi khi xử lý đăng nhập: ", error.message);
-    }
+  function isCheckValation() {
+      return true;
   }
 
+  async function handleLogin() {
+    if (isCheckValation()){
+      try {
+        const url = "http://localhost:8080/api/auth/login";
+        const payload = {
+          username: form.value.username,
+          password: form.value.password
+        }
+        
+        const response = await axios.post(url, payload);
 
-  const login = () => {
-    console.log("Thông tin đăng nhập:", form);
+        if(response.data.token) {
+          const token = response.data.token;
+          showSuccessToast();
+          localStorage.setItem('token', JSON.stringify(token));
+          router.push('/');
+        } else {
+          showErrorAlert("Vui lòng kiểm tra lại tên đăng nhập và mật khẩu");
+        }
 
-    // 🧩 Giả lập đăng nhập thành công
-    if (form.email === "demo@vietcine.vn" && form.password === "123456") {
-      // localStorage.setItem("isLoggedIn", "true");
-      // localStorage.setItem("userEmail", form.email);
-
-      // 👉 Chuyển về trang chủ
-      router.push("/");
-    } else {
-      alert("Sai thông tin đăng nhập!");
+        console.log("data: ", form.value);
+        console.log("repsonse: ", response.data.token || response.data.error);
+      } catch (error) {
+        console.error("Lỗi khi xử lý đăng nhập: ", error.message);
+      }
     }
-  };
-
-  onMounted(() => {
-    console.log("Form demo:", form.value);
-  });
+  }
 </script>
 
 <style scoped>
-/* 🌈 Nền tổng thể */
-.auth-container {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(120deg, #a8edea, #fed6e3);
-  font-family: "Poppins", sans-serif;
-}
-
-/* 🌿 Card chính */
-.auth-wrapper {
-  width: 95%;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 20px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  padding: 35px 40px;
-  animation: fadeInUp 0.5s ease;
-}
-
-.form-label {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.form-control {
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  padding: 8px 10px;
-}
-
-.btn-success {
-  background-color: #94e900;
-  border: none;
-}
-.btn-success:hover {
-  background-color: #7ad000;
-}
-
-.text-success:hover {
-  text-decoration: underline;
-}
-.auth-logo img {
-  height: 75px;
-  width: auto;
-}
-
-/* 💫 Animation mượt */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+  /* 🌈 Nền tổng thể */
+  .auth-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(120deg, #a8edea, #fed6e3);
+    font-family: "Poppins", sans-serif;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@media (max-width: 480px) {
+  /* 🌿 Card chính */
   .auth-wrapper {
-    padding: 25px;
+    width: 95%;
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 20px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    padding: 35px 40px;
+    animation: fadeInUp 0.5s ease;
   }
-}
+
+  .form-label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .form-control {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+  }
+
+  .btn-success {
+    background-color: #94e900;
+    border: none;
+  }
+  .btn-success:hover {
+    background-color: #7ad000;
+  }
+
+  .text-success:hover {
+    text-decoration: underline;
+  }
+  .auth-logo img {
+    height: 75px;
+    width: auto;
+  }
+
+  /* 💫 Animation mượt */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .auth-wrapper {
+      padding: 25px;
+    }
+  }
 </style>

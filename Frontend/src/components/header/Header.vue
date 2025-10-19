@@ -23,7 +23,7 @@
         <!-- Nhóm bên phải -->
         <div class="right-group">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="isLoggedIn" class="profile-dropdown" @click="toggleProfileMenu">
+          <div v-if="token" class="profile-dropdown" @click="toggleProfileMenu">
             <button class="login-btn">
               👤 HỒ SƠ
             </button>
@@ -50,52 +50,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+  import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
 
-const emit = defineEmits(['change-component'])
-const router = useRouter()
+  const emit = defineEmits(['change-component'])
+  const router = useRouter()
 
-const menuOpen = ref(false)
-const isLoggedIn = ref(false)
-const profileMenuOpen = ref(false) // 🟢 Trạng thái dropdown
+  const menuOpen = ref(false)
+  const isLoggedIn = ref(false)
+  const profileMenuOpen = ref(false) // 🟢 Trạng thái dropdown
 
-onMounted(() => {
-  isLoggedIn.value = localStorage.getItem('isLoggedIn') === 'true'
-})
+  const token = localStorage.getItem('token') || null;
 
-function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-}
+  function toggleMenu() {
+    menuOpen.value = !menuOpen.value
+  }
 
-function closeMenu() {
-  menuOpen.value = false
-}
+  function closeMenu() {
+    menuOpen.value = false
+  }
 
-function emitChange(componentName) {
-  emit('change-component', componentName)
-  closeMenu()
-}
+  function emitChange(componentName) {
+    emit('change-component', componentName)
+    closeMenu()
+  }
 
-function toggleProfileMenu() {
-  profileMenuOpen.value = !profileMenuOpen.value
-}
+  function toggleProfileMenu() {
+    profileMenuOpen.value = !profileMenuOpen.value
+  }
 
-// 👉 Khi chọn "Trang cá nhân"
-function goProfile() {
-  router.push('/profile')
-  profileMenuOpen.value = false
-}
+  // 👉 Khi chọn "Trang cá nhân"
+  function goProfile() {
+    router.push('/profile')
+    profileMenuOpen.value = false
+  }
 
-// 👉 Khi chọn "Đăng xuất"
-function logout() {
-  localStorage.removeItem('isLoggedIn')
-  localStorage.removeItem('userEmail')
-  isLoggedIn.value = false
-  profileMenuOpen.value = false
-  router.push('/')
-  window.location.reload() // reload để đồng bộ header
-}
+  // 👉 Khi chọn "Đăng xuất"
+  function logout() {
+    localStorage.removeItem('token');
+    profileMenuOpen.value = false
+    router.push('/')
+    window.location.reload() // reload để đồng bộ header
+  }
+
+  onMounted(() => {
+    console.log("token: ", token);
+  });
 </script>
 
 
