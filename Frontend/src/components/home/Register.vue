@@ -2,7 +2,7 @@
   <div class="auth-container">
     <div class="auth-wrapper">
       <div class="auth-card">
-        <div class="auth-logo text-center">
+        <div class="auth-logo text-center" @click="goHome">
           <img src="/src/assets/header/Logo.png" alt="Logo" />
         </div>
         <RegisterForm />
@@ -14,6 +14,13 @@
 <script setup>
 
 import RegisterForm from "../auth/Register.vue";
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function goHome() {
+  router.push('/')
+}
 </script>
 
 <style scoped>

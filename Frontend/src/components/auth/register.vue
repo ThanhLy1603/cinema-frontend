@@ -3,18 +3,12 @@
     <div class="card shadow-sm border-0 mx-auto" style="max-width: 700px;">
       <div class="card-body p-4">
         <h4 class="fw-bold mb-4 text-center">Đăng ký tài khoản</h4>
-
         <form @submit.prevent="submitForm">
-          <!-- Họ Tên -->
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Họ *</label>
-              <input v-model="form.ho" type="text" class="form-control" placeholder="Nhập họ" required />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Tên đệm và tên *</label>
-              <input v-model="form.ten" type="text" class="form-control" placeholder="Nhập tên đệm và tên" required />
-            </div>
+          <!-- Họ và tên -->
+          <div class="mb-3">
+            <label class="form-label">Họ và tên *</label>
+            <input v-model="form.hovaten" type="text" class="form-control" placeholder="Nhập họ và tên đầy đủ"
+              required />
           </div>
 
           <!-- Giới tính + Email -->
@@ -38,11 +32,13 @@
           <div class="row mb-3">
             <div class="col-md-6">
               <label class="form-label">Mật khẩu *</label>
-              <input v-model="form.password" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
+              <input v-model="form.password" type="password" class="form-control" placeholder="Nhập mật khẩu"
+                required />
             </div>
             <div class="col-md-6">
               <label class="form-label">Nhập lại mật khẩu *</label>
-              <input v-model="form.repassword" type="password" class="form-control" placeholder="Xác nhận mật khẩu" required />
+              <input v-model="form.repassword" type="password" class="form-control" placeholder="Xác nhận mật khẩu"
+                required />
             </div>
           </div>
 
@@ -101,6 +97,11 @@
           <button type="submit" class="btn btn-success w-100 fw-bold py-2">
             ĐĂNG KÝ
           </button>
+          <div class="text-center mt-3">
+            <button type="button" class="btn-back" @click="goBack">
+              ← Quay lại đăng nhập
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -113,10 +114,13 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
+function goBack() {
+  router.push("/login");
+}
+
 // Biến reactive cho form
 const form = reactive({
-  ho: "",
-  ten: "",
+  hovaten: "",
   gioitinh: "",
   email: "",
   password: "",
@@ -128,7 +132,6 @@ const form = reactive({
   city: "",
   agree: false,
   promo: false,
-  
 });
 // Danh sách năm sinh (100 năm gần nhất)
 const years = computed(() => {
@@ -156,42 +159,64 @@ const submitForm = () => {
 
 
 <style scoped>
-  .card {
-    border-radius: 10px;
+.card {
+  border-radius: 10px;
 }
 
 .form-label {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .btn-success {
-    background-color: #94e900;
-    border: none;
+  background-color: #94e900;
+  border: none;
 }
 
 .btn-success:hover {
-    background-color: #7ad000;
+  background-color: #7ad000;
 }
 
 a.text-success:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .form-control,
 .form-select {
-    border-radius: 8px;
-    border: 1px solid #ccc;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 .d-flex.gap-2 select.form-select {
-    min-width: 0;
-    /* Ngăn tràn */
+  min-width: 0;
+  /* Ngăn tràn */
 }
 
 @media (max-width: 576px) {
-    .d-flex.gap-2 {
-        flex-direction: column;
-        /* Mobile: tự xuống hàng */
-    }
+  .d-flex.gap-2 {
+    flex-direction: column;
+    /* Mobile: tự xuống hàng */
+  }
 }
+
+.btn-back {
+  position: absolute;         
+  bottom: 15px;               
+  left: 17px;                  
+  background: none;          
+  border: none;                
+  color: #666;               
+  font-size: 15px;            
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 500;
+  opacity: 0.8;                
+}
+
+.btn-back:hover {
+  color: #000;    
+  opacity: 1;
+  transform: translateX(-2px);
+  text-decoration: underline;
+}
+
 </style>

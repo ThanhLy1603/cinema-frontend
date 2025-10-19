@@ -3,7 +3,6 @@
     <div class="header-banner">
       <img src="/src/assets/header/banner_header.jpg" class="header-bg" alt="Header background" />
     </div>
-
     <div class="header-dash">
       <div class="header-content">
         <div class="logo">
@@ -12,16 +11,35 @@
           </router-link>
         </div>
 
+        <!-- Menu chính -->
         <nav :class="['menu', { active: menuOpen }]">
-          <router-link to="/phim" @click="closeMenu">PHIM</router-link>
-          <router-link to="/thuc-an-nuoc-uong" @click="closeMenu">THỨC ĂN & NƯỚC UỐNG</router-link>
-          <router-link to="/uu-dai" @click="closeMenu">ƯU ĐÃI & KHUYẾN MÃI</router-link>
-          <router-link to="/dich-vu" @click="closeMenu">DỊCH VỤ & TIỆN ÍCH</router-link>
-          <router-link to="/gioi-thieu" @click="closeMenu">GIỚI THIỆU</router-link>
+          <button @click="emitChange('Movies')">PHIM</button>
+          <button @click="emitChange('Products')">THỨC ĂN & NƯỚC UỐNG</button>
+          <button @click="emitChange('Promotions')">ƯU ĐÃI & KHUYẾN MÃI</button>
+          <button @click="emitChange('Services')">DỊCH VỤ & TIỆN ÍCH</button>
+          <button @click="emitChange('About')">GIỚI THIỆU</button>
         </nav>
 
+        <!-- Nhóm bên phải -->
         <div class="right-group">
-          <router-link to="/login" class="login-btn" @click="closeMenu">ĐĂNG NHẬP</router-link>
+          <!-- Nếu đã đăng nhập -->
+          <div v-if="isLoggedIn" class="profile-dropdown" @click="toggleProfileMenu">
+            <button class="login-btn">
+              👤 HỒ SƠ
+            </button>
+
+            <!-- Dropdown xuất hiện khi click -->
+            <div v-if="profileMenuOpen" class="dropdown-menu">
+              <button @click="goProfile">Trang cá nhân</button>
+              <button @click="logout">Đăng xuất</button>
+            </div>
+          </div>
+
+          <!-- Nếu chưa đăng nhập -->
+          <button v-else class="login-btn" @click="router.push('/login')">
+            ĐĂNG NHẬP
+          </button>
+
           <div class="menu-toggle" @click="toggleMenu">
             {{ menuOpen ? "✕" : "☰" }}
           </div>
@@ -32,18 +50,55 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-  const menuOpen = ref(false);
+const emit = defineEmits(['change-component'])
+const router = useRouter()
 
-  function toggleMenu() {
-    menuOpen.value = !menuOpen.value;
-  }
+const menuOpen = ref(false)
+const isLoggedIn = ref(false)
+const profileMenuOpen = ref(false) // 🟢 Trạng thái dropdown
 
-  function closeMenu() {
-    menuOpen.value = !menuOpen.value;
-  }
+onMounted(() => {
+  isLoggedIn.value = localStorage.getItem('isLoggedIn') === 'true'
+})
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
+function closeMenu() {
+  menuOpen.value = false
+}
+
+function emitChange(componentName) {
+  emit('change-component', componentName)
+  closeMenu()
+}
+
+function toggleProfileMenu() {
+  profileMenuOpen.value = !profileMenuOpen.value
+}
+
+// 👉 Khi chọn "Trang cá nhân"
+function goProfile() {
+  router.push('/profile')
+  profileMenuOpen.value = false
+}
+
+// 👉 Khi chọn "Đăng xuất"
+function logout() {
+  localStorage.removeItem('isLoggedIn')
+  localStorage.removeItem('userEmail')
+  isLoggedIn.value = false
+  profileMenuOpen.value = false
+  router.push('/')
+  window.location.reload() // reload để đồng bộ header
+}
 </script>
+
+
 
 <style scoped>
     .main-header {
@@ -103,6 +158,28 @@
     display: flex;
     gap: 25px;
   }
+
+  .menu button{
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 700px;
+    color: #222;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    position: relative;
+  }
+
+ .menu button:hover {
+  background-color: lightgreen;
+  color: black;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
 
   .menu a {
     color: #000;
@@ -242,5 +319,46 @@
       padding: 8px 0;
     }
   }
+  /* Dropdown profile */
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dropdown-menu button {
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Hiệu ứng xuất hiện */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 
 </style>
