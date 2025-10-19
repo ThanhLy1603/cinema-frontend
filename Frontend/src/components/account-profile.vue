@@ -86,7 +86,7 @@
             </div>
 
             <div class="text-center mt-3">
-              <button type="submit" class="btn btn-success px-4 fw-semibold">CẬP NHẬT</button>
+              <button type="submit" class="btn btn-success px-4 fw-semibold" onclick=updateInfo()>CẬP NHẬT</button>
             </div>
           </form>
         </div>
@@ -135,6 +135,65 @@ const form = ref({
   address: "",
 });
 
+const errors = ref({});
+
+function checkValidate() {
+    errors.value = {};
+    const v = form.value;
+    let valid = true;
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRe = /^\d{9,11}$/;
+
+    if (!v.lastName || !v.lastName.trim()) {
+        errors.value.lastName = "Họ là bắt buộc";
+        valid = false;
+    }
+
+    if (!v.firstName || !v.firstName.trim()) {
+        errors.value.firstName = "Tên là bắt buộc";
+        valid = false;
+    }
+
+    if (!v.email || !emailRe.test(v.email)) {
+        errors.value.email = "Email không hợp lệ";
+        valid = false;
+    }
+
+    if (v.password && v.password.length > 0 && v.password.length < 6) {
+        errors.value.password = "Mật khẩu phải có ít nhất 6 ký tự";
+        valid = false;
+    }
+
+    if (!v.phone || !phoneRe.test(v.phone)) {
+        errors.value.phone = "Số điện thoại không hợp lệ (9-11 chữ số)";
+        valid = false;
+    }
+
+    if (!v.gender) {
+        errors.value.gender = "Chọn giới tính";
+        valid = false;
+    }
+
+    if (!v.day || !v.month || !v.year) {
+        errors.value.dob = "Chọn ngày sinh";
+        valid = false;
+    }
+
+    if (!v.city) {
+        errors.value.city = "Chọn tỉnh/thành";
+        valid = false;
+    }
+
+    if (!v.address || !v.address.trim()) {
+        errors.value.address = "Địa chỉ là bắt buộc";
+        valid = false;
+    }
+
+    return { valid, errors: errors.value };
+}
+
+
 const years = computed(() => {
   const arr = [];
   for (let y = 1950; y <= 2025; y++) arr.push(y);
@@ -142,7 +201,12 @@ const years = computed(() => {
 });
 
 const updateInfo = () => {
-  alert("Cập nhật thông tin thành công!");
+    if(!checkValidate){
+        return;
+    }else{
+        alert("Cập nhật thông tin thành công!");
+    }
+  
 };
 
 

@@ -1,9 +1,9 @@
 <template>
-  <HelloWorld></HelloWorld>
+  <AccountProfile/>
 </template>
 
 <script setup>
-  import HelloWorld from './components/HelloWorld.vue';
+  import AccountProfile from './components/account-profile.vue';
 </script>
 
 <style scoped>
