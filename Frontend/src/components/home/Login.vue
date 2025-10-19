@@ -55,36 +55,47 @@
 </template>
 
 <script setup>
-import { onMounted, reactive } from "vue";
-import { useRouter } from "vue-router";
+  import { onMounted, ref } from "vue";
+  import { useRouter } from "vue-router";
 
-const router = useRouter();
+  const router = useRouter();
 
-function goHome() {
-  router.push('/')
-}
-const form = reactive({
-  email: "demo@vietcine.vn",
-  password: "123456",
-});
+  const form = ref({
+    email: "demo@vietcine.vn",
+    password: "123456"
+  });
 
-const login = () => {
-  console.log("Thông tin đăng nhập:", form);
-
-  // 🧩 Giả lập đăng nhập thành công
-  if (form.email === "demo@vietcine.vn" && form.password === "123456") {
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userEmail", form.email);
-
-    // 👉 Chuyển về trang chủ
-    router.push("/");
-  } else {
-    alert("Sai thông tin đăng nhập!");
+  function goHome() {
+    router.push('/')
   }
-};
-onMounted(() => {
-  console.log("Form demo:", form);
-});
+
+  async function handleLogin() {
+    try {
+
+    } catch (error) {
+      console.error("Lỗi khi xử lý đăng nhập: ", error.message);
+    }
+  }
+
+
+  const login = () => {
+    console.log("Thông tin đăng nhập:", form);
+
+    // 🧩 Giả lập đăng nhập thành công
+    if (form.email === "demo@vietcine.vn" && form.password === "123456") {
+      // localStorage.setItem("isLoggedIn", "true");
+      // localStorage.setItem("userEmail", form.email);
+
+      // 👉 Chuyển về trang chủ
+      router.push("/");
+    } else {
+      alert("Sai thông tin đăng nhập!");
+    }
+  };
+
+  onMounted(() => {
+    console.log("Form demo:", form.value);
+  });
 </script>
 
 <style scoped>
