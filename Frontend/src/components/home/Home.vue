@@ -14,8 +14,9 @@
 </template>
 
 <script setup>
-  import { ref, computed } from 'vue'
-  import Header from '../header/Header.vue'
+  import { ref, computed } from 'vue';
+  import Header from '../header/Header.vue';
+  import { inject } from 'vue';
 
   // import các component con
   import Movies from '../load/Movies.vue'
@@ -24,7 +25,9 @@
   import Services from '../load/Services.vue'
   import About from '../load/About.vue'
 
-  const current = ref('Movies') // mặc định load trang phim
+  const current = ref('Movies'); // mặc định load trang phim
+
+  const $swal = inject("$swal");
 
   const componentsMap = {
     Movies,

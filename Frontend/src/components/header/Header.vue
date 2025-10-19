@@ -50,17 +50,33 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { inject } from 'vue';
 
-  const emit = defineEmits(['change-component'])
-  const router = useRouter()
+  const emit = defineEmits(['change-component']);
+  const router = useRouter();
+  const $swal = inject("$swal");
 
-  const menuOpen = ref(false)
-  const isLoggedIn = ref(false)
-  const profileMenuOpen = ref(false) // 🟢 Trạng thái dropdown
+  const menuOpen = ref(false);
+  const profileMenuOpen = ref(false); // 🟢 Trạng thái dropdown
 
   const token = localStorage.getItem('token') || null;
+
+  function showToast(message) {
+    const toastConfig = $swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timerProgressBar: true,
+      timer: 1500
+    });
+
+    toastConfig.fire({
+      icon: 'success',
+      title: message || "Vui lòng nhập thông báo"
+    });
+  }
 
   function toggleMenu() {
     menuOpen.value = !menuOpen.value
@@ -89,8 +105,13 @@
   function logout() {
     localStorage.removeItem('token');
     profileMenuOpen.value = false
-    router.push('/')
-    window.location.reload() // reload để đồng bộ header
+    router.push('/');
+    showToast("Đăng xuất thành công");
+
+    setTimeout(() => {
+      window.location.reload(); // reload để đồng bộ header
+    }, 500);
+
   }
 
   onMounted(() => {
