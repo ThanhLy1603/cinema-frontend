@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <AccountProfile/>
 </template>
 
@@ -9,3 +10,10 @@
 <style scoped>
 
 </style> 
+=======
+  <router-view/>
+</template>
+
+<script setup></script>
+<style scoped></style>
+>>>>>>> 0a0f88822c93d81734cf8c871ba41a3b59012b22
