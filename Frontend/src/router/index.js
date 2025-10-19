@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 // Import các component
-import Home from '../components/home/Home_All.vue';
-import Auth from '../components/home/Auth.vue';
-import Auth_Register from '../components/home/Auth_Register.vue';
+import Home from '../components/home/Home.vue';
+import Login from '../components/home/Login.vue';
+import Register from '../components/home/Register.vue';
 
 // Khai báo routes
 const routes = [
@@ -13,14 +13,14 @@ const routes = [
     component: Home,
   },
   {
-    path: "/auth_register",
-    name: "Auth_Register",
-    component: Auth_Register,
+    path: "/register",
+    name: "Register",
+    component: Register,
   },
   {
-    path: "/auth",
-    name: "Auth",
-    component: Auth,
+    path: "/login",
+    name: "Login",
+    component: Login,
   }
 ];
 

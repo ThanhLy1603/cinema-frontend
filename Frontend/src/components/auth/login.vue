@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -71,6 +71,7 @@ const login = () => {
   // Giả lập xử lý đăng nhập thành công
   router.push("/home");
 };
+
 </script>
 
 <style scoped>

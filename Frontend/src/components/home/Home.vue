@@ -7,6 +7,6 @@
 </template>
 
 <script setup>
-    import header_Home from '../Header/header_Home.vue';
+    import header_Home from '../Header/HeaderGuest.vue';
 </script>
 <style scoped></style>

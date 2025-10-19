@@ -44,7 +44,7 @@
           <!-- Link tới Đăng ký -->
           <div class="text-center mt-4">
             <span>Bạn chưa có tài khoản?</span>
-            <router-link to="/auth_register" class="text-success fw-semibold text-decoration-none">
+            <router-link to="/register" class="text-success fw-semibold text-decoration-none">
               Đăng ký ngay
             </router-link>
           </div>
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -69,6 +69,11 @@ const login = () => {
   console.log("Thông tin đăng nhập:", form);
   router.push("/home");
 };
+
+
+onMounted(() => {
+  console.log("form: ", form);
+});
 </script>
 
 <style scoped>

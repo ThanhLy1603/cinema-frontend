@@ -128,6 +128,7 @@ const form = reactive({
   city: "",
   agree: false,
   promo: false,
+  
 });
 // Danh sách năm sinh (100 năm gần nhất)
 const years = computed(() => {
