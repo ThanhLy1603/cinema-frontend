@@ -50,51 +50,53 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { jwtDecode } from 'jwt-decode';
 
   const emit = defineEmits(['change-component'])
-  const router = useRouter()
+  const router = useRouter();
 
-  const menuOpen = ref(false)
-  const isLoggedIn = ref(false)
-  const profileMenuOpen = ref(false) // 🟢 Trạng thái dropdown
+  const menuOpen = ref(false);
+  const isLoggedIn = ref(false);
+  const profileMenuOpen = ref(false); // 🟢 Trạng thái dropdown
 
   const token = localStorage.getItem('token') || null;
 
   function toggleMenu() {
-    menuOpen.value = !menuOpen.value
+    menuOpen.value = !menuOpen.value;
   }
 
   function closeMenu() {
-    menuOpen.value = false
+    menuOpen.value = false;
   }
 
   function emitChange(componentName) {
-    emit('change-component', componentName)
-    closeMenu()
+    emit('change-component', componentName);
+    closeMenu();
   }
 
   function toggleProfileMenu() {
-    profileMenuOpen.value = !profileMenuOpen.value
+    profileMenuOpen.value = !profileMenuOpen.value;
   }
 
   // 👉 Khi chọn "Trang cá nhân"
   function goProfile() {
-    router.push('/profile')
-    profileMenuOpen.value = false
+    router.push('/profile');
+    profileMenuOpen.value = false;
   }
 
   // 👉 Khi chọn "Đăng xuất"
   function logout() {
     localStorage.removeItem('token');
-    profileMenuOpen.value = false
-    router.push('/')
-    window.location.reload() // reload để đồng bộ header
+    profileMenuOpen.value = false;
+    router.push('/');
+    window.location.reload() ;// reload để đồng bộ header
   }
 
   onMounted(() => {
     console.log("token: ", token);
+    if (token) console.log("Thông tin trong token: ", jwtDecode(token));
   });
 </script>
 
