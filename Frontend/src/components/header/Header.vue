@@ -52,6 +52,7 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
+<<<<<<< HEAD
   import { inject } from 'vue';
 
   const emit = defineEmits(['change-component']);
@@ -59,6 +60,15 @@
   const $swal = inject("$swal");
 
   const menuOpen = ref(false);
+=======
+  import { jwtDecode } from 'jwt-decode';
+
+  const emit = defineEmits(['change-component'])
+  const router = useRouter();
+
+  const menuOpen = ref(false);
+  const isLoggedIn = ref(false);
+>>>>>>> origin/LyNguyen
   const profileMenuOpen = ref(false); // 🟢 Trạng thái dropdown
 
   const token = localStorage.getItem('token') || null;
@@ -79,31 +89,32 @@
   }
 
   function toggleMenu() {
-    menuOpen.value = !menuOpen.value
+    menuOpen.value = !menuOpen.value;
   }
 
   function closeMenu() {
-    menuOpen.value = false
+    menuOpen.value = false;
   }
 
   function emitChange(componentName) {
-    emit('change-component', componentName)
-    closeMenu()
+    emit('change-component', componentName);
+    closeMenu();
   }
 
   function toggleProfileMenu() {
-    profileMenuOpen.value = !profileMenuOpen.value
+    profileMenuOpen.value = !profileMenuOpen.value;
   }
 
   // 👉 Khi chọn "Trang cá nhân"
   function goProfile() {
-    router.push('/profile')
-    profileMenuOpen.value = false
+    router.push('/profile');
+    profileMenuOpen.value = false;
   }
 
   // 👉 Khi chọn "Đăng xuất"
   function logout() {
     localStorage.removeItem('token');
+<<<<<<< HEAD
     profileMenuOpen.value = false
     router.push('/');
     showToast("Đăng xuất thành công");
@@ -112,10 +123,16 @@
       window.location.reload(); // reload để đồng bộ header
     }, 500);
 
+=======
+    profileMenuOpen.value = false;
+    router.push('/');
+    window.location.reload() ;// reload để đồng bộ header
+>>>>>>> origin/LyNguyen
   }
 
   onMounted(() => {
     console.log("token: ", token);
+    if (token) console.log("Thông tin trong token: ", jwtDecode(token));
   });
 </script>
 
