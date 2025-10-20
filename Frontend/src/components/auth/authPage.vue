@@ -3,12 +3,12 @@
     <div class="row justify-content-center">
       <!-- Đăng nhập -->
       <div class="col-lg-5 col-md-6 col-12 mb-4 mb-lg-0">
-        <Login/>
+        <Login />
       </div>
 
       <!-- Đăng ký -->
       <div class="col-lg-7 col-md-6 col-12">
-        <Register/>
+        <Register />
       </div>
     </div>
   </div>

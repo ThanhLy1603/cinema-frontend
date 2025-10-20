@@ -1,14 +1,14 @@
 <template>
   <div class="home">
     <!-- Header -->
-     <div>
-       <HeaderGuest @change-component="setCurrentComponent" />
-     </div>
+    <div>
+      <HeaderGuest @change-component="setCurrentComponent" />
+    </div>
     <!-- Nội dung -->
-     <div class="content-wrapper">
-    <transition name="fade" mode="out-in">
-      <component :is="currentComponent" />
-    </transition>
+    <div class="content-wrapper">
+      <transition name="fade" mode="out-in">
+        <component :is="currentComponent" />
+      </transition>
     </div>
   </div>
 </template>
@@ -60,6 +60,7 @@ function setCurrentComponent(name) {
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;

@@ -52,14 +52,14 @@ function goHome() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px; 
+  gap: 5px;
 }
 
 /* 🖼 Logo */
 .auth-logo {
   text-align: center;
-  margin-bottom: -25px; 
-  margin-top: -5px; 
+  margin-bottom: -25px;
+  margin-top: -5px;
 }
 
 .auth-logo img {
@@ -73,6 +73,7 @@ function goHome() {
   font-weight: 500;
   margin-top: 3px;
 }
+
 .form-control {
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -99,6 +100,7 @@ function goHome() {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

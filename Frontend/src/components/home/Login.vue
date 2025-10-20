@@ -2,7 +2,7 @@
   <div class="auth-container">
     <div class="auth-wrapper">
       <div class="auth-card">
-        <div class="auth-logo text-center mb-3" @click="goHome" >
+        <div class="auth-logo text-center mb-3" @click="goHome">
           <img src="/src/assets/header/Logo.png" alt="Logo" />
         </div>
         <h4 class="fw-bold mb-4 text-center">Đăng nhập tài khoản</h4>
@@ -10,25 +10,13 @@
           <!-- Email -->
           <div class="mb-3">
             <label class="form-label">Email *</label>
-            <input
-              v-model="form.email"
-              type="email"
-              class="form-control"
-              placeholder="Nhập email"
-              required
-            />
+            <input v-model="form.email" type="email" class="form-control" placeholder="Nhập email" required />
           </div>
 
           <!-- Password -->
           <div class="mb-3">
             <label class="form-label">Mật khẩu *</label>
-            <input
-              v-model="form.password"
-              type="password"
-              class="form-control"
-              placeholder="Nhập mật khẩu"
-              required
-            />
+            <input v-model="form.password" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
           </div>
 
           <!-- Quên mật khẩu -->
@@ -124,6 +112,7 @@ onMounted(() => {
   background-color: #94e900;
   border: none;
 }
+
 .btn-success:hover {
   background-color: #7ad000;
 }
@@ -131,6 +120,7 @@ onMounted(() => {
 .text-success:hover {
   text-decoration: underline;
 }
+
 .auth-logo img {
   height: 75px;
   width: auto;
@@ -142,6 +132,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

@@ -1,19 +1,16 @@
 <template>
-<<<<<<< HEAD
-  <AccountProfile/>
+  <div>
+    <router-view />
+  </div>
 </template>
 
 <script setup>
-  import AccountProfile from './components/account-profile.vue';
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
 </script>
 
 <style scoped>
 
 </style> 
-=======
-  <router-view/>
-</template>
 
-<script setup></script>
-<style scoped></style>
->>>>>>> 0a0f88822c93d81734cf8c871ba41a3b59012b22
