@@ -52,23 +52,14 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
-<<<<<<< HEAD
   import { inject } from 'vue';
+  import { jwtDecode } from 'jwt-decode';
 
   const emit = defineEmits(['change-component']);
   const router = useRouter();
   const $swal = inject("$swal");
 
   const menuOpen = ref(false);
-=======
-  import { jwtDecode } from 'jwt-decode';
-
-  const emit = defineEmits(['change-component'])
-  const router = useRouter();
-
-  const menuOpen = ref(false);
-  const isLoggedIn = ref(false);
->>>>>>> origin/LyNguyen
   const profileMenuOpen = ref(false); // 🟢 Trạng thái dropdown
 
   const token = localStorage.getItem('token') || null;
@@ -114,7 +105,7 @@
   // 👉 Khi chọn "Đăng xuất"
   function logout() {
     localStorage.removeItem('token');
-<<<<<<< HEAD
+
     profileMenuOpen.value = false
     router.push('/');
     showToast("Đăng xuất thành công");
@@ -123,11 +114,6 @@
       window.location.reload(); // reload để đồng bộ header
     }, 500);
 
-=======
-    profileMenuOpen.value = false;
-    router.push('/');
-    window.location.reload() ;// reload để đồng bộ header
->>>>>>> origin/LyNguyen
   }
 
   onMounted(() => {
