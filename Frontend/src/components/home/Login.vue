@@ -127,6 +127,7 @@
             console.log("repsonse: ", response.data.token || response.data.error);
          } catch (error) {
             console.error("Lỗi khi xử lý đăng nhập: ", error.message);
+            showErrorAlert("Lỗi khi kết nối đến server");
          }
       }
    }
