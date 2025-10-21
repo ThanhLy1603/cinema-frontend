@@ -8,7 +8,11 @@
           <!-- Tên đăng nhập -->
           <div class="mb-3">
             <label class="form-label">Tên đăng nhập *</label>
-            <input v-model="form.username" type="text" class="form-control" placeholder="Nhập tên đăng nhập" required />
+            <input v-model="form.username" type="text" class="form-control" placeholder="Nhập tên đăng nhập"
+              @blur="checkUsername" required />
+            <small v-if="usernameStatus" :class="usernameStatus.includes('tồn tại') ? 'text-danger' : 'text-success'">
+              {{ usernameStatus }}
+            </small>
           </div>
 
           <!-- Họ và tên -->
@@ -34,11 +38,14 @@
               <label class="form-label">Địa chỉ email *</label>
               <div class="email-otp-group">
                 <input v-model="form.email" type="email" class="form-control" placeholder="example@gmail.com" required
-                  :readonly="otpStep !== 0" />
+                  :readonly="otpStep !== 0" @blur="checkEmail" />
                 <button type="button" class="btn btn-otp" @click="sendOtp" :disabled="otpSending || otpStep > 0">
                   {{ otpSending ? "Đang gửi..." : "Gửi OTP" }}
                 </button>
               </div>
+              <small v-if="emailStatus" :class="emailStatus.includes('đã được sử dụng') ? 'text-danger' : 'text-success'">
+              {{ emailStatus }}
+            </small>
             </div>
           </div>
           <!-- Ô nhập mã OTP -->
@@ -161,11 +168,16 @@ const otpSending = ref(false);
 const otpVerifying = ref(false);
 const otpValid = ref(false);
 const otpStatus = ref("");
+const usernameStatus = ref("");
+const emailStatus = ref("");
+
 
 // ===== NĂM SINH =====
-const years = computed(() => {
+const years = computed(function () {
   const current = new Date().getFullYear();
-  return Array.from({ length: 100 }, (_, i) => current - i);
+  return Array.from({ length: 100 }, function (_, i) {
+    return current - i;
+  });
 });
 
 // ===== QUAY LẠI ĐĂNG NHẬP =====
@@ -174,7 +186,7 @@ function goBack() {
 }
 
 // ===== GỬI OTP =====
-const sendOtp = async () => {
+async function sendOtp() {
   if (!form.email) {
     alert("⚠️ Vui lòng nhập email trước khi gửi OTP!");
     return;
@@ -195,10 +207,10 @@ const sendOtp = async () => {
   } finally {
     otpSending.value = false;
   }
-};
+}
 
 // ===== XÁC MINH OTP =====
-const verifyOtp = async () => {
+async function verifyOtp() {
   if (!form.otp) {
     alert("⚠️ Vui lòng nhập mã OTP!");
     return;
@@ -221,10 +233,10 @@ const verifyOtp = async () => {
   } finally {
     otpVerifying.value = false;
   }
-};
+}
 
 // ===== XỬ LÝ ĐĂNG KÝ =====
-const submitForm = async () => {
+async function submitForm() {
   if (!otpValid.value) {
     alert("⚠️ Bạn cần xác minh OTP trước khi đăng ký!");
     return;
@@ -249,18 +261,52 @@ const submitForm = async () => {
   };
 
   try {
-    const res = await axios.post(
-      "http://localhost:8080/api/auth/register",
-      payload
-    );
+    const res = await axios.post("http://localhost:8080/api/auth/register", payload);
     alert(res.data.message || "🎉 Đăng ký thành công!");
     router.push("/login");
   } catch (err) {
     console.error(err);
     alert("❌ Lỗi khi đăng ký: " + (err.response?.data?.message || "Không xác định."));
   }
-};
+}
+// Kiểm tra username
+async function checkUsername() {
+  if (!form.username.trim()) {
+    usernameStatus.value = "";
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+      "http://localhost:8080/api/auth/check-username",
+      { params: { username: form.username } }
+    );
+    usernameStatus.value = res.data.message;
+  } catch (err) {
+    usernameStatus.value = "⚠️ Lỗi khi kiểm tra username.";
+  }
+}
+// Kiểm tra email
+async function checkEmail() {
+  if (!form.email.trim()) {
+    emailStatus.value = "";
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+      "http://localhost:8080/api/auth/check-email",
+      { params: { email: form.email } }
+    );
+    emailStatus.value = res.data.message;
+  } catch (err) {
+    emailStatus.value = "⚠️ Lỗi khi kiểm tra email.";
+  }
+}
+
+
 </script>
+
 
 
 <style scoped>
@@ -375,5 +421,4 @@ a.text-success:hover {
     margin-top: 6px;
   }
 }
-
 </style>
