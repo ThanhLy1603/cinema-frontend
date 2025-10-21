@@ -153,7 +153,7 @@ const submitForm = () => {
   // In ra thông tin (test)
   console.log("Thông tin đăng ký:", { ...form });
   // Giả lập xử lý xong -> chuyển hướng sang trang đăng nhập
-  router.push("/dang-nhap");
+  router.push("/login");
 };
 </script>
 
