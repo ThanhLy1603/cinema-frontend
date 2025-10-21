@@ -269,7 +269,6 @@ async function submitForm() {
     alert("❌ Lỗi khi đăng ký: " + (err.response?.data?.message || "Không xác định."));
   }
 }
-// Kiểm tra username
 async function checkUsername() {
   if (!form.username.trim()) {
     usernameStatus.value = "";
@@ -277,16 +276,16 @@ async function checkUsername() {
   }
 
   try {
-    const res = await axios.get(
+    const res = await axios.post(
       "http://localhost:8080/api/auth/check-username",
-      { params: { username: form.username } }
+      { username: form.username }
     );
     usernameStatus.value = res.data.message;
   } catch (err) {
     usernameStatus.value = "⚠️ Lỗi khi kiểm tra username.";
   }
 }
-// Kiểm tra email
+
 async function checkEmail() {
   if (!form.email.trim()) {
     emailStatus.value = "";
@@ -294,17 +293,15 @@ async function checkEmail() {
   }
 
   try {
-    const res = await axios.get(
+    const res = await axios.post(
       "http://localhost:8080/api/auth/check-email",
-      { params: { email: form.email } }
+      { email: form.email }
     );
     emailStatus.value = res.data.message;
   } catch (err) {
     emailStatus.value = "⚠️ Lỗi khi kiểm tra email.";
   }
 }
-
-
 </script>
 
 
