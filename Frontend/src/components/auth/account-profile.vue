@@ -6,8 +6,8 @@
       <div class="col-lg-8">
         <div class="card p-4 shadow-sm">
           <div class="d-flex align-items-center mb-3">
-            <img :src="form.avatarUrl" alt="Avatar" class="rounded-circle me-3 border"
-              style="width: 100px; height: 100px; object-fit: cover;" />
+            <img :src="form.avatarUrl" alt="Avatar"
+              class="rounded-circle me-3 border" style="width: 100px; height: 100px; object-fit: cover;" />
             <div>
               <h5 class="fw-semibold mb-1">{{ form.lastName + ' ' + form.firstName }}</h5>
             </div>
@@ -21,13 +21,13 @@
               <div class="col-md-6 mb-3">
                 <label class="form-label">Họ *</label>
                 <input v-model="form.lastName" type="text" class="form-control"
-                  :class="{ 'is-invalid': errors.lastName }" />
+                  :class="{ 'is-invalid': errors.lastName }" :disabled="!isEditing" />
                 <div class="invalid-feedback">{{ errors.lastName }}</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Tên đệm và tên *</label>
                 <input v-model="form.firstName" type="text" class="form-control"
-                  :class="{ 'is-invalid': errors.firstName }" />
+                  :class="{ 'is-invalid': errors.firstName }" :disabled="!isEditing" />
                 <div class="invalid-feedback">{{ errors.firstName }}</div>
               </div>
               <div class="col-12 mb-3">
@@ -46,13 +46,15 @@
 
               <div class="col-12 mb-3">
                 <label class="form-label">Số điện thoại *</label>
-                <input v-model="form.phone" type="text" class="form-control" :class="{ 'is-invalid': errors.phone }" />
+                <input v-model="form.phone" type="text" class="form-control" :class="{ 'is-invalid': errors.phone }"
+                  :disabled="!isEditing" />
                 <div class="invalid-feedback">{{ errors.phone }}</div>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Giới tính *</label>
-                <select v-model="form.gender" class="form-select" :class="{ 'is-invalid': errors.gender }">
+                <select v-model="form.gender" class="form-select" :class="{ 'is-invalid': errors.gender }"
+                  :disabled="!isEditing">
                   <option value="">Chọn giới tính</option>
                   <option value="true">Nam</option>
                   <option value="false">Nữ</option>
@@ -63,15 +65,18 @@
               <div class="col-md-6 mb-3">
                 <label class="form-label">Ngày sinh *</label>
                 <div class="d-flex gap-2">
-                  <select v-model.number="form.day" class="form-select" :class="{ 'is-invalid': errors.dob }">
+                  <select v-model.number="form.day" class="form-select" :class="{ 'is-invalid': errors.dob }"
+                    :disabled="!isEditing">
                     <option value="">Ngày</option>
                     <option v-for="d in 31" :key="d" :value="d">{{ d.toString().padStart(2, '0') }}</option>
                   </select>
-                  <select v-model.number="form.month" class="form-select" :class="{ 'is-invalid': errors.dob }">
+                  <select v-model.number="form.month" class="form-select" :class="{ 'is-invalid': errors.dob }"
+                    :disabled="!isEditing">
                     <option value="">Tháng</option>
                     <option v-for="m in 12" :key="m" :value="m">{{ m.toString().padStart(2, '0') }}</option>
                   </select>
-                  <select v-model.number="form.year" class="form-select" :class="{ 'is-invalid': errors.dob }">
+                  <select v-model.number="form.year" class="form-select" :class="{ 'is-invalid': errors.dob }"
+                    :disabled="!isEditing">
                     <option value="">Năm</option>
                     <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
                   </select>
@@ -81,7 +86,8 @@
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Tỉnh/Thành phố *</label>
-                <select v-model="form.city" class="form-select" :class="{ 'is-invalid': errors.city }">
+                <select v-model="form.city" class="form-select" :class="{ 'is-invalid': errors.city }"
+                  :disabled="!isEditing">
                   <option value="">Chọn tỉnh/thành</option>
                   <option>Hà Nội</option>
                   <option>Hồ Chí Minh</option>
@@ -92,14 +98,23 @@
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Địa chỉ *</label>
-                <input v-model="form.address" type="text" class="form-control"
-                  :class="{ 'is-invalid': errors.address }" />
+                <input v-model="form.address" type="text" class="form-control" :class="{ 'is-invalid': errors.address }"
+                  :disabled="!isEditing" />
                 <div class="invalid-feedback">{{ errors.address }}</div>
               </div>
             </div>
 
             <div class="text-center mt-3">
-              <button type="submit" class="btn btn-success px-4 fw-semibold">CẬP NHẬT</button>
+              <button v-if="!isEditing" type="button" class="btn btn-primary px-4 fw-semibold"
+                @click="isEditing = true">
+                CHỈNH SỬA
+              </button>
+              <button v-if="isEditing" type="submit" class="btn btn-success px-4 fw-semibold">
+                CẬP NHẬT
+              </button>
+              <button v-if="isEditing" type="button" class="btn btn-outline-secondary ms-2" @click="isEditing = false">
+                HỦY
+              </button>
             </div>
           </form>
 
@@ -117,8 +132,10 @@
                 </p>
                 <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
               </div>
-              <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">ĐĂNG XUẤT</button>
-              <a href="#" class="text-danger small" @click.prevent="deleteProfile">Xóa thông tin</a>
+              <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">
+                ĐĂNG XUẤT
+              </button>
+
             </div>
           </div>
         </div>
@@ -153,6 +170,7 @@ const form = ref({
 const errors = ref({});
 const error = ref('');
 const success = ref('');
+const isEditing = ref(false); // Trạng thái chỉnh sửa
 
 function checkValidate() {
   errors.value = {};
