@@ -92,7 +92,7 @@
          customeClass: {
          popup: 'text-alert'
          }
-      })
+      });
    }
 
    function goHome() {
