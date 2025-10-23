@@ -15,6 +15,8 @@
                      type="text"
                      class="form-control"
                      placeholder="Nhập tài khoản"
+                     @input="removeSpaces('username')"
+                     @keydown.space.prevent
                      required
                   />
                </div>
@@ -27,13 +29,15 @@
                      type="password"
                      class="form-control"
                      placeholder="Nhập mật khẩu"
+                     @input="removeSpaces('password')"
+                     @keydown.space.prevent
                      required
                   />
                </div>
 
                <!-- Quên mật khẩu -->
                <div class="text-end mb-4">
-                  <a href="#" class="text-success small text-decoration-none">Quên mật khẩu?</a>
+                  <router-link to="/forgot-password" class="text-success small text-decoration-none">Quên mật khẩu?</router-link>
                </div>
 
                <!-- Submit -->
@@ -93,6 +97,9 @@
          popup: 'text-alert'
          }
       });
+   }
+   function removeSpaces(field) {
+      form.value[field] = form.value[field].replace(/\s+/g, "");
    }
 
    function goHome() {
