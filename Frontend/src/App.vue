@@ -1,6 +1,16 @@
 <template>
-  <router-view/>
+  <div>
+    <router-view />
+  </div>
 </template>
 
-<script setup></script>
-<style scoped></style>
+<script setup>
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+</script>
+
+<style scoped>
+
+</style> 
+

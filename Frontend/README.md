@@ -1,5 +1,18 @@
-# Vue 3 + Vite
+```markdown
+# 🍿 Cinema Management System – Frontend (Vue 3)
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 🧩 Giới thiệu
+Giao diện người dùng cho hệ thống **quản lý rạp chiếu phim**, phát triển bằng **Vue 3 (Composition API)**.  
+Frontend tương tác với backend Spring Boot qua API, hỗ trợ khách hàng đặt vé, xem phim, và nhân viên quản lý suất chiếu.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+---
+
+## ⚙️ Công nghệ sử dụng
+- Vue 3 + Vite
+- Vue Router
+- Axios
+- Pinia (state management)
+- Bootstrap 5 + FontAwesome
+- SweetAlert2 / Toastify
+
+---
