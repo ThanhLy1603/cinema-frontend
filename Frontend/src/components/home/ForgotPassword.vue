@@ -95,7 +95,6 @@
 import { ref } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import logo from "../../assets/header/Logo.png";
 
 const step = ref(1);
 const email = ref("");

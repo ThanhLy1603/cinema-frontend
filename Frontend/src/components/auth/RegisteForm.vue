@@ -202,9 +202,6 @@
                Xác minh OTP
             </button>
           </div>
-          <small v-if="otpStatus" :class="otpValid ? 'text-success' : 'text-danger'">
-            {{ otpStatus }}
-          </small>
         </div>
       </div>
     </div>
@@ -220,9 +217,6 @@ const router = useRouter();
 const $swal = inject("$swal");
 
 const step = ref(1);
-const otpValid = ref(false);
-const otpVerifying = ref(false);
-const otpStatus = ref("");
 const usernameStatus = ref("");
 const emailStatus = ref("");
 
@@ -247,7 +241,7 @@ const years = computed(() => {
   return Array.from({ length: 100 }, (_, i) => current - i);
 });
 
-const time = ref(5 * 60);
+const time = ref(5 *60);
 let timer = null;
 
 const formattedTime = computed(() => {
@@ -304,7 +298,7 @@ function countdown() {
     else {
       clearInterval(timer);
       showAlertToast("Đã hết thời gian nhập OTP");
-      router.go(0);
+      window.location.reload();
     }
   }, 1000);
 }
