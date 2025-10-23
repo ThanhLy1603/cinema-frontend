@@ -13,7 +13,7 @@
 
 <script setup>
 
-import RegisterForm from "../auth/Register.vue";
+import RegisterForm from "../auth/RegisteForm.vue";
 import { useRouter } from 'vue-router'
 
 const router = useRouter()

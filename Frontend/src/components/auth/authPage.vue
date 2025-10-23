@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
-import Login from "./Login.vue";
-import Register from "./Register.vue";
+import Login from "./LoginForm.vue";
+import Register from "./RegisteForm.vue";
 </script>
 
 <style scoped>
