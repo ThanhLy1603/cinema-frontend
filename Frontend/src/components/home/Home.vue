@@ -1,16 +1,16 @@
 <template>
-  <div class="home">
-    <!-- Header -->
-     <div>
-       <Header @change-component="setCurrentComponent" />
-     </div>
-    <!-- Nội dung -->
-     <div class="content-wrapper">
-    <transition name="fade" mode="out-in">
-      <component :is="currentComponent" />
-    </transition>
-    </div>
-  </div>
+   <div class="home">
+      <!-- Header -->
+      <div>
+         <Header @change-component="setCurrentComponent" />
+      </div>
+      <!-- Nội dung -->
+      <div class="content-wrapper">
+         <transition name="fade" mode="out-in">
+            <component :is="currentComponent" />
+         </transition>
+      </div>
+   </div>
 </template>
 
 <script setup>
@@ -61,12 +61,13 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
    }
 
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.3s ease;
-  }
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
-  }
+   .fade-enter-active,
+   .fade-leave-active {
+      transition: opacity 0.3s ease;
+   }
+
+   .fade-enter-from,
+   .fade-leave-to {
+      opacity: 0;
+   }
 </style>

@@ -98,6 +98,7 @@
          }
       });
    }
+   
    function removeSpaces(field) {
       form.value[field] = form.value[field].replace(/\s+/g, "");
    }
