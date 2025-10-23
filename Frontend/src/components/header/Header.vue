@@ -98,7 +98,9 @@
 
   // 👉 Khi chọn "Trang cá nhân"
   function goProfile() {
-    router.push('/profile');
+    const userInfo = jwtDecode(token);
+    console.log("Thông tin user từ token:", userInfo);
+    router.push(`/auth/${userInfo.subject}`);
     profileMenuOpen.value = false;
   }
 
@@ -122,229 +124,229 @@
 </script>
 
 <style scoped>
-   .main-header {
-      width: 100%;
-      overflow: visible !important;
-   }
+    .main-header {
+    width: 100%;
+    overflow: visible !important;
+  }
 
   /* === Banner === */
-   .header-banner {
-      position: relative;
-      width: 100%;
-      height: 150px;
-      background: linear-gradient(to right, #7cc9ff, #54a3ff);
-   }
+  .header-banner {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(to right, #7cc9ff, #54a3ff);
+  }
 
-   .header-bg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-   }
+  .header-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
   /* === Dash bar === */
-   .header-dash {
-      background-color: white;
-      border-top: 2px solid #ccc;
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  .header-dash {
+    background-color: white;
+    border-top: 2px solid #ccc;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+
+    /* ✅ Cho phép menu xổ ra */
+    position: relative;
+    overflow: visible !important;
+    z-index: 10;
+  }
+
+  .header-content {
+    width: 95%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: visible !important;
+    z-index: 10;
+
+    /* ✅ Cho menu nằm trên */
+    position: relative;
+    overflow: visible !important;
+    z-index: 20;
+  }
+
+  .logo img {
+    height: 70px;
+  }
+
+  .menu {
+    display: flex;
+    gap: 25px;
+  }
+
+  .menu button{
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 700px;
+    color: #222;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    position: relative;
+  }
+
+ .menu button:hover {
+  background-color: lightgreen;
+  color: black;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
+
+  .menu a {
+    color: #000;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .menu a:hover {
+    color: #007bff;
+  }
+
+  /* Nút đăng nhập */
+  .login-btn {
+    background-color: #94e900;
+    color: #000;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.3s;
+  }
+
+  .login-btn:hover {
+    background-color: #7ad000;
+  }
+
+  /* Nhóm login + ☰ */
+  .right-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Hamburger */
+  .menu-toggle {
+    display: none;
+    cursor: pointer;
+    font-size: 28px;
+    color: #000;
+    font-weight: bold;
+    user-select: none;
+    transition: transform 0.3s ease;
+  }
+
+  .menu-toggle:hover {
+    transform: scale(1.1);
+  }
+
+
+
+  /* Tablet (<= 992px) */
+  @media (max-width: 992px) {
+    .logo img {
+      height: 60px;
+    }
+    .login-btn {
+      padding: 6px 12px;
+    }
+  }
+
+  /* Mobile (<= 768px) */
+  @media (max-width: 768px) {
+    .header-banner {
+      height: 100px;
+    }
+
+    .logo img {
+      height: 45px;
+    }
+
+    /* Ẩn menu chính, dùng dạng dropdown */
+    .menu {
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      flex-direction: column;
+      gap: 0;
+      width: 200px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
       padding: 10px 0;
 
-      /* ✅ Cho phép menu xổ ra */
-      position: relative;
-      overflow: visible !important;
-      z-index: 10;
-   }
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
 
-   .header-content {
-      width: 95%;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: relative;
-      overflow: visible !important;
-      z-index: 10;
+      /* ✅ Đảm bảo nằm trên các phần khác */
+      z-index: 9999 !important;
+    }
 
-      /* ✅ Cho menu nằm trên */
-      position: relative;
-      overflow: visible !important;
-      z-index: 20;
-   }
-
-   .logo img {
-      height: 70px;
-   }
-
-   .menu {
-      display: flex;
-      gap: 25px;
-   }
-
-   .menu button{
-      background: none;
-      border: none;
-      outline: none;
-      font-size: 16px;
-      font-weight: 700px;
-      color: #222;
-      cursor: pointer;
-      padding: 5px 10px;
-      border-radius: 8px;
-      transition: all 0.25s ease;
-      letter-spacing: 0.3px;
-      position: relative;
-   }
-
-   .menu button:hover {
-   background-color: lightgreen;
-   color: black;
-   transform: translateY(-2px);
-   box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
-   }
-
-   .menu a {
+    .menu a {
+      padding: 10px 0;
       color: #000;
-      font-weight: bold;
-      text-decoration: none;
-      transition: color 0.2s;
-   }
+    }
 
-   .menu a:hover {
-      color: #007bff;
-   }
+    /* Khi bật menu */
+    .menu.active {
+      opacity: 1 !important;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
 
-   /* Nút đăng nhập */
-   .login-btn {
-      background-color: #94e900;
-      color: #000;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-weight: bold;
-      text-decoration: none;
-      transition: background 0.3s;
-   }
+    /* Hiện hamburger cạnh login */
+    .menu-toggle {
+      display: block;
+    }
 
-   .login-btn:hover {
-      background-color: #7ad000;
-   }
-
-   /* Nhóm login + ☰ */
-   .right-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-   }
-
-   /* Hamburger */
-   .menu-toggle {
-      display: none;
-      cursor: pointer;
-      font-size: 28px;
-      color: #000;
-      font-weight: bold;
-      user-select: none;
-      transition: transform 0.3s ease;
-   }
-
-   .menu-toggle:hover {
-      transform: scale(1.1);
-   }
-
-
-
-   /* Tablet (<= 992px) */
-   @media (max-width: 992px) {
-      .logo img {
-         height: 60px;
-      }
-      .login-btn {
-         padding: 6px 12px;
-      }
-   }
-
-   /* Mobile (<= 768px) */
-   @media (max-width: 768px) {
-      .header-banner {
-         height: 100px;
-      }
-
-      .logo img {
-         height: 45px;
-      }
-
-      /* Ẩn menu chính, dùng dạng dropdown */
-      .menu {
-         position: absolute;
-         top: 60px;
-         right: 10px;
-         flex-direction: column;
-         gap: 0;
-         width: 200px;
-         background: white;
-         border-radius: 10px;
-         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-         padding: 10px 0;
-
-         opacity: 0;
-         pointer-events: none;
-         transform: translateY(-10px);
-         transition: all 0.3s ease;
-
-         /* ✅ Đảm bảo nằm trên các phần khác */
-         z-index: 9999 !important;
-      }
-
-      .menu a {
-         padding: 10px 0;
-         color: #000;
-      }
-
-      /* Khi bật menu */
-      .menu.active {
-         opacity: 1 !important;
-         pointer-events: auto;
-         transform: translateY(0);
-      }
-
-      /* Hiện hamburger cạnh login */
-      .menu-toggle {
-         display: block;
-      }
-
-      .header-content {
-         position: relative;
-      }
-
-      .login-btn {
-         font-size: 13px;
-         padding: 6px 10px;
-      }
-   }
-
-   /* Điện thoại nhỏ (<= 480px) */
-   @media (max-width: 480px) {
-      .header-banner {
-         height: 80px;
-      }
-
-      .logo img {
-         height: 40px;
-      }
-
-      .login-btn {
-         padding: 5px 8px;
-         font-size: 12px;
-      }
-
-      .header-dash {
-         padding: 8px 0;
-      }
-   }
-   /* Dropdown profile */
-   .profile-dropdown {
+    .header-content {
       position: relative;
-      display: inline-block;
-   }
+    }
+
+    .login-btn {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+  }
+
+  /* Điện thoại nhỏ (<= 480px) */
+  @media (max-width: 480px) {
+    .header-banner {
+      height: 80px;
+    }
+
+    .logo img {
+      height: 40px;
+    }
+
+    .login-btn {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    .header-dash {
+      padding: 8px 0;
+    }
+  }
+  /* Dropdown profile */
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
+}
 
    .dropdown-menu {
       position: absolute;
@@ -375,9 +377,11 @@
       background-color: #f0f0f0;
    }
 
-   /* Hiệu ứng xuất hiện */
-   @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-   }
+/* Hiệu ứng xuất hiện */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
 </style>

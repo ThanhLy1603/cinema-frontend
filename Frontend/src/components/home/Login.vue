@@ -15,8 +15,6 @@
                      type="text"
                      class="form-control"
                      placeholder="Nhập tài khoản"
-                     @input="removeSpaces('username')"
-                     @keydown.space.prevent
                      required
                   />
                </div>
@@ -29,8 +27,6 @@
                      type="password"
                      class="form-control"
                      placeholder="Nhập mật khẩu"
-                     @input="removeSpaces('password')"
-                     @keydown.space.prevent
                      required
                   />
                </div>
@@ -173,33 +169,33 @@
       padding: 8px 10px;
    }
 
-   .btn-success {
-      background-color: #94e900;
-      border: none;
-   }
-   .btn-success:hover {
-      background-color: #7ad000;
-   }
+  .btn-success {
+    background-color: #94e900;
+    border: none;
+  }
+  .btn-success:hover {
+    background-color: #7ad000;
+  }
 
-   .text-success:hover {
-      text-decoration: underline;
-   }
-   .auth-logo img {
-      height: 75px;
-      width: auto;
-   }
+  .text-success:hover {
+    text-decoration: underline;
+  }
+  .auth-logo img {
+    height: 75px;
+    width: auto;
+  }
 
-   /* 💫 Animation mượt */
-   @keyframes fadeInUp {
-      from {
-         opacity: 0;
-         transform: translateY(30px);
-      }
-      to {
-         opacity: 1;
-         transform: translateY(0);
-      }
-   }
+  /* 💫 Animation mượt */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
    @media (max-width: 480px) {
       .auth-wrapper {

@@ -17,6 +17,7 @@
               @blur="checkUsername"
               @input="removeSpaces('username')"
               @keydown.space.prevent
+              title="Vui lòng nhập tên đăng nhập"
               required
             />
             <small
@@ -223,7 +224,7 @@ const emailStatus = ref("");
 const form = reactive({
   username: "",
   fullName: "",
-  gender: "Nam",
+  gender: "",
   email: "",
   otp: "",
   password: "",
