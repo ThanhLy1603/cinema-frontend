@@ -33,7 +33,7 @@
 
                <!-- Quên mật khẩu -->
                <div class="text-end mb-4">
-                  <a href="#" class="text-success small text-decoration-none">Quên mật khẩu?</a>
+                  <router-link to="/forgot-password" class="text-success small text-decoration-none">Quên mật khẩu?</router-link>
                </div>
 
                <!-- Submit -->
