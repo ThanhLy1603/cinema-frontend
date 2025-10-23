@@ -98,7 +98,9 @@
 
   // 👉 Khi chọn "Trang cá nhân"
   function goProfile() {
-    router.push('/profile');
+    const userInfo = jwtDecode(token);
+    console.log("Thông tin user từ token:", userInfo);
+    router.push(`/auth/${userInfo.subject}`);
     profileMenuOpen.value = false;
   }
 

@@ -132,7 +132,7 @@
                 </p>
                 <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
               </div>
-              <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">
+              <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout()">
                 ĐĂNG XUẤT
               </button>
 
@@ -265,6 +265,18 @@ const fetchProfile = async () => {
     success.value = '';
   }
 };
+
+function logout() {
+    localStorage.removeItem('token');
+
+    router.push('/');
+    showToast("Đăng xuất thành công");
+
+    setTimeout(() => {
+      window.location.reload(); // reload để đồng bộ header
+    }, 500);
+
+  }
 
 onMounted(() => {
   console.log('🚀 Component mounted, fetching profile...');
