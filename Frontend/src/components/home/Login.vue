@@ -15,6 +15,8 @@
                      type="text"
                      class="form-control"
                      placeholder="Nhập tài khoản"
+                     @input="removeSpaces('username')"
+                     @keydown.space.prevent
                      required
                   />
                </div>
@@ -27,6 +29,8 @@
                      type="password"
                      class="form-control"
                      placeholder="Nhập mật khẩu"
+                     @input="removeSpaces('password')"
+                     @keydown.space.prevent
                      required
                   />
                </div>

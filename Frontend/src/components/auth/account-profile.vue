@@ -275,7 +275,6 @@ function logout() {
     setTimeout(() => {
       window.location.reload(); // reload để đồng bộ header
     }, 500);
-
   }
 
 onMounted(() => {
