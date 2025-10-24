@@ -19,7 +19,7 @@
    import { inject } from 'vue';
 
    // import các component con
-   import Movies from '../load/Movies.vue'
+   import Films from '../load/Films.vue'
    import Products from '../load/Products.vue'
    import Promotions from '../load/Promotions.vue'
    import Services from '../load/Services.vue'
@@ -31,7 +31,7 @@
    const $swal = inject("$swal");
 
    const componentsMap = {
-      Movies,
+      Films,
       Products,
       Promotions,
       Services,
