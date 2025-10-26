@@ -30,7 +30,7 @@
 
             <!-- Dropdown xuất hiện khi click -->
             <div v-if="profileMenuOpen" class="dropdown-menu">
-              <button @click="goProfile">Trang cá nhân</button>
+              <button @click="emitChange('accountProfile')">Trang cá nhân</button>
               <button @click="logout">Đăng xuất</button>
             </div>
           </div>

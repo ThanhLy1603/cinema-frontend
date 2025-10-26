@@ -22,12 +22,6 @@ const routes = [
     path: "/login",
     name: "Login",
     component: Login,
-  },
-  {
-    path: "/auth/:id",
-    name: "Profile",
-    component: AccountProfile,
-    meta: { requiresAuth: true } // Yêu cầu đăng nhập để truy cập
   }
 ];
 
