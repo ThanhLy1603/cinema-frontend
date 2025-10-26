@@ -106,16 +106,15 @@
 
   // 👉 Khi chọn "Đăng xuất"
   function logout() {
-    localStorage.removeItem('token');
+      localStorage.removeItem('token');
 
-    profileMenuOpen.value = false
-    router.push('/');
-    showToast("Đăng xuất thành công");
+      profileMenuOpen.value = false
+      router.push('/');
+      showToast("Đăng xuất thành công");
 
-    setTimeout(() => {
-      window.location.reload(); // reload để đồng bộ header
-    }, 500);
-
+      setTimeout(() => {
+         window.location.reload(); // reload để đồng bộ header
+      }, 500);
   }
 
   onMounted(() => {

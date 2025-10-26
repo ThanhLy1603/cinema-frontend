@@ -1,39 +1,39 @@
 <template>
-  <div class="auth-container">
-    <div class="auth-wrapper">
-      <div class="auth-card">
-        <div class="auth-logo text-center mb-3" @click="goHome" >
-          <img src="/src/assets/header/Logo.png" alt="Logo" />
-        </div>
-        <h4 class="fw-bold mb-4 text-center">Đăng nhập tài khoản</h4>
-        <form @submit.prevent="handleLogin()">
-          <!-- Email -->
-          <div class="mb-3">
-            <label class="form-label">Email *</label>
-            <input
-              v-model="form.username"
-              type="text"
-              class="form-control"
-              placeholder="Nhập tài khoản"
-              required
-            />
-          </div>
+   <div class="auth-container">
+      <div class="auth-wrapper">
+         <div class="auth-card">
+            <div class="auth-logo text-center mb-3" @click="goHome" >
+               <img src="/src/assets/header/Logo.png" alt="Logo" />
+            </div>
+            <h4 class="fw-bold mb-4 text-center">Đăng nhập tài khoản</h4>
+            <form @submit.prevent="handleLogin()">
+               <!-- Email -->
+               <div class="mb-3">
+                  <label class="form-label">Email *</label>
+                  <input
+                     v-model="form.username"
+                     type="text"
+                     class="form-control"
+                     placeholder="Nhập tài khoản"
+                     required
+                  />
+               </div>
 
-          <!-- Password -->
-          <div class="mb-3">
-            <label class="form-label">Mật khẩu *</label>
-            <input
-              v-model="form.password"
-              type="password"
-              class="form-control"
-              placeholder="Nhập mật khẩu"
-              required
-            />
-          </div>
+               <!-- Password -->
+               <div class="mb-3">
+                  <label class="form-label">Mật khẩu *</label>
+                  <input
+                     v-model="form.password"
+                     type="password"
+                     class="form-control"
+                     placeholder="Nhập mật khẩu"
+                     required
+                  />
+               </div>
 
                <!-- Quên mật khẩu -->
                <div class="text-end mb-4">
-                  <a href="#" class="text-success small text-decoration-none">Quên mật khẩu?</a>
+                  <router-link to="/forgot-password" class="text-success small text-decoration-none">Quên mật khẩu?</router-link>
                </div>
 
                <!-- Submit -->
@@ -93,6 +93,9 @@
          popup: 'text-alert'
          }
       });
+   }
+   function removeSpaces(field) {
+      form.value[field] = form.value[field].replace(/\s+/g, "");
    }
 
    function goHome() {
