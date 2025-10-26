@@ -2,7 +2,7 @@
    <div class="home">
       <!-- Header -->
       <div>
-         <Header @change-component="setCurrentComponent" />
+         <Header @change-component="setCurrentComponent"></Header>
       </div>
       <!-- Nội dung -->
       <div class="content-wrapper">
