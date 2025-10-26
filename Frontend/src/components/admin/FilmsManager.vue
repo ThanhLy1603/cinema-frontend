@@ -76,8 +76,9 @@
 import { ref } from "vue";
 
 export default {
-  name: "Films",
-  setup() {
+  name: "FilmsManager",
+  emits: ["open"], 
+  setup(props, { emit }) {
     const API_URL = "http://localhost:8080/api/films";
 
     const film = ref({
@@ -104,8 +105,9 @@ export default {
       }, 2500);
     }
 
+    // ✅ Sửa lại goBack: gửi sự kiện về cha, không dùng history.back()
     function goBack() {
-      history.back();
+      emit("open", null);
     }
 
     async function createFilm() {

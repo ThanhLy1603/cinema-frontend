@@ -1,72 +1,72 @@
 <template>
   <div class="admin-dashboard">
-    <aside class="sidebar">
-      <h2 class="logo">Admin</h2>
-      <nav>
-        <ul>
-          <li :class="{ active: isActive('/admin/films') }">
-            <router-link to="/admin/films">🎬 Quản lý phim</router-link>
-          </li>
-          <li>
-            <button class="logout-btn" @click="logout">Đăng xuất</button>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+    <Header></Header>
 
-    <main class="main-content">
-      <header class="topbar">
-        <h1>{{ pageTitle }}</h1>
-      </header>
-      <section class="content-area">
-        <!-- Đây là nơi hiển thị các component con (FilmsManager, v.v.) -->
-        <router-view />
-      </section>
+    <main class="admin-main">
+      <div class="breadcrumb">
+        <span @click="goBack" class="link">Hạng mục quản lý</span>
+        <template v-if="activeComponent">
+          <span> / </span>
+          <span>{{ activeTitle }}</span>
+        </template>
+      </div>
+
+      <div class="content-area">
+        <!-- Hiển thị component động -->
+        <component
+          :is="currentComponent"
+          @open="handleOpen"
+        />
+      </div>
     </main>
+
+    <footer class="footer">footer</footer>
   </div>
 </template>
 
 <script>
-import { ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, computed } from "vue";
+import Header from "../header/Header.vue";
+import AdminIndex from "../admin/AdminIndex.vue";
+import FilmsManager from "../admin/FilmsManager.vue";
 
 export default {
   name: "AdminDashboard",
+  components: { Header, AdminIndex, FilmsManager},
+
   setup() {
-    const route = useRoute();
-    const router = useRouter();
+    const activeComponent = ref(null);
 
-    const pageTitle = ref("Bảng điều khiển");
+    const components = {
+      AdminIndex,
+      FilmsManager,
+    };
 
-    function updateTitle() {
-      if (route.path.includes("films")) {
-        pageTitle.value = "Quản lý phim";
-      } else {
-        pageTitle.value = "Bảng điều khiển";
-      }
-    }
-
-    function isActive(path) {
-      return route.path === path;
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      router.push("/login");
-    }
-
-    watch(route, function () {
-      updateTitle();
+    const currentComponent = computed(function () {
+      return activeComponent.value ? components[activeComponent.value] : AdminIndex;
     });
 
-    // Gọi lần đầu
-    updateTitle();
+    const activeTitle = computed(function () {
+      var map = {
+        FilmsManager: "Phim",
+      };
+      return map[activeComponent.value] || "";
+    });
+
+    function handleOpen(componentName) {
+      activeComponent.value = componentName;
+    }
+
+    function goBack() {
+      activeComponent.value = null;
+    }
 
     return {
-      pageTitle,
-      isActive,
-      logout
+      activeComponent,
+      currentComponent,
+      activeTitle,
+      handleOpen,
+      goBack
     };
   }
 };
@@ -75,84 +75,31 @@ export default {
 <style scoped>
 .admin-dashboard {
   display: flex;
-  height: 100vh;
-  background: #f9fafb;
-  color: #111827;
-  overflow: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 240px;
-  background: #1f2937;
-  color: #fff;
-  display: flex;
   flex-direction: column;
-  padding: 20px;
+  min-height: 100vh;
 }
-.logo {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 24px;
-}
-.sidebar nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.sidebar nav li {
-  margin-bottom: 12px;
-}
-.sidebar nav a {
-  text-decoration: none;
-  color: #e5e7eb;
-  display: block;
-  padding: 10px 12px;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-.sidebar nav a:hover {
-  background: #374151;
-}
-.sidebar nav li.active a {
-  background: #2563eb;
-  color: #fff;
-}
-.logout-btn {
-  margin-top: 20px;
-  width: 100%;
-  background: #dc2626;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-.logout-btn:hover {
-  background: #b91c1c;
-}
-
-/* Main content */
-.main-content {
+.admin-main {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   background: #fff;
-}
-.topbar {
-  background: #f3f4f6;
-  padding: 14px 20px;
-  border-bottom: 1px solid #e5e7eb;
-}
-.topbar h1 {
-  margin: 0;
-  font-size: 20px;
-}
-.content-area {
-  flex: 1;
   padding: 20px;
-  overflow-y: auto;
+}
+.breadcrumb {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1a6d36;
+  border-left: 5px solid #1a6d36;
+  padding-left: 10px;
+  margin-bottom: 25px;
+}
+.breadcrumb .link {
+  cursor: pointer;
+  color: #1a6d36;
+}
+.footer {
+  background: #cbd5e1;
+  text-align: center;
+  padding: 20px;
+  font-size: 32px;
+  font-weight: bold;
 }
 </style>
