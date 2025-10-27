@@ -1,65 +1,92 @@
 <template>
    <div class="films-home">
-      <!-- Banner -->
+      <!-- =================== BANNER =================== -->
       <section class="banner-section position-relative">
-         <img :src="bannerSrc" alt="Banner" class="banner-img" />
-         <div class="banner-overlay">
-            <h1 class="display-4 fw-bold text-danger text-uppercase">Mùa Đỏ</h1>
-            <p class="fs-5 mb-3">Suất chiếu đặc biệt lúc 18:00 ngày 21.08.2025</p>
-            <div class="d-flex gap-3 justify-content-center">
-               <router-link class="btn btn-success" to="/booking">Mua vé ngay</router-link>
-               <router-link class="btn btn-outline-light" to="/info"
-                  >Thông tin chi tiết</router-link
-               >
-            </div>
+         <transition-group name="fade" tag="div" class="banner-wrapper">
+            <img
+               v-for="(banner, index) in banners"
+               :key="banner"
+               v-show="currentBanner === index"
+               :src="banner"
+               alt="Banner"
+               class="banner-img"
+            />
+         </transition-group>
+
+         <!-- NỘI DUNG TRONG BANNER -->
+         <div class="banner-content">
+            <router-link class="btn btn-success" to="/booking">Mua vé ngay</router-link>
+            <router-link class="btn btn-outline-light" to="/info">Thông tin chi tiết</router-link>
          </div>
       </section>
 
-      <!-- PHIM ĐANG CHIẾU -->
-      <section id="now" class="container py-5">
-         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h2 class="section-title fw-bold m-0">Phim đang chiếu</h2>
-         </div>
+      <!-- =================== PHIM ĐANG CHIẾU =================== -->
+      <section id="now" class="container-fluid section-films py-5">
+         <h2 class="section-title fw-bold mb-4">Phim đang chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
          </div>
 
          <div v-else class="row g-4">
-            <div class="col-6 col-md-4 col-lg-3" v-for="film in nowShowing" :key="film.id">
-               <div class="card film-card h-100 border-0 shadow-sm">
-                  <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
-                  <div class="card-body d-flex flex-column">
-                     <h5 class="card-title text-truncate">{{ film.name }}</h5>
-                     <p class="card-text text-muted small mb-2">
-                        {{ film.country }} • {{ film.duration }} phút
-                     </p>
-                     <div class="mt-auto d-flex gap-2">
-                        <router-link
-                           :to="`/film/${film.id}`"
-                           class="btn btn-sm btn-success flex-grow-1"
-                           >Chi tiết</router-link
-                        >
-                        <button class="btn btn-sm btn-outline-secondary" @click="openTrailer(film)">
-                           Trailer
-                        </button>
+            <div v-if="nowShowing.length">
+               <div v-for="film in nowShowing" :key="film.id" class="col-6 col-md-4 col-lg-3">
+                  <div class="card film-card h-100 border-0 shadow-sm">
+                     <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
+                     <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">{{ film.name }}</h5>
+                        <p class="card-text text-muted small mb-2">
+                           {{ film.country }} • {{ film.duration }} phút
+                        </p>
+                        <div class="mt-auto d-flex gap-2">
+                           <router-link
+                              :to="`/film/${film.id}`"
+                              class="btn btn-sm btn-success flex-grow-1"
+                              >Chi tiết</router-link
+                           >
+                           <button
+                              class="btn btn-sm btn-outline-secondary"
+                              @click="openTrailer(film)"
+                           >
+                              Trailer
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>
             </div>
-            <div v-if="!nowShowing.length" class="text-center text-muted py-5">
-               Chưa có phim đang chiếu.
+            <div v-else class="text-center text-muted py-5">Chưa có phim đang chiếu.</div>
+         </div>
+
+         <div v-if="nowShowingFunc().length > 4" class="text-center mt-4">
+            <button class="btn btn-outline-success px-4" @click="showAllNow = !showAllNow">
+               {{ showAllNow ? 'Thu gọn' : 'Xem thêm' }}
+            </button>
+         </div>
+      </section>
+
+      <!-- =================== ƯU ĐÃI / KHUYẾN MÃI =================== -->
+      <section id="offers" class="offers-section py-5 text-center">
+         <h2 class="section-title fw-bold mb-4">Ưu đãi & khuyến mãi</h2>
+
+         <div class="container-fluid px-4">
+            <div class="row g-4 justify-content-center">
+               <div v-for="promo in promotions" :key="promo.id" class="col-12 col-md-6 col-lg-4">
+                  <div class="card promo-card border-0 shadow-sm h-100">
+                     <img :src="promo.image" class="card-img-top" :alt="promo.title" />
+                     <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ promo.title }}</h5>
+                        <p class="card-text text-muted small">{{ promo.description }}</p>
+                        <button class="btn btn-outline-success btn-sm mt-2">Xem chi tiết</button>
+                     </div>
+                  </div>
+               </div>
             </div>
          </div>
       </section>
 
-      <!-- ƯU ĐÃI -->
-      <section id="offers" class="py-5">
-         <Promotions />
-      </section>
-
-      <!-- PHIM SẮP CHIẾU -->
-      <section id="coming" class="container py-5">
+      <!-- =================== PHIM SẮP CHIẾU =================== -->
+      <section id="coming" class="container-fluid section-films py-5">
          <h2 class="section-title fw-bold mb-4">Phim sắp chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
@@ -67,88 +94,124 @@
          </div>
 
          <div v-else class="row g-4">
-            <div class="col-6 col-md-4 col-lg-3" v-for="film in comingSoon" :key="film.id">
-               <div class="card film-card h-100 border-0 shadow-sm">
-                  <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
-                  <div class="card-body d-flex flex-column">
-                     <h5 class="card-title text-truncate">{{ film.name }}</h5>
-                     <p class="card-text text-muted small mb-2">
-                        {{ film.country }} • {{ film.duration }} phút
-                     </p>
-                     <div class="mt-auto d-flex gap-2">
-                        <router-link
-                           :to="`/film/${film.id}`"
-                           class="btn btn-sm btn-outline-success flex-grow-1"
-                           >Chi tiết</router-link
-                        >
-                        <button class="btn btn-sm btn-outline-secondary" @click="openTrailer(film)">
-                           Trailer
-                        </button>
+            <template v-if="comingSoon.length">
+               <div v-for="film in comingSoon" :key="film.id" class="col-6 col-md-4 col-lg-3">
+                  <div class="card film-card h-100 border-0 shadow-sm">
+                     <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
+                     <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">{{ film.name }}</h5>
+                        <p class="card-text text-muted small mb-2">
+                           {{ film.country }} • {{ film.duration }} phút
+                        </p>
+                        <div class="mt-auto d-flex gap-2">
+                           <router-link
+                              :to="`/film/${film.id}`"
+                              class="btn btn-sm btn-outline-success flex-grow-1"
+                              >Chi tiết</router-link
+                           >
+                           <button
+                              class="btn btn-sm btn-outline-secondary"
+                              @click="openTrailer(film)"
+                           >
+                              Trailer
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>
-            </div>
-            <div v-if="!comingSoon.length" class="text-center text-muted py-5">
-               Chưa có phim sắp chiếu.
-            </div>
+            </template>
+            <div v-else class="text-center text-muted py-5">Chưa có phim sắp chiếu.</div>
+         </div>
+
+         <div v-if="comingSoonFunc().length > 4" class="text-center mt-4">
+            <button class="btn btn-outline-success px-4" @click="showAllComing = !showAllComing">
+               {{ showAllComing ? 'Thu gọn' : 'Xem thêm' }}
+            </button>
          </div>
       </section>
 
-      <!-- FOOTER -->
+      <!-- =================== FOOTER =================== -->
       <footer class="text-center py-4 bg-dark text-white">
          <p class="mb-0">© 2025 VietCine. All Rights Reserved.</p>
       </footer>
-
-      <!-- MODAL TRAILER -->
-      <div class="modal fade" id="trailerModal" tabindex="-1" ref="trailerModalRef">
-         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0">
-               <div class="modal-header">
-                  <h5 class="modal-title">{{ currentFilm?.name || 'Trailer' }}</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-               </div>
-               <div class="modal-body p-0">
-                  <div class="ratio ratio-16x9">
-                     <video v-if="trailerSrc" :src="trailerSrc" controls autoplay></video>
-                     <div
-                        v-else
-                        class="d-flex align-items-center justify-content-center text-muted py-5"
-                     >
-                        Chưa có trailer.
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
    </div>
 </template>
 
 <script setup>
    import axios from 'axios';
-   import { ref, onMounted, computed } from 'vue';
-   import Promotions from '../load/Promotions.vue';
+   import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
-   var API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-   var IMAGE_URL = import.meta.env.VITE_IMAGE_URL || '';
-   var VIDEO_URL = import.meta.env.VITE_VIDEO_URL || '';
+   /* =================== CONFIG =================== */
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || '';
+   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL || '';
 
-   var films = ref([]);
-   var loading = ref(true);
-   var bannerSrc = '/banner.jpg';
+   /* =================== STATE =================== */
+   const films = ref([]);
+   const loading = ref(true);
+   const currentFilm = ref(null);
+   const trailerSrc = ref('');
+   const trailerModalRef = ref(null);
+   const bsModal = null;
 
-   var currentFilm = ref(null);
-   var trailerSrc = ref('');
-   var trailerModalRef = ref(null);
-   var bsModal = null;
+   const showAllNow = ref(false);
+   const showAllComing = ref(false);
 
-   // === Lấy dữ liệu phim ===
+   /* =================== BANNERS =================== */
+   const banners = [
+      new URL('../../assets/banner/MuaDo.jpg', import.meta.url).href,
+      new URL('../../assets/banner/Avatar3.jpg', import.meta.url).href,
+      new URL('../../assets/banner/PlayWithMe.jpg', import.meta.url).href,
+   ];
+
+   const currentBanner = ref(0);
+   const bannerTimer = null;
+
+   function nextBanner() {
+      currentBanner.value = (currentBanner.value + 1) % banners.length;
+   }
+
+   onMounted(function () {
+      bannerTimer = setInterval(nextBanner, 5000);
+   });
+
+   onBeforeUnmount(function () {
+      if (bannerTimer) {
+         clearInterval(bannerTimer);
+      }
+   });
+
+   /* =================== ƯU ĐÃI =================== */
+   const promotions = [
+      {
+         id: 1,
+         title: 'Giảm 50% vé 2D ngày thứ 3',
+         description: 'Áp dụng cho tất cả các suất chiếu trước 18h.',
+         image: new URL('../../assets/banner/Promo1.jpg', import.meta.url).href,
+      },
+      {
+         id: 2,
+         title: 'Combo bắp nước chỉ 69k',
+         description: 'Mua combo bắp + nước lớn với giá siêu tiết kiệm!',
+         image: new URL('../../assets/banner/Promo2.jpg', import.meta.url).href,
+      },
+      {
+         id: 3,
+         title: 'Thành viên VietCine giảm 20%',
+         description: 'Ưu đãi đặc biệt dành riêng cho khách hàng thân thiết.',
+         image: new URL('../../assets/banner/Promo3.jpg', import.meta.url).href,
+      },
+   ];
+
+   /* =================== PHIM =================== */
    async function getFilms() {
       try {
-         var res = await axios.get(API_BASE_URL + '/films');
-         films.value = Array.isArray(res.data) ? res.data : [];
-
-         console.log("films: ", films.value);
+         const res = await axios.get(API_BASE_URL + '/films');
+         if (Array.isArray(res.data)) {
+            films.value = res.data;
+         } else {
+            films.value = [];
+         }
       } catch (err) {
          console.error('Lỗi khi lấy danh sách phim:', err.message);
       } finally {
@@ -156,38 +219,43 @@
       }
    }
 
-   onMounted(async function () {
-      await getFilms();
+   onMounted(function () {
+      getFilms();
       if (window.bootstrap && trailerModalRef.value) {
          bsModal = new window.bootstrap.Modal(trailerModalRef.value);
       }
    });
 
-   // === Xử lý dữ liệu ===
-   function nowShowingFunc() {
+   function filterFilms(statusList) {
       return films.value.filter(function (f) {
-         return f.status === 'NOW_SHOWING';
+         return statusList.includes(f.status?.toLowerCase());
       });
+   }
+
+   function nowShowingFunc() {
+      return filterFilms(['active', 'now_showing']);
    }
 
    function comingSoonFunc() {
-      return films.value.filter(function (f) {
-         return f.status === 'COMING_SOON';
-      });
+      return filterFilms(['upcoming', 'coming_soon']);
    }
 
-   var nowShowing = computed(function () {
-      return nowShowingFunc();
-   });
-   var comingSoon = computed(function () {
-      return comingSoonFunc();
+   const nowShowing = computed(function () {
+      const list = nowShowingFunc();
+      return showAllNow.value ? list : list.slice(0, 4);
    });
 
-   // === Helpers ===
+   const comingSoon = computed(function () {
+      const list = comingSoonFunc();
+      return showAllComing.value ? list : list.slice(0, 4);
+   });
+
+   /* =================== HELPERS =================== */
    function posterSrc(poster) {
       if (poster && poster.startsWith('http')) return poster;
       return IMAGE_URL + poster;
    }
+   // === Helpers ===
 
    function videoSrc(trailer) {
       if (!trailer) return '';
@@ -203,39 +271,86 @@
 </script>
 
 <style scoped>
+   /* =================== GLOBAL =================== */
    .films-home {
       background-color: #f9fafb;
       font-family: 'Montserrat', sans-serif;
    }
 
-   /* Banner */
+   /* =================== BANNER =================== */
    .banner-section {
-      height: 480px;
+      position: relative;
+      width: 100%;
+      height: 90vh;
       overflow: hidden;
+      background-color: #000;
+   }
+   .banner-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
    }
    .banner-img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.6);
+      transition: opacity 1s ease-in-out;
+      filter: brightness(1);
    }
-   .banner-overlay {
+   .fade-enter-active,
+   .fade-leave-active {
+      transition: opacity 1s ease;
+   }
+   .fade-enter-from,
+   .fade-leave-to {
+      opacity: 0;
+   }
+   .banner-content {
       position: absolute;
-      inset: 0;
+      bottom: 6%;
+      left: 5%;
+      z-index: 10;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      text-align: center;
+      gap: 12px;
+   }
+   .banner-content .btn {
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 0.6rem 1.4rem;
+      margin-right: 10px;
    }
 
-   /* Titles */
+   /* =================== ƯU ĐÃI =================== */
+   .offers-section {
+      background: linear-gradient(135deg, #f8fff8, #e9f9ec);
+   }
+   .promo-card {
+      transition:
+         transform 0.3s ease,
+         box-shadow 0.3s ease;
+   }
+   .promo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+   }
+   .promo-card img {
+      height: 220px;
+      object-fit: cover;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+   }
+
+   /* =================== PHIM =================== */
+   .section-films {
+      padding-left: 4%;
+      padding-right: 4%;
+   }
    .section-title {
       letter-spacing: 1px;
    }
-
-   /* Film card */
    .film-card img {
       transition: transform 0.3s ease;
       border-top-left-radius: 10px;
@@ -245,12 +360,34 @@
       transform: scale(1.05);
    }
 
-   /* Offers */
-   .offers-section {
-      background: linear-gradient(135deg, #f0fdf4, #d1fae5);
+   /* =================== RESPONSIVE =================== */
+   @media (max-width: 1024px) {
+      .banner-section {
+         height: 70vh;
+      }
+      .banner-content {
+         left: 4%;
+      }
+   }
+   @media (max-width: 768px) {
+      .banner-section {
+         height: 60vh;
+      }
+      .banner-content {
+         left: 3%;
+         top: 55%;
+      }
+   }
+   @media (max-width: 480px) {
+      .banner-section {
+         height: 55vh;
+      }
+      .banner-content {
+         left: 2%;
+      }
    }
 
-   /* Footer */
+   /* =================== FOOTER =================== */
    footer {
       background: #111;
       color: #ccc;
