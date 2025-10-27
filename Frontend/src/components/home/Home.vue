@@ -2,7 +2,7 @@
    <div class="home">
       <!-- Header -->
       <div>
-         <Header @change-component="setCurrentComponent" />
+         <Header @change-component="setCurrentComponent"></Header>
       </div>
       <!-- Nội dung -->
       <div class="content-wrapper">
@@ -26,7 +26,7 @@
    import About from '../load/About.vue'
    import AccountProfile from '../auth/AccountProfile.vue';
 
-   const current = ref('Movies'); // mặc định load trang phim
+   const current = ref('Films'); // mặc định load trang phim
 
    const $swal = inject("$swal");
 
