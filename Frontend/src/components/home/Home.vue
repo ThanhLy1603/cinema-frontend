@@ -26,7 +26,7 @@
    import About from '../load/About.vue'
    import accountProfile from '../auth/account-profile.vue';
 
-   const current = ref('Movies'); // mặc định load trang phim
+   const current = ref('Films'); // mặc định load trang phim
 
    const $swal = inject("$swal");
 
