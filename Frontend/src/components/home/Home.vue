@@ -24,7 +24,7 @@
    import Promotions from '../load/Promotions.vue'
    import Services from '../load/Services.vue'
    import About from '../load/About.vue'
-   import accountProfile from '../auth/account-profile.vue';
+   import AccountProfile from '../auth/AccountProfile.vue';
 
    const current = ref('Movies'); // mặc định load trang phim
 
@@ -36,7 +36,7 @@
       Promotions,
       Services,
       About,
-      accountProfile
+      AccountProfile
    }
 
    const currentComponent = computed(() => componentsMap[current.value])

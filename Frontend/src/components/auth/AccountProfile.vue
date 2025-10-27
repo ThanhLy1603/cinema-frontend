@@ -218,6 +218,10 @@
 
    const router = useRouter();
    const route = useRoute();
+   
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
+   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL;
 
    const form = ref({
       lastName: '',

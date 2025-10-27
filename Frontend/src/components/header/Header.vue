@@ -1,5 +1,4 @@
 <template>
-<<<<<<< HEAD
    <header class="main-header">
       <div class="header-banner">
          <img
@@ -7,54 +6,8 @@
             class="header-bg"
             alt="Header background"
          />
-=======
-  <header class="main-header">
-    <div class="header-banner">
-      <img src="/src/assets/header/banner_header.jpg" class="header-bg" alt="Header background" />
-    </div>
-    <div class="header-dash">
-      <div class="header-content">
-        <div class="logo">
-          <router-link to="/">
-            <img src="/src/assets/header/Logo.png" alt="VietCine Logo" />
-          </router-link>
-        </div>
-
-        <!-- Menu chính -->
-        <nav :class="['menu', { active: menuOpen }]">
-          <button @click="emitChange('Movies')">PHIM</button>
-          <button @click="emitChange('Products')">THỨC ĂN & NƯỚC UỐNG</button>
-          <button @click="emitChange('Promotions')">ƯU ĐÃI & KHUYẾN MÃI</button>
-          <button @click="emitChange('Services')">DỊCH VỤ & TIỆN ÍCH</button>
-          <button @click="emitChange('About')">GIỚI THIỆU</button>
-        </nav>
-
-        <!-- Nhóm bên phải -->
-        <div class="right-group">
-          <!-- Nếu đã đăng nhập -->
-          <div v-if="token" class="profile-dropdown" @click="toggleProfileMenu">
-            <button class="login-btn">
-              👤 HỒ SƠ
-            </button>
-
-            <!-- Dropdown xuất hiện khi click -->
-            <div v-if="profileMenuOpen" class="dropdown-menu">
-              <button @click="emitChange('accountProfile')">Trang cá nhân</button>
-              <button @click="logout">Đăng xuất</button>
-            </div>
-          </div>
-
-          <!-- Nếu chưa đăng nhập -->
-          <button v-else class="login-btn" @click="router.push('/login')">
-            ĐĂNG NHẬP
-          </button>
-
-          <div class="menu-toggle" @click="toggleMenu">
-            {{ menuOpen ? "✕" : "☰" }}
-          </div>
-        </div>
->>>>>>> origin/Quan
       </div>
+
       <div class="header-dash">
          <div class="header-content">
             <div class="logo">
@@ -80,7 +33,7 @@
 
                   <!-- Dropdown xuất hiện khi click -->
                   <div v-if="profileMenuOpen" class="dropdown-menu">
-                     <button @click="emitChange('accountProfile')">Trang cá nhân</button>
+                     <button @click="emitChange('AccountProfile')">Trang cá nhân</button>
                      <button @click="logout">Đăng xuất</button>
                   </div>
                </div>
@@ -88,6 +41,7 @@
                <!-- Nếu chưa đăng nhập -->
                <button v-else class="login-btn" @click="router.push('/login')">ĐĂNG NHẬP</button>
 
+               <!-- Nút menu di động -->
                <div class="menu-toggle" @click="toggleMenu">
                   {{ menuOpen ? '✕' : '☰' }}
                </div>
