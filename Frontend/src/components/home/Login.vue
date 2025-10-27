@@ -74,6 +74,8 @@
       password: '',
    });
 
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
    // ✅ Fix lỗi decode token khi chưa tồn tại
    let decoded = null;
    const token = localStorage.getItem('token');
@@ -126,7 +128,7 @@
    async function handleLogin() {
       if (isCheckValation()) {
          try {
-            const url = 'http://localhost:8080/api/auth/login';
+            const url = `${API_BASE_URL}/auth/login`;
             const payload = {
                username: form.value.username,
                password: form.value.password,

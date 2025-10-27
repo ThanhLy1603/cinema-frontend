@@ -1,40 +1,65 @@
 <template>
    <div class="container account-page my-5">
-      <h4 class="text-center mb-4 fw-bold">Tài khoản</h4>
+      <h4 class="text-center mb-4 fw-bold">Thông tin cá nhân</h4>
       <div class="row g-4">
          <!-- LEFT COLUMN -->
          <div class="col-lg-8">
             <div class="card p-4 shadow-sm">
                <div class="d-flex align-items-center mb-3">
-                  <img
-                     :src="form.avatarUrl"
+                  <!-- <img
+                     :src="`${IMAGE_URL + form.avatarUrl || 'https://via.placeholder.com/100x100.png?text=Avatar'}`"
                      alt="Avatar"
                      class="rounded-circle me-3 border"
                      style="width: 100px; height: 100px; object-fit: cover"
-                  />
+                  /> -->
+
+                  <div class="position-relative d-inline-block mb-3">
+                     <!-- Avatar hiển thị -->
+                     <img
+                        :src="
+                           form.avatarPreview ||
+                           (form.avatarUrl
+                              ? IMAGE_URL + form.avatarUrl
+                              : 'https://via.placeholder.com/100x100.png?text=Avatar')
+                        "
+                        alt="Avatar"
+                        class="rounded-circle border"
+                        style="width: 120px; height: 120px; object-fit: cover"
+                     />
+
+                     <!-- Icon tải ảnh -->
+                     <label
+                        v-if="isEditing"
+                        for="avatar-upload"
+                        class="camera-btn position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow"
+                        style="width: 32px; height: 32px; cursor: pointer; border: 2px solid white"
+                     >
+                        <i class="bi bi-camera-fill" style="font-size: 16px"></i>
+                     </label>
+
+                     <!-- Input file ẩn -->
+                     <input
+                        v-if="isEditing"
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        @change="previewAvatar"
+                        style="display: none"
+                     />
+                  </div>
+
                   <div>
-                     <h5 class="fw-semibold mb-1">{{ form.lastName + ' ' + form.firstName }}</h5>
+                     <h5 class="fw-semibold mb-1">{{ form.firstName + ' ' + form.lastName }}</h5>
                   </div>
                </div>
 
-               <div v-if="error" class="alert alert-danger">{{ error }}</div>
-               <div v-if="success" class="alert alert-success">{{ success }}</div>
+               <!-- <div v-if="error" class="alert alert-danger">{{ error }}</div>
+               <div v-if="success" class="alert alert-success">{{ success }}</div> -->
 
                <form @submit.prevent="updateInfo">
                   <div class="row">
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Họ *</label>
-                        <input
-                           v-model="form.lastName"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.lastName }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.lastName }}</div>
-                     </div>
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Tên đệm và tên *</label>
                         <input
                            v-model="form.firstName"
                            type="text"
@@ -43,6 +68,17 @@
                            :disabled="!isEditing"
                         />
                         <div class="invalid-feedback">{{ errors.firstName }}</div>
+                     </div>
+                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên đệm và tên *</label>
+                        <input
+                           v-model="form.lastName"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.lastName }"
+                           :disabled="!isEditing"
+                        />
+                        <div class="invalid-feedback">{{ errors.lastName }}</div>
                      </div>
                      <div class="col-12 mb-3">
                         <label class="form-label">Email *</label>
@@ -85,6 +121,7 @@
                            class="form-select"
                            :class="{ 'is-invalid': errors.gender }"
                            :disabled="!isEditing"
+                           required
                         >
                            <option value="">Chọn giới tính</option>
                            <option value="true">Nam</option>
@@ -101,6 +138,7 @@
                               class="form-select"
                               :class="{ 'is-invalid': errors.dob }"
                               :disabled="!isEditing"
+                              required
                            >
                               <option value="">Ngày</option>
                               <option v-for="d in 31" :key="d" :value="d">
@@ -112,10 +150,11 @@
                               class="form-select"
                               :class="{ 'is-invalid': errors.dob }"
                               :disabled="!isEditing"
+                              required
                            >
                               <option value="">Tháng</option>
-                              <option v-for="m in 12" :key="m" :value="m">
-                                 {{ m.toString().padStart(2, '0') }}
+                              <option v-for="month in 12" :key="month" :value="month">
+                                 {{ month.toString().padStart(2, '0') }}
                               </option>
                            </select>
                            <select
@@ -172,14 +211,14 @@
                      <button
                         v-if="isEditing"
                         type="submit"
-                        class="btn btn-success px-4 fw-semibold"
+                        class="btn btn-success px-4 fw-semibold mx-2"
                      >
                         CẬP NHẬT
                      </button>
                      <button
                         v-if="isEditing"
                         type="button"
-                        class="btn btn-outline-secondary ms-2"
+                        class="btn btn-outline-secondary ms-2 mx-2"
                         @click="isEditing = false"
                      >
                         HỦY
@@ -192,18 +231,62 @@
          <!-- RIGHT COLUMN -->
          <div class="col-lg-4">
             <div class="card p-4 shadow-sm text-center">
-               <img
-                  src="https://api.qrserver.com/v1/create-qr-code/?data=ONL2311348&size=120x120"
-                  alt="QR Code"
-                  class="mx-auto mb-3"
-               />
                <div class="text-start small mb-3">
                   <p class="mb-1"><strong>Tên đăng nhập:</strong> {{ form.email }}</p>
                   <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
                </div>
-               <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout()">
+               <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">
                   ĐĂNG XUẤT
                </button>
+
+               <!-- Form đổi mật khẩu -->
+               <div v-if="showChangePassword" class="mt-4">
+                  <h5 class="fw-semibold mb-3">Đổi mật khẩu</h5>
+                  <form @submit.prevent="changePassword">
+                     <div class="mb-3">
+                        <label class="form-label">Mật khẩu cũ *</label>
+                        <input
+                           v-model="passwordForm.oldPassword"
+                           type="password"
+                           class="form-control form-control-sm"
+                           :class="{ 'is-invalid': errors.oldPassword }"
+                        />
+                        <div class="invalid-feedback">{{ errors.oldPassword }}</div>
+                     </div>
+                     <div class="mb-3">
+                        <label class="form-label">Mật khẩu mới *</label>
+                        <input
+                           v-model="passwordForm.newPassword"
+                           type="password"
+                           class="form-control form-control-sm"
+                           :class="{ 'is-invalid': errors.newPassword }"
+                        />
+                        <div class="invalid-feedback">{{ errors.newPassword }}</div>
+                     </div>
+                     <div class="mb-3">
+                        <label class="form-label">Xác nhận mật khẩu *</label>
+                        <input
+                           v-model="passwordForm.confirmPassword"
+                           type="password"
+                           class="form-control form-control-sm"
+                           :class="{ 'is-invalid': errors.confirmPassword }"
+                        />
+                        <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
+                     </div>
+                     <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold mx-2">
+                           LƯU MẬT KHẨU
+                        </button>
+                        <button
+                           type="button"
+                           class="btn btn-outline-secondary btn-sm ms-2 mx-2"
+                           @click="showChangePassword = false"
+                        >
+                           HỦY
+                        </button>
+                     </div>
+                  </form>
+               </div>
             </div>
          </div>
       </div>
@@ -215,13 +298,12 @@
    import { useRouter, useRoute } from 'vue-router';
    import axios from 'axios';
    import { onMounted } from 'vue';
+   import { jwtDecode } from 'jwt-decode';
+   import { inject } from 'vue';
 
    const router = useRouter();
-   const route = useRoute();
-   
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
-   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL;
+   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || '';
 
    const form = ref({
       lastName: '',
@@ -235,12 +317,53 @@
       city: '',
       address: '',
       avatarUrl: '',
+      avatarPreview: '',
+   });
+
+   const passwordForm = ref({
+      oldPassword: '',
+      newPassword: '',
    });
 
    const errors = ref({});
    const error = ref('');
    const success = ref('');
    const isEditing = ref(false); // Trạng thái chỉnh sửa
+   const token = localStorage.getItem('token') || null;
+   const showChangePassword = ref(false);
+   const $swal = inject('$swal');
+
+   const selectedAvatarFile = ref();
+
+   function previewAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Kiểm tra file hợp lệ
+      if (!file.type.startsWith('image/')) {
+         alert('Vui lòng chọn file hình ảnh hợp lệ!');
+         return;
+      }
+
+      // Tạo URL preview tạm thời
+      form.value.avatarPreview = URL.createObjectURL(file);
+      selectedAvatarFile.value = file;
+   }
+
+   function showToast(message) {
+      const toastConfig = $swal.mixin({
+         toast: true,
+         position: 'top-end',
+         showConfirmButton: false,
+         timerProgressBar: true,
+         timer: 1500,
+      });
+
+      toastConfig.fire({
+         icon: 'success',
+         title: message || 'Vui lòng nhập thông báo',
+      });
+   }
 
    function checkValidate() {
       errors.value = {};
@@ -299,29 +422,42 @@
    }
 
    // Update Profile
-   const updateInfo = async () => {
+   async function updateInfo() {
       const { valid } = checkValidate();
       if (!valid) return;
 
       try {
          const userInfo = jwtDecode(token);
-         const payload = {
-            firstName: form.value.firstName,
-            lastName: form.value.lastName,
-            phone: form.value.phone,
-            email: form.value.email,
-            gender: form.value.gender,
-            day: form.value.day,
-            month: form.value.month,
-            year: form.value.year,
-            address: `${form.value.address}, ${form.value.city}`,
-         };
+
+         // Tạo formData thay vì JSON thông thường
+         const formData = new FormData();
+         formData.append('firstName', form.value.firstName);
+         formData.append('lastName', form.value.lastName);
+         formData.append('phone', form.value.phone);
+         formData.append('email', form.value.email);
+         formData.append('gender', form.value.gender);
+         formData.append('day', form.value.day);
+         formData.append('month', form.value.month);
+         formData.append('year', form.value.year);
+         formData.append('address', `${form.value.address}, ${form.value.city}`);
+
+         // Nếu có ảnh mới thì thêm vào formData
+         if (selectedAvatarFile.value) {
+            formData.append('avatarUrl', selectedAvatarFile.value);
+         }
+
+         console.log('select avatar: ', selectedAvatarFile.value);
+
+         console.log('Form data: ', formData);
 
          const response = await axios.put(
-            `http://localhost:8080/api/auth/${userInfo.subject}/updateprofile`,
-            payload,
+            `${API_BASE_URL}/auth/${userInfo.subject}/update-profile`,
+            formData,
             {
-               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+               headers: {
+                  Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  'Content-Type': 'multipart/form-data',
+               },
             }
          );
 
@@ -333,7 +469,7 @@
          error.value = err.response?.data?.message || 'Lỗi khi cập nhật thông tin';
          success.value = '';
       }
-   };
+   }
 
    const years = computed(() => {
       const arr = [];
@@ -342,12 +478,11 @@
    });
 
    // Lấy thông tin profile khi component được tạo
-   const fetchProfile = async () => {
+   async function getProfile() {
       try {
-         console.log(' Đang lấy profile cho user:', route.params.id);
-         const response = await axios.get(`http://localhost:8080/api/auth/${route.params.id}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-         });
+         const userInfo = jwtDecode(token);
+         console.log(' Đang lấy profile cho user:', userInfo);
+         const response = await axios.get(`${API_BASE_URL}/auth/${userInfo.subject}`);
          const data = response.data;
          console.log(' Dữ liệu hồ sơ nhận được:', data);
 
@@ -372,6 +507,61 @@
       }
    };
 
+   // validate đổi mật khẩu
+   const validatePasswordForm = () => {
+      errors.value = {};
+      let valid = true; // Khai báo biến valid
+
+      if (!passwordForm.value.oldPassword) {
+         errors.value.oldPassword = 'Mật khẩu cũ là bắt buộc';
+         valid = false;
+      }
+
+      if (!passwordForm.value.newPassword || passwordForm.value.newPassword.length < 6) {
+         errors.value.newPassword = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+         valid = false;
+      }
+
+      if (
+         !passwordForm.value.confirmPassword ||
+         passwordForm.value.confirmPassword !== passwordForm.value.newPassword
+      ) {
+         errors.value.confirmPassword = 'Xác nhận mật khẩu không khớp';
+         valid = false;
+      }
+
+      return valid;
+   };
+   // Đổi mật khẩu
+   async function changePassword() {
+      if (!validatePasswordForm()) return;
+
+      try {
+         const userInfo = jwtDecode(token);
+         const payload = {
+            oldPassword: passwordForm.value.oldPassword,
+            newPassword: passwordForm.value.newPassword,
+         };
+         console.log('JWT Token:', token);
+
+         console.log('payload change password: ', payload);
+         console.log('user: ', userInfo.subject);
+         const response = await axios.put(
+            `${API_BASE_URL}/auth/${userInfo.subject}/change-password`,
+            payload,
+            {
+               headers: { Authorization: `Bearer ${token}` },
+            }
+         );
+         success.value = response.data.message;
+         error.value = '';
+         passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' };
+         showChangePassword.value = false;
+      } catch (err) {
+         error.value = err.response?.data?.message || 'Lỗi khi đổi mật khẩu';
+      }
+   }
+
    function logout() {
       localStorage.removeItem('token');
 
@@ -384,14 +574,15 @@
    }
 
    onMounted(() => {
-      console.log('🚀 Component mounted, fetching profile...');
-      fetchProfile(); // ✅ GỌI TỰ ĐỘNG
+      console.log('Component mounted, fetching profile...');
+      getProfile(); // ✅ GỌI TỰ ĐỘNG
    });
 </script>
 
 <style scoped>
    .account-page .card {
       border-radius: 15px;
+      transition: box-shadow 0.2s ease-in-out;
    }
 
    .account-page label {
@@ -416,5 +607,106 @@
       border: 1px solid #ccc;
       padding: 4px;
       border-radius: 10px;
+   }
+
+   .camera-btn {
+      bottom: 4px;
+      right: 4px;
+      width: 34px;
+      height: 34px;
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease-in-out;
+   }
+
+   .camera-btn:hover {
+      background-color: #0a58ca;
+      transform: scale(1.05);
+   }
+
+   /* -------------------------- */
+   /* 🎯 RESPONSIVE STYLING */
+   /* -------------------------- */
+
+   /* Mobile (≤576px) */
+   @media (max-width: 576px) {
+      .account-page {
+         padding: 10px;
+      }
+
+      .account-page .card {
+         padding: 1rem !important;
+      }
+
+      .account-page h4 {
+         font-size: 1.2rem;
+      }
+
+      .account-page img.rounded-circle {
+         width: 90px !important;
+         height: 90px !important;
+      }
+
+      .camera-btn {
+         width: 28px;
+         height: 28px;
+         font-size: 14px;
+         bottom: 2px;
+         right: 2px;
+      }
+
+      .account-page .row {
+         flex-direction: column;
+      }
+
+      .account-page .col-lg-8,
+      .account-page .col-lg-4 {
+         width: 100%;
+      }
+
+      .account-page .btn {
+         font-size: 0.9rem;
+      }
+
+      .account-page .form-select,
+      .account-page .form-control {
+         font-size: 0.9rem;
+      }
+   }
+
+   /* Tablet (577px - 991px) */
+   @media (min-width: 577px) and (max-width: 991px) {
+      .account-page {
+         padding: 20px;
+      }
+
+      .account-page img.rounded-circle {
+         width: 110px !important;
+         height: 110px !important;
+      }
+
+      .account-page .card {
+         padding: 1.5rem !important;
+      }
+
+      .account-page h4 {
+         font-size: 1.4rem;
+      }
+
+      .account-page .form-label {
+         font-size: 0.95rem;
+      }
+   }
+
+   /* Desktop (≥992px) */
+   @media (min-width: 992px) {
+      .account-page {
+         padding: 40px;
+      }
+
+      .account-page h4 {
+         font-size: 1.6rem;
+      }
    }
 </style>

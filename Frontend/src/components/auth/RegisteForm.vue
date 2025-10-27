@@ -225,6 +225,8 @@
    const usernameStatus = ref('');
    const emailStatus = ref('');
 
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
    const form = reactive({
       username: '',
       fullName: '',
@@ -291,7 +293,7 @@
          return showAlertToast('⚠️ ' + emailStatus.value + '. Vui lòng nhập email khác.');
 
       try {
-         await axios.post('http://localhost:8080/api/auth/send-otp', { email: form.email });
+         await axios.post(`${API_BASE_URL}/auth/send-otp`, { email: form.email });
          showSuccessToast('OTP đã được gửi đến email của bạn', 3000);
          countdown();
       } catch {
@@ -326,7 +328,7 @@
          };
 
          const response = await axios.post(
-            'http://localhost:8080/api/auth/verify-otp',
+            `${API_BASE_URL}/auth/verify-otp`,
             {
                email: form.email,
                otp: form.otp,
@@ -374,7 +376,7 @@
       console.log('payload', payload);
 
       try {
-         const res = await axios.post('http://localhost:8080/api/auth/register', payload);
+         const res = await axios.post(`${API_BASE_URL}/auth/register`, payload);
          showSuccessToast(res.data.message || '🎉 Đăng ký thành công!');
          router.push('/login');
       } catch {
@@ -400,7 +402,7 @@
    async function checkUsername() {
       if (!form.username.trim()) return (usernameStatus.value = '');
       try {
-         const res = await axios.post('http://localhost:8080/api/auth/check-username', {
+         const res = await axios.post(`${API_BASE_URL}/auth/check-username`, {
             username: form.username,
          });
          usernameStatus.value = res.data.message;
@@ -412,7 +414,7 @@
    async function checkEmail() {
       if (!form.email.trim()) return (emailStatus.value = '');
       try {
-         const res = await axios.post('http://localhost:8080/api/auth/check-email', {
+         const res = await axios.post(`${API_BASE_URL}/auth/check-email`, {
             email: form.email,
          });
          emailStatus.value = res.data.message;

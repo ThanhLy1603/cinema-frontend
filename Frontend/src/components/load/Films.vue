@@ -22,47 +22,49 @@
 
       <!-- =================== PHIM ĐANG CHIẾU =================== -->
       <section id="now" class="container-fluid section-films py-5">
-         <h2 class="section-title fw-bold mb-4">Phim đang chiếu</h2>
+         <h2 class="section-title fw-bold mb-4 display-6 text-center">Phim đang chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
          </div>
 
-         <div v-else class="row g-4">
-            <div v-if="nowShowing.length">
-               <div v-for="film in nowShowing" :key="film.id" class="col-6 col-md-4 col-lg-3">
-                  <div class="card film-card h-100 border-0 shadow-sm">
-                     <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
-                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-truncate">{{ film.name }}</h5>
-                        <p class="card-text text-muted small mb-2">
-                           {{ film.country }} • {{ film.duration }} phút
-                        </p>
-                        <div class="mt-auto d-flex gap-2">
-                           <router-link
-                              :to="`/film/${film.id}`"
-                              class="btn btn-sm btn-success flex-grow-1"
-                              >Chi tiết</router-link
-                           >
-                           <button
-                              class="btn btn-sm btn-outline-secondary"
-                              @click="openTrailer(film)"
-                           >
-                              Trailer
-                           </button>
-                        </div>
+         <Swiper
+            v-else
+            :modules="modules"
+            :slides-per-view="4"
+            :space-between="24"
+            :loop="true"
+            :autoplay="{ delay: 4000, disableOnInteraction: false }"
+            :breakpoints="{
+               320: { slidesPerView: 1 },
+               576: { slidesPerView: 2 },
+               768: { slidesPerView: 3 },
+               1200: { slidesPerView: 4 },
+            }"
+            navigation
+            pagination
+            class="mySwiper"
+         >
+            <SwiperSlide v-for="film in nowShowingFunc()" :key="film.id">
+               <div class="card film-card h-100 border-0">
+                  <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
+                  <div class="card-body">
+                     <h5 class="card-title text-truncate">{{ film.name }}</h5>
+                     <p class="card-text">{{ film.country }} • {{ film.duration }} phút</p>
+                     <div class="d-flex gap-2 justify-content-center mt-2">
+                        <router-link to="/booking" class="btn btn-sm btn-success flex-grow-1"
+                           >Mua vé</router-link
+                        >
+                        <router-link
+                           :to="`/film/${film.id}`"
+                           class="btn btn-sm btn-outline-success flex-grow-1"
+                           >Chi tiết</router-link
+                        >
                      </div>
                   </div>
                </div>
-            </div>
-            <div v-else class="text-center text-muted py-5">Chưa có phim đang chiếu.</div>
-         </div>
-
-         <div v-if="nowShowingFunc().length > 4" class="text-center mt-4">
-            <button class="btn btn-outline-success px-4" @click="showAllNow = !showAllNow">
-               {{ showAllNow ? 'Thu gọn' : 'Xem thêm' }}
-            </button>
-         </div>
+            </SwiperSlide>
+         </Swiper>
       </section>
 
       <!-- =================== ƯU ĐÃI / KHUYẾN MÃI =================== -->
@@ -87,47 +89,49 @@
 
       <!-- =================== PHIM SẮP CHIẾU =================== -->
       <section id="coming" class="container-fluid section-films py-5">
-         <h2 class="section-title fw-bold mb-4">Phim sắp chiếu</h2>
+         <h2 class="section-title fw-bold mb-4 text-center">🎞️ Phim sắp chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
          </div>
 
-         <div v-else class="row g-4">
-            <template v-if="comingSoon.length">
-               <div v-for="film in comingSoon" :key="film.id" class="col-6 col-md-4 col-lg-3">
-                  <div class="card film-card h-100 border-0 shadow-sm">
-                     <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
-                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-truncate">{{ film.name }}</h5>
-                        <p class="card-text text-muted small mb-2">
-                           {{ film.country }} • {{ film.duration }} phút
-                        </p>
-                        <div class="mt-auto d-flex gap-2">
-                           <router-link
-                              :to="`/film/${film.id}`"
-                              class="btn btn-sm btn-outline-success flex-grow-1"
-                              >Chi tiết</router-link
-                           >
-                           <button
-                              class="btn btn-sm btn-outline-secondary"
-                              @click="openTrailer(film)"
-                           >
-                              Trailer
-                           </button>
-                        </div>
+         <Swiper
+            v-else
+            :modules="modules"
+            :slides-per-view="4"
+            :space-between="24"
+            :loop="true"
+            :autoplay="{ delay: 4000, disableOnInteraction: false }"
+            :breakpoints="{
+               320: { slidesPerView: 1 },
+               576: { slidesPerView: 2 },
+               768: { slidesPerView: 3 },
+               1200: { slidesPerView: 4 },
+            }"
+            navigation
+            pagination
+            class="mySwiper"
+         >
+            <SwiperSlide v-for="film in comingSoonFunc()" :key="film.id">
+               <div class="card film-card h-100 border-0">
+                  <img :src="posterSrc(film.poster)" :alt="film.name" class="card-img-top" />
+                  <div class="card-body">
+                     <h5 class="card-title text-truncate">{{ film.name }}</h5>
+                     <p class="card-text">{{ film.country }} • {{ film.duration }} phút</p>
+                     <div class="d-flex gap-2 justify-content-center mt-2">
+                        <router-link to="/booking" class="btn btn-sm btn-success flex-grow-1"
+                           >Mua vé</router-link
+                        >
+                        <router-link
+                           :to="`/film/${film.id}`"
+                           class="btn btn-sm btn-outline-success flex-grow-1"
+                           >Chi tiết</router-link
+                        >
                      </div>
                   </div>
                </div>
-            </template>
-            <div v-else class="text-center text-muted py-5">Chưa có phim sắp chiếu.</div>
-         </div>
-
-         <div v-if="comingSoonFunc().length > 4" class="text-center mt-4">
-            <button class="btn btn-outline-success px-4" @click="showAllComing = !showAllComing">
-               {{ showAllComing ? 'Thu gọn' : 'Xem thêm' }}
-            </button>
-         </div>
+            </SwiperSlide>
+         </Swiper>
       </section>
 
       <!-- =================== FOOTER =================== -->
@@ -139,25 +143,21 @@
 
 <script setup>
    import axios from 'axios';
-   import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+   import { ref, onMounted, onBeforeUnmount } from 'vue';
+   import { Swiper, SwiperSlide } from 'swiper/vue';
+   import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+   import 'swiper/css';
+   import 'swiper/css/navigation';
+   import 'swiper/css/pagination';
 
-   /* =================== CONFIG =================== */
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || '';
-   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL || '';
+   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
 
-   /* =================== STATE =================== */
    const films = ref([]);
    const loading = ref(true);
-   const currentFilm = ref(null);
-   const trailerSrc = ref('');
-   const trailerModalRef = ref(null);9
-   const bsModal = null;
 
-   const showAllNow = ref(false);
-   const showAllComing = ref(false);
+   const modules = [Navigation, Pagination, Autoplay];
 
-   /* =================== BANNERS =================== */
    const banners = [
       new URL('../../assets/banner/MuaDo.jpg', import.meta.url).href,
       new URL('../../assets/banner/Avatar3.jpg', import.meta.url).href,
@@ -171,17 +171,14 @@
       currentBanner.value = (currentBanner.value + 1) % banners.length;
    }
 
-   onMounted(function () {
+   onMounted(() => {
       bannerTimer = setInterval(nextBanner, 5000);
    });
 
-   onBeforeUnmount(function () {
-      if (bannerTimer) {
-         clearInterval(bannerTimer);
-      }
+   onBeforeUnmount(() => {
+      if (bannerTimer) clearInterval(bannerTimer);
    });
 
-   /* =================== ƯU ĐÃI =================== */
    const promotions = [
       {
          id: 1,
@@ -203,33 +200,23 @@
       },
    ];
 
-   /* =================== PHIM =================== */
    async function getFilms() {
       try {
-         const res = await axios.get(API_BASE_URL + '/films');
-         if (Array.isArray(res.data)) {
-            films.value = res.data;
-         } else {
-            films.value = [];
-         }
-      } catch (err) {
-         console.error('Lỗi khi lấy danh sách phim:', err.message);
+         const response = await axios.get(`${API_BASE_URL}/films`);
+         films.value = response.data;
+      } catch (error) {
+         console.error('Lỗi khi lấy danh sách phim:', error.message);
       } finally {
          loading.value = false;
       }
    }
 
-   onMounted(function () {
+   onMounted(() => {
       getFilms();
-      if (window.bootstrap && trailerModalRef.value) {
-         bsModal = new window.bootstrap.Modal(trailerModalRef.value);
-      }
    });
 
    function filterFilms(statusList) {
-      return films.value.filter(function (f) {
-         return statusList.includes(f.status?.toLowerCase());
-      });
+      return films.value.filter((f) => statusList.includes(f.status?.toLowerCase()));
    }
 
    function nowShowingFunc() {
@@ -240,37 +227,34 @@
       return filterFilms(['upcoming', 'coming_soon']);
    }
 
-   const nowShowing = computed(function () {
-      const list = nowShowingFunc();
-      return showAllNow.value ? list : list.slice(0, 4);
-   });
-
-   const comingSoon = computed(function () {
-      const list = comingSoonFunc();
-      return showAllComing.value ? list : list.slice(0, 4);
-   });
-
    /* =================== HELPERS =================== */
    function posterSrc(poster) {
       if (poster && poster.startsWith('http')) return poster;
       return IMAGE_URL + poster;
    }
-   // === Helpers ===
-
-   function videoSrc(trailer) {
-      if (!trailer) return '';
-      if (trailer.startsWith('http')) return trailer;
-      return VIDEO_URL + trailer;
-   }
-
-   function openTrailer(film) {
-      currentFilm.value = film;
-      trailerSrc.value = videoSrc(film.trailer);
-      if (bsModal) bsModal.show();
-   }
 </script>
 
 <style scoped>
+   @import 'swiper/css';
+   @import 'swiper/css/navigation';
+   @import 'swiper/css/pagination';
+
+   .mySwiper {
+      padding-bottom: 40px;
+   }
+   .swiper-button-next,
+   .swiper-button-prev {
+      color: #198754;
+      transition: all 0.3s ease;
+   }
+   .swiper-button-next:hover,
+   .swiper-button-prev:hover {
+      transform: scale(1.2);
+   }
+   .swiper-pagination-bullet-active {
+      background-color: #198754;
+   }
+
    /* =================== GLOBAL =================== */
    .films-home {
       background-color: #f9fafb;
@@ -320,7 +304,6 @@
       font-weight: 600;
       border-radius: 6px;
       padding: 0.6rem 1.4rem;
-      margin-right: 10px;
    }
 
    /* =================== ƯU ĐÃI =================== */
@@ -351,39 +334,103 @@
    .section-title {
       letter-spacing: 1px;
    }
+
+   /* CARD PHIM */
+   .film-card {
+      border-radius: 12px;
+      overflow: hidden;
+      transition:
+         transform 0.3s ease,
+         box-shadow 0.3s ease;
+      background-color: #fff;
+   }
+   .film-card:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+   }
+
+   /* HÌNH ẢNH PHIM */
    .film-card img {
-      transition: transform 0.3s ease;
-      border-top-left-radius: 10px;
-      border-top-right-radius: 10px;
+      width: 100%;
+      height: 360px;
+      object-fit: cover;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      transition: transform 0.4s ease;
    }
    .film-card:hover img {
-      transform: scale(1.05);
+      transform: scale(1.08);
+   }
+
+   /* BODY NỘI DUNG */
+   .film-card .card-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1rem 1rem 1.2rem;
+      text-align: center;
+   }
+   .film-card .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: #222;
+      transition: color 0.3s ease;
+   }
+   .film-card:hover .card-title {
+      color: #198754;
+   }
+   .film-card .card-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-bottom: 0.6rem;
+   }
+   .film-card .btn {
+      border-radius: 6px;
+      transition: all 0.3s ease;
+   }
+   .film-card .btn:hover {
+      transform: translateY(-2px);
+   }
+
+   /* Hiệu ứng xuất hiện */
+   .row.g-4 > div {
+      animation: fadeInUp 0.6s ease both;
+   }
+   @keyframes fadeInUp {
+      from {
+         opacity: 0;
+         transform: translateY(20px);
+      }
+      to {
+         opacity: 1;
+         transform: translateY(0);
+      }
    }
 
    /* =================== RESPONSIVE =================== */
-   @media (max-width: 1024px) {
+   @media (max-width: 992px) {
       .banner-section {
          height: 70vh;
       }
-      .banner-content {
-         left: 4%;
+      .film-card img {
+         height: 300px;
       }
    }
    @media (max-width: 768px) {
       .banner-section {
          height: 60vh;
       }
-      .banner-content {
-         left: 3%;
-         top: 55%;
+      .film-card img {
+         height: 260px;
       }
    }
    @media (max-width: 480px) {
       .banner-section {
          height: 55vh;
       }
-      .banner-content {
-         left: 2%;
+      .film-card img {
+         height: 220px;
       }
    }
 
