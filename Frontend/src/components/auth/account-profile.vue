@@ -6,8 +6,12 @@
          <div class="col-lg-8">
             <div class="card p-4 shadow-sm">
                <div class="d-flex align-items-center mb-3">
-                  <img :src="form.avatarUrl" alt="Avatar" class="rounded-circle me-3 border"
-                     style="width: 100px; height: 100px; object-fit: cover;" />
+                  <img
+                     :src="form.avatarUrl"
+                     alt="Avatar"
+                     class="rounded-circle me-3 border"
+                     style="width: 100px; height: 100px; object-fit: cover"
+                  />
                   <div>
                      <h5 class="fw-semibold mb-1">{{ form.lastName + ' ' + form.firstName }}</h5>
                   </div>
@@ -20,41 +24,68 @@
                   <div class="row">
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Họ *</label>
-                        <input v-model="form.lastName" type="text" class="form-control"
-                           :class="{ 'is-invalid': errors.lastName }" :disabled="!isEditing" />
+                        <input
+                           v-model="form.lastName"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.lastName }"
+                           :disabled="!isEditing"
+                        />
                         <div class="invalid-feedback">{{ errors.lastName }}</div>
                      </div>
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Tên đệm và tên *</label>
-                        <input v-model="form.firstName" type="text" class="form-control"
-                           :class="{ 'is-invalid': errors.firstName }" :disabled="!isEditing" />
+                        <input
+                           v-model="form.firstName"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.firstName }"
+                           :disabled="!isEditing"
+                        />
                         <div class="invalid-feedback">{{ errors.firstName }}</div>
                      </div>
                      <div class="col-12 mb-3">
                         <label class="form-label">Email *</label>
-                        <input v-model="form.email" type="email" class="form-control"
-                           :class="{ 'is-invalid': errors.email }" readonly />
+                        <input
+                           v-model="form.email"
+                           type="email"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.email }"
+                           readonly
+                        />
                         <div class="invalid-feedback">{{ errors.email }}</div>
                      </div>
 
                      <div class="col-md-3 mb-3 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-success w-100"
-                           @click="showChangePassword = !showChangePassword">
+                        <button
+                           type="button"
+                           class="btn btn-outline-success w-100"
+                           @click="showChangePassword = !showChangePassword"
+                        >
                            ĐỔI MẬT KHẨU
                         </button>
                      </div>
 
                      <div class="col-12 mb-3">
                         <label class="form-label">Số điện thoại *</label>
-                        <input v-model="form.phone" type="text" class="form-control"
-                           :class="{ 'is-invalid': errors.phone }" :disabled="!isEditing" />
+                        <input
+                           v-model="form.phone"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.phone }"
+                           :disabled="!isEditing"
+                        />
                         <div class="invalid-feedback">{{ errors.phone }}</div>
                      </div>
 
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Giới tính *</label>
-                        <select v-model="form.gender" class="form-select" :class="{ 'is-invalid': errors.gender }"
-                           :disabled="!isEditing">
+                        <select
+                           v-model="form.gender"
+                           class="form-select"
+                           :class="{ 'is-invalid': errors.gender }"
+                           :disabled="!isEditing"
+                        >
                            <option value="">Chọn giới tính</option>
                            <option value="true">Nam</option>
                            <option value="false">Nữ</option>
@@ -65,18 +96,34 @@
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Ngày sinh *</label>
                         <div class="d-flex gap-2">
-                           <select v-model.number="form.day" class="form-select" :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing">
+                           <select
+                              v-model.number="form.day"
+                              class="form-select"
+                              :class="{ 'is-invalid': errors.dob }"
+                              :disabled="!isEditing"
+                           >
                               <option value="">Ngày</option>
-                              <option v-for="d in 31" :key="d" :value="d">{{ d.toString().padStart(2, '0') }}</option>
+                              <option v-for="d in 31" :key="d" :value="d">
+                                 {{ d.toString().padStart(2, '0') }}
+                              </option>
                            </select>
-                           <select v-model.number="form.month" class="form-select" :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing">
+                           <select
+                              v-model.number="form.month"
+                              class="form-select"
+                              :class="{ 'is-invalid': errors.dob }"
+                              :disabled="!isEditing"
+                           >
                               <option value="">Tháng</option>
-                              <option v-for="m in 12" :key="m" :value="m">{{ m.toString().padStart(2, '0') }}</option>
+                              <option v-for="m in 12" :key="m" :value="m">
+                                 {{ m.toString().padStart(2, '0') }}
+                              </option>
                            </select>
-                           <select v-model.number="form.year" class="form-select" :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing">
+                           <select
+                              v-model.number="form.year"
+                              class="form-select"
+                              :class="{ 'is-invalid': errors.dob }"
+                              :disabled="!isEditing"
+                           >
                               <option value="">Năm</option>
                               <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
                            </select>
@@ -86,8 +133,12 @@
 
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Tỉnh/Thành phố *</label>
-                        <select v-model="form.city" class="form-select" :class="{ 'is-invalid': errors.city }"
-                           :disabled="!isEditing">
+                        <select
+                           v-model="form.city"
+                           class="form-select"
+                           :class="{ 'is-invalid': errors.city }"
+                           :disabled="!isEditing"
+                        >
                            <option value="">Chọn tỉnh/thành</option>
                            <option>Hà Nội</option>
                            <option>Hồ Chí Minh</option>
@@ -98,45 +149,61 @@
 
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Địa chỉ *</label>
-                        <input v-model="form.address" type="text" class="form-control"
-                           :class="{ 'is-invalid': errors.address }" :disabled="!isEditing" />
+                        <input
+                           v-model="form.address"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.address }"
+                           :disabled="!isEditing"
+                        />
                         <div class="invalid-feedback">{{ errors.address }}</div>
                      </div>
                   </div>
 
                   <div class="text-center mt-3">
-                     <button v-if="!isEditing" type="button" class="btn btn-primary px-4 fw-semibold"
-                        @click="isEditing = true">
+                     <button
+                        v-if="!isEditing"
+                        type="button"
+                        class="btn btn-primary px-4 fw-semibold"
+                        @click="isEditing = true"
+                     >
                         CHỈNH SỬA
                      </button>
-                     <button v-if="isEditing" type="submit" class="btn btn-success px-4 fw-semibold">
+                     <button
+                        v-if="isEditing"
+                        type="submit"
+                        class="btn btn-success px-4 fw-semibold"
+                     >
                         CẬP NHẬT
                      </button>
-                     <button v-if="isEditing" type="button" class="btn btn-outline-secondary ms-2"
-                        @click="isEditing = false">
+                     <button
+                        v-if="isEditing"
+                        type="button"
+                        class="btn btn-outline-secondary ms-2"
+                        @click="isEditing = false"
+                     >
                         HỦY
                      </button>
                   </div>
                </form>
-
             </div>
          </div>
 
          <!-- RIGHT COLUMN -->
          <div class="col-lg-4">
             <div class="card p-4 shadow-sm text-center">
-               <img src="https://api.qrserver.com/v1/create-qr-code/?data=ONL2311348&size=120x120" alt="QR Code"
-                  class="mx-auto mb-3" />
+               <img
+                  src="https://api.qrserver.com/v1/create-qr-code/?data=ONL2311348&size=120x120"
+                  alt="QR Code"
+                  class="mx-auto mb-3"
+               />
                <div class="text-start small mb-3">
-                  <p class="mb-1">
-                     <strong>Tên đăng nhập:</strong> {{ form.email }}
-                  </p>
+                  <p class="mb-1"><strong>Tên đăng nhập:</strong> {{ form.email }}</p>
                   <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
                </div>
                <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout()">
                   ĐĂNG XUẤT
                </button>
-
             </div>
          </div>
       </div>
@@ -163,7 +230,7 @@
       year: '',
       city: '',
       address: '',
-      avatarUrl: ''
+      avatarUrl: '',
    });
 
    const errors = ref({});
@@ -180,53 +247,89 @@
       const phoneRe = /^\d{9,11}$/;
 
       if (!v.lastName || !v.lastName.trim()) {
-         errors.value.lastName = "Họ là bắt buộc";
+         errors.value.lastName = 'Họ là bắt buộc';
          valid = false;
       }
 
       if (!v.firstName || !v.firstName.trim()) {
-         errors.value.firstName = "Tên là bắt buộc";
+         errors.value.firstName = 'Tên là bắt buộc';
          valid = false;
       }
 
       if (!v.email || !emailRe.test(v.email)) {
-         errors.value.email = "Email không hợp lệ";
+         errors.value.email = 'Email không hợp lệ';
          valid = false;
       }
 
       if (v.password && v.password.length > 0 && v.password.length < 6) {
-         errors.value.password = "Mật khẩu phải có ít nhất 6 ký tự";
+         errors.value.password = 'Mật khẩu phải có ít nhất 6 ký tự';
          valid = false;
       }
 
       if (!v.phone || !phoneRe.test(v.phone)) {
-         errors.value.phone = "Số điện thoại không hợp lệ (9-11 chữ số)";
+         errors.value.phone = 'Số điện thoại không hợp lệ (9-11 chữ số)';
          valid = false;
       }
 
       if (!v.gender) {
-         errors.value.gender = "Chọn giới tính";
+         errors.value.gender = 'Chọn giới tính';
          valid = false;
       }
 
       if (!v.day || !v.month || !v.year) {
-         errors.value.dob = "Chọn ngày sinh";
+         errors.value.dob = 'Chọn ngày sinh';
          valid = false;
       }
 
       if (!v.city) {
-         errors.value.city = "Chọn tỉnh/thành";
+         errors.value.city = 'Chọn tỉnh/thành';
          valid = false;
       }
 
       if (!v.address || !v.address.trim()) {
-         errors.value.address = "Địa chỉ là bắt buộc";
+         errors.value.address = 'Địa chỉ là bắt buộc';
          valid = false;
       }
 
       return { valid, errors: errors.value };
    }
 
+   // Update Profile
+   const updateInfo = async () => {
+      const { valid } = checkValidate();
+      if (!valid) return;
+
+      try {
+         const userInfo = jwtDecode(token);
+         const payload = {
+            firstName: form.value.firstName,
+            lastName: form.value.lastName,
+            phone: form.value.phone,
+            email: form.value.email,
+            gender: form.value.gender,
+            day: form.value.day,
+            month: form.value.month,
+            year: form.value.year,
+            address: `${form.value.address}, ${form.value.city}`,
+         };
+
+         const response = await axios.put(
+            `http://localhost:8080/api/auth/${userInfo.subject}/updateprofile`,
+            payload,
+            {
+               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            }
+         );
+
+         success.value = response.data.message;
+         error.value = '';
+         showToast('Cập nhật thông tin thành công');
+         isEditing.value = false;
+      } catch (err) {
+         error.value = err.response?.data?.message || 'Lỗi khi cập nhật thông tin';
+         success.value = '';
+      }
+   };
 
    const years = computed(() => {
       const arr = [];
@@ -239,10 +342,10 @@
       try {
          console.log(' Đang lấy profile cho user:', route.params.id);
          const response = await axios.get(`http://localhost:8080/api/auth/${route.params.id}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
          });
          const data = response.data;
-         console.log(" Dữ liệu hồ sơ nhận được:", data);
+         console.log(' Dữ liệu hồ sơ nhận được:', data);
 
          form.value = {
             lastName: data.fullName ? data.fullName.split(' ').slice(0, -1).join(' ') : '',
@@ -255,7 +358,7 @@
             year: data.birthday ? parseInt(data.birthday.split('-')[0]) : '',
             city: data.address ? data.address.split(', ').slice(-1)[0] : '',
             address: data.address ? data.address.split(', ').slice(0, -1).join(', ') : '',
-            avatarUrl: data.avatarUrl || ''
+            avatarUrl: data.avatarUrl || '',
          };
          error.value = '';
       } catch (err) {
@@ -269,7 +372,7 @@
       localStorage.removeItem('token');
 
       router.push('/');
-      showToast("Đăng xuất thành công");
+      showToast('Đăng xuất thành công');
 
       setTimeout(() => {
          window.location.reload(); // reload để đồng bộ header
@@ -279,7 +382,7 @@
    onMounted(() => {
       console.log('🚀 Component mounted, fetching profile...');
       fetchProfile(); // ✅ GỌI TỰ ĐỘNG
-   })
+   });
 </script>
 
 <style scoped>
@@ -305,7 +408,7 @@
       border-radius: 10px;
    }
 
-   .account-page img[alt="QR Code"] {
+   .account-page img[alt='QR Code'] {
       border: 1px solid #ccc;
       padding: 4px;
       border-radius: 10px;
