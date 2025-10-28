@@ -150,7 +150,7 @@
                showSuccessToast();
 
                if (role === 'admin') {
-                  router.push('/admin/films');
+                  router.push('/admin');
                } else {
                   router.push('/');
                }

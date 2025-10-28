@@ -6,7 +6,7 @@ import Login from '../components/home/Login.vue';
 import Register from '../components/home/Register.vue';
 import ForgotPassword from '../components/home/ForgotPassword.vue';
 import FilmDetail from '../components/home/FilmDetail.vue';
-import FilmsManager from '../components/admin/FilmsManager.vue';
+import AdminDashboard from '../components/admin/AdminDashboard.vue';
 import AccountProfile from '../components/auth/AccountProfile.vue';
 
 // Nếu bạn có cấu trúc routes riêng (module-based), có thể import:
@@ -52,9 +52,9 @@ const routes = [
 
    // Admin routes
    {
-      path: '/films-manager',
-      name: 'FilmsManager',
-      component: FilmsManager,
+      path: '/admin',
+      name: 'AdminDashboard',
+      component: AdminDashboard,
       meta: { requiresAuth: true, role: 'admin' },
    },
 
