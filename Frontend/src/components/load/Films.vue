@@ -9,13 +9,13 @@
 
          <div class="banner-content">
             <router-link class="btn btn-success" to="/booking">Mua vé ngay</router-link>
-            <router-link class="btn btn-outline-light" to="/info">Thông tin chi tiết</router-link>
+            <router-link class="btn btn-outline-light" to="/">Trang chủ</router-link>
          </div>
       </section>
 
       <!-- =================== PHIM ĐANG CHIẾU =================== -->
       <section id="now" class="container-fluid section-films py-5">
-         <h2 class="section-title fw-bold mb-4 display-6 text-center">Phim đang chiếu</h2>
+         <h2 class="section-title fw-bold mb-4 display-6 text-center">🎬 Phim đang chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
@@ -37,9 +37,9 @@
 
                      <div class="film-buttons d-flex justify-content-center gap-2">
                         <router-link to="/booking" class="btn-film flex-grow-1">Mua vé</router-link>
-                        <button class="btn-film-outline flex-grow-1" @click="$emit('open-film-detail', film.id)">
+                        <router-link :to="`/film/${film.id}`" class="btn-film-outline flex-grow-1">
                            Chi tiết
-                        </button>
+                        </router-link>
                      </div>
                   </div>
                </div>
@@ -47,7 +47,7 @@
          </Swiper>
       </section>
 
-      <!-- =================== ƯU ĐÃI / KHUYẾN MÃI =================== -->
+      <!-- =================== ƯU ĐÃI =================== -->
       <section id="offers" class="offers-section py-5 text-center">
          <h2 class="section-title fw-bold mb-4">Ưu đãi & khuyến mãi</h2>
 
@@ -69,7 +69,7 @@
 
       <!-- =================== PHIM SẮP CHIẾU =================== -->
       <section id="coming" class="container-fluid section-films py-5">
-         <h2 class="section-title fw-bold mb-4 text-center">Phim sắp chiếu</h2>
+         <h2 class="section-title fw-bold mb-4 text-center">🎞️ Phim sắp chiếu</h2>
 
          <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
@@ -91,9 +91,9 @@
 
                      <div class="film-buttons d-flex justify-content-center gap-2">
                         <router-link to="/booking" class="btn-film flex-grow-1">Mua vé</router-link>
-                        <button class="btn-film-outline flex-grow-1" @click="$emit('open-film-detail', film.id)">
+                        <router-link :to="`/film/${film.id}`" class="btn-film-outline flex-grow-1">
                            Chi tiết
-                        </button>
+                        </router-link>
                      </div>
                   </div>
                </div>

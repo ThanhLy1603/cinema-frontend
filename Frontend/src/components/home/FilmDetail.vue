@@ -1,68 +1,84 @@
 <template>
-  <div class="film-detail-page">
-    <!-- ==================== THÔNG TIN PHIM ==================== -->
-    <section class="container py-5">
-      <div v-if="!film.id" class="text-center text-muted py-5">
-        <div class="spinner-border text-success" role="status"></div>
+  <div class="film-detail-wrapper">
+    <!-- 🟢 HEADER -->
+    <Header />
+
+    <!-- 🟢 NỘI DUNG CHI TIẾT -->
+    <div class="film-detail-page container py-5">
+      <div v-if="!film.id" class="text-center py-5 text-muted">
+        <div class="spinner-border text-success"></div>
         <p class="mt-3">Đang tải thông tin phim...</p>
       </div>
 
-      <div v-else class="row g-4 align-items-start bg-white rounded-4 shadow-lg p-4 detail-card">
-        <!-- Poster -->
-        <div class="col-md-4 text-center">
-          <img :src="IMAGE_URL + film.poster" alt="Poster" class="img-fluid rounded-4 poster-img" />
+      <div v-else class="card shadow-lg border-0 rounded-4 overflow-hidden p-4">
+        <!-- Nút quay lại -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="fw-bold text-success m-0">🎬 {{ film.name }}</h2>
+          <router-link to="/" class="btn-back">
+            ⬅ Quay lại danh sách
+          </router-link>
         </div>
 
-        <!-- Thông tin phim -->
-        <div class="col-md-8 d-flex flex-column align-items-start text-start">
-          <h3 class="fw-bold text-success">{{ film.name }}</h3>
-          <p><strong>Đạo diễn:</strong> {{ film.director }}</p>
-          <p><strong>Diễn viên:</strong> {{ film.actor }}</p>
-          <p><strong>Thời lượng:</strong> {{ film.duration }} phút</p>
-          <p><strong>Ngày khởi chiếu:</strong> {{ film.releaseDate }}</p>
-          <p><strong>Trạng thái:</strong> {{ film.status }}</p>
-          <p><strong>Thể loại:</strong> {{ categoryNames }}</p>
-          <div class="mt-3 w-100">
-            <h5 class="fw-bold">Tóm tắt nội dung</h5>
-            <p class="text-secondary">{{ film.description }}</p>
+        <div class="row g-4 align-items-start">
+          <!-- Poster -->
+          <div class="col-md-4 text-center">
+            <img
+              :src="IMAGE_URL + film.poster"
+              alt="Poster"
+              class="img-fluid rounded shadow-sm mb-4"
+            />
+          </div>
+
+          <!-- Thông tin + Trailer -->
+          <div class="col-md-8">
+            <div class="film-info">
+              <p><strong>Đạo diễn:</strong> {{ film.director }}</p>
+              <p><strong>Diễn viên:</strong> {{ film.actor }}</p>
+              <p><strong>Thể loại:</strong> {{ categoryNames }}</p>
+              <p><strong>Thời lượng:</strong> {{ film.duration }} phút</p>
+              <p><strong>Ngày khởi chiếu:</strong> {{ film.releaseDate }}</p>
+              <p><strong>Trạng thái:</strong> {{ film.status }}</p>
+            </div>
+
+            <div class="film-description mt-4">
+              <h5 class="fw-bold mb-2">Tóm tắt nội dung</h5>
+              <p class="text-secondary">{{ film.description }}</p>
+            </div>
+
+            <!-- Trailer ngay trong panel -->
+            <div v-if="film.trailer" class="film-trailer mt-5">
+              <h5 class="fw-bold text-primary mb-3">🎞️ Trailer chính thức</h5>
+              <video
+                :src="VIDEO_URL + film.trailer"
+                controls
+                class="w-100 rounded shadow-sm border"
+              ></video>
+            </div>
           </div>
         </div>
-
       </div>
-    </section>
 
-    <!-- ==================== TRAILER ==================== -->
-    <section v-if="film.trailer" class="container text-center py-5 trailer-section">
-      <div class="trailer-wrapper rounded-4 shadow-lg p-4 bg-white">
-        <h4 class="fw-bold mb-4 text-primary">🎥 Official Trailer</h4>
-        <video class="rounded-3 border shadow-sm" controls width="80%" height="420"
-          :src="VIDEO_URL + film.trailer"></video>
-      </div>
-    </section>
-
-    <!-- ==================== COMPONENT CON ==================== -->
-    <section class="container py-5">
-      <div class="rounded-4 bg-white shadow-sm p-4 border-top border-success border-3">
+      <!-- Lịch chiếu -->
+      <section class="container py-5">
         <ShowtimeComponent :film="film" />
-      </div>
-    </section>
+      </section>
+    </div>
 
-    <!-- ==================== FOOTER ==================== -->
-    <footer class="bg-dark text-white text-center py-3 mt-5 rounded-top-4 shadow-inner">
-      <p class="mb-0 small">© 2025 VietCine | All Rights Reserved</p>
+    <!-- 🟢 FOOTER -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+      <p class="mb-0">© 2025 VietCine | All Rights Reserved</p>
     </footer>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, computed } from "vue";
+import { useRoute } from "vue-router";
 import axios from "axios";
-import { ref, onMounted, watch, computed } from "vue";
 import ShowtimeComponent from "../../components/filmDetail/ShowtimeComponent.vue";
+import Header from "../../components/header/Header.vue";
 
-const props = defineProps({
-  filmId: String,
-});
-
+const route = useRoute();
 const film = ref({});
 const categories = ref([]);
 
@@ -77,110 +93,100 @@ const categoryNames = computed(() =>
 );
 
 async function getFilm() {
-  if (!props.filmId) return;
   try {
-    const res = await axios.get(`${API_BASE_URL}/films/${props.filmId}`);
+    const res = await axios.get(`${API_BASE_URL}/films/${route.params.id}`);
     film.value = res.data;
+    await getCategories();
   } catch (err) {
     console.error("Lỗi khi lấy Film:", err.message);
   }
 }
 
 async function getCategories() {
-  if (!film.value.id) return;
-  const res = await axios.get(`${API_BASE_URL}/films/${film.value.id}/categories`);
-  categories.value = res.data;
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/films/${film.value.id}/categories`
+    );
+    categories.value = res.data;
+  } catch (err) {
+    console.error("Lỗi khi lấy dữ liệu từ FilmCategory:", err.message);
+  }
 }
 
-watch(
-  () => props.filmId,
-  async (newId) => {
-    if (newId) {
-      await getFilm();
-      await getCategories();
-    } else {
-      film.value = {};
-      categories.value = [];
-    }
-  },
-  { immediate: true }
-);
+onMounted(() => {
+  getFilm();
+});
 </script>
 
 <style scoped>
-.film-detail-page {
-  background: linear-gradient(180deg, #f0fdf4 0%, #f9fafb 100%);
+.film-detail-wrapper {
+  background-color: #f9fafb;
   font-family: "Montserrat", sans-serif;
-  min-height: 100vh;
-  padding-bottom: 50px;
 }
 
-/* CARD chính */
-.detail-card {
-  border: 2px solid #e9f5ee;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.detail-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Ảnh poster */
-.poster-img {
-  border: 3px solid #d1e7dd;
-  transition: transform 0.5s ease, box-shadow 0.4s ease;
-}
-
-.poster-img:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
-}
-
-/* Grid nội dung */
-.info-section p {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-
-.info-section h2 {
-  letter-spacing: 0.5px;
-}
-
-.description {
-  border-top: 2px dashed #198754;
-  padding-top: 12px;
-}
-
-/* Trailer section */
-.trailer-section {
-  background: linear-gradient(135deg, #f7fff9, #e9f8ef);
+/* Card */
+.card {
+  background-color: #fff;
   border-radius: 20px;
-}
-
-.trailer-wrapper {
-  border: 2px solid #d1e7dd;
   transition: all 0.3s ease;
 }
-
-.trailer-wrapper:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+.card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }
 
-/* Video */
-video {
+/* Poster */
+img {
   border-radius: 12px;
-  object-fit: cover;
-  border: 2px solid #19875433;
+  transition: transform 0.3s ease;
+}
+img:hover {
+  transform: scale(1.03);
 }
 
-/* Footer */
-footer {
-  background: #0f1f0f;
-  font-size: 0.9rem;
-  letter-spacing: 0.4px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+/* Text layout */
+h2 {
+  font-size: 2rem;
+}
+h5 {
+  font-size: 1.2rem;
+}
+p {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Trailer video */
+.film-trailer video {
+  border-radius: 12px;
+  background: #000;
+}
+
+/* Back button */
+.btn-back {
+  background: #198754;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+.btn-back:hover {
+  background: #157347;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .film-detail-page {
+    padding: 20px;
+  }
+  .film-trailer video {
+    height: auto;
+  }
+  .btn-back {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.9rem;
+  }
 }
 </style>
