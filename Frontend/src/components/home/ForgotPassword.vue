@@ -31,7 +31,7 @@
                Vui lòng nhập mã OTP để tiếp tục.
             </p>
             <div class="mb-3">
-               <label class="form-label fw-semibold">Mã OTP *</label>
+               <label class="text-danger mx-2">{{formattedTime}} (có hiệu lực trong vòng 5 phút)</label>
                <input v-model="otp" type="text" maxlength="6" class="form-control text-center"
                   placeholder="Nhập mã OTP gồm 6 số" />
             </div>
@@ -78,6 +78,10 @@
    import { ref } from "vue";
    import axios from "axios";
    import Swal from "sweetalert2";
+   import { onMounted } from "vue";
+   import { onUnmounted } from "vue";
+   import { computed } from "vue";
+   
 
    const step = ref(1);
    const email = ref("");
@@ -85,6 +89,13 @@
    const newPassword = ref("");
    const confirmPassword = ref("");
    const isLoading = ref(false);
+   const time = ref(5 * 60);
+      let timer = null;
+   const formattedTime = computed(() => {
+      const minutes = Math.floor(time.value / 60);
+      const seconds = time.value % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+   });
 
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -180,6 +191,25 @@
    function backToLogin() {
       window.location.href = "/login";
    }
+
+   function countdown() {
+      timer = setInterval(() => {
+         if (time.value > 0) {
+            time.value--;
+         } else {
+            clearInterval(timer);
+         }
+      }, 1000);
+   }
+
+   onMounted(() => {
+      countdown();
+   });
+
+   onUnmounted(() => {
+      clearInterval(timer);
+   });
+
 </script>
 
 <style scoped>
