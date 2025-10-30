@@ -95,6 +95,58 @@ export default {
       isDeleted: false
     });
 
+    // --- 1. READ: Lấy danh sách phim ---
+async function fetchFilms() {
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error("Lỗi khi tải danh sách phim");
+        filmsList.value = await response.json();
+    } catch (error) {
+        console.error(error);
+        // showToast("Không thể tải danh sách phim", "error");
+    }
+}
+
+// --- 2. UPDATE: Chỉnh sửa phim ---
+async function handleUpdateFilm(filmId, updatedData) {
+    try {
+        const response = await fetch(`${API_URL}/${filmId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+        });
+
+        if (!response.ok) throw new Error("Lỗi khi cập nhật phim");
+        
+        // Xử lý thành công
+        // showToast("Cập nhật phim thành công");
+        // fetchFilms(); // Tải lại danh sách
+    } catch (error) {
+        console.error(error);
+        // showToast("Cập nhật phim thất bại", "error");
+    }
+}
+
+// --- 3. DELETE: Xóa logic phim ---
+async function handleDeleteFilm(filmId) {
+    if (!confirm("Bạn có chắc chắn muốn xóa (ẩn) phim này?")) return;
+
+    try {
+        const response = await fetch(`${API_URL}/${filmId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) throw new Error("Lỗi khi xóa phim");
+        
+        // Xử lý thành công
+        // showToast("Xóa phim thành công");
+        // filmsList.value = filmsList.value.filter(f => f.id !== filmId); // Cập nhật ngay lập tức
+        fetchFilms(); // Tải lại danh sách
+    } catch (error) {
+        console.error(error);
+        // showToast("Xóa phim thất bại", "error");
+    }
+}
     const toast = ref({ message: "", type: "" });
 
     function showToast(msg, type) {
@@ -111,28 +163,52 @@ export default {
     }
 
     async function createFilm() {
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(film.value)
-        });
+     const dataToSend = {
+        name: film.value.name,
+        country: film.value.country,
+        director: film.value.director,
+        actor: film.value.actor,
+        description: film.value.description,
+        duration: film.value.duration,
+        poster: film.value.poster,
+        trailer: film.value.trailer,
+        releaseDate: film.value.releaseDate, // Format YYYY-MM-DD
+        status: film.value.status,
+        isDeleted: false // Luôn là false khi tạo mới [cite: 674]
+        // Không cần truyền id khi POST
+    };
 
-        if (!response.ok) {
-          throw new Error("HTTP " + response.status);
+    try {
+        const response = await fetch(API_URL, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify(dataToSend) // Sử dụng dataToSend đã chuẩn bị
+        }); 
+
+        if (!response.ok) { 
+            throw new Error("HTTP " + response.status); 
         }
 
-        showToast("Tạo phim thành công!");
+        // Lấy phim đã tạo để có ID và thông tin đầy đủ nếu cần
+        const createdFilm = await response.json(); 
+        
+        showToast("Tạo phim thành công! ID: " + createdFilm.id); 
+        
+        // Reset form, giữ lại status/isDeleted
         for (var key in film.value) {
-          if (key !== "status" && key !== "isDeleted") {
-            film.value[key] = "";
-          }
-          if (key === "isDeleted") film.value[key] = false;
+            if (key !== "status" && key !== "isDeleted") {
+                film.value[key] = "";
+            }
+            if (key === "isDeleted") film.value[key] = false;
         }
-      } catch (error) {
+        
+        // Chuyển về trang danh sách phim sau khi tạo thành công (tùy chọn)
+        // emit("open", null);
+        
+    } catch (error) { 
         console.error(error);
-        showToast("Tạo phim thất bại!", "error");
-      }
+        showToast("Tạo phim thất bại! Lỗi: " + error.message, "error");
+    }
     }
 
     return {
