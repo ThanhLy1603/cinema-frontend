@@ -10,21 +10,36 @@
                <!-- Email -->
                <div class="mb-3">
                   <label class="form-label">Email *</label>
-                  <input v-model="form.username" type="text" class="form-control" placeholder="Nhập tài khoản"
-                     @input="removeSpaces('username')" @keydown.space.prevent required />
+                  <input
+                     v-model="form.username"
+                     type="text"
+                     class="form-control"
+                     placeholder="Nhập tài khoản"
+                     @input="removeSpaces('username')"
+                     @keydown.space.prevent
+                     required
+                  />
                </div>
 
                <!-- Password -->
                <div class="mb-3">
                   <label class="form-label">Mật khẩu *</label>
-                  <input v-model="form.password" type="password" class="form-control" placeholder="Nhập mật khẩu"
-                     @input="removeSpaces('password')" @keydown.space.prevent required />
+                  <input
+                     v-model="form.password"
+                     type="password"
+                     class="form-control"
+                     placeholder="Nhập mật khẩu"
+                     @input="removeSpaces('password')"
+                     @keydown.space.prevent
+                     required
+                  />
                </div>
 
                <!-- Quên mật khẩu -->
                <div class="text-end mb-4">
-                  <router-link to="/forgot-password" class="text-success small text-decoration-none">Quên mật
-                     khẩu?</router-link>
+                  <router-link to="/forgot-password" class="text-success small text-decoration-none"
+                     >Quên mật khẩu?</router-link
+                  >
                </div>
 
                <!-- Submit -->
@@ -44,180 +59,181 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { inject } from 'vue';
-import axios from 'axios';
-import { jwtDecode } from "jwt-decode";
-import { getUserRoleFromToken, getUserNameFromToken } from "../../utils/jwt.js";
+   import { onMounted, ref } from 'vue';
+   import { useRouter } from 'vue-router';
+   import { inject } from 'vue';
+   import axios from 'axios';
+   import { jwtDecode } from 'jwt-decode';
+   import { getUserRoleFromToken, getUserNameFromToken } from '../../utils/jwt.js';
 
-const $swal = inject('$swal');
-const router = useRouter();
+   const $swal = inject('$swal');
+   const router = useRouter();
 
-const form = ref({
-   username: '',
-   password: '',
-});
-
-// ✅ Fix lỗi decode token khi chưa tồn tại
-let decoded = null;
-const token = localStorage.getItem("token");
-if (token && token !== "null" && token !== "undefined") {
-  try {
-    decoded = jwtDecode(token);
-    console.log("🔹 Token decode thành công:", decoded);
-  } catch (err) {
-    console.error("❌ Token không hợp lệ:", err.message);
-  }
-}
-
-function showSuccessToast() {
-   const toastConfig = $swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timerProgressBar: true,
-      timer: 1500,
+   const form = ref({
+      username: '',
+      password: '',
    });
 
-   toastConfig.fire({
-      icon: 'success',
-      title: 'Đăng nhập thành công',
-   });
-}
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-function showErrorAlert(message) {
-   $swal.fire({
-      icon: 'error',
-      title: 'Đăng nhập thất bại',
-      text: message || 'Sai tên đăng nhập hoặc mật khẩu',
-      confirmButtonText: 'OK',
-      customeClass: { popup: 'text-alert' },
-   });
-}
-
-function removeSpaces(field) {
-   form.value[field] = form.value[field].replace(/\s+/g, '');
-}
-
-function goHome() {
-   router.push('/');
-}
-
-function isCheckValation() {
-   return true;
-}
-
-async function handleLogin() {
-   if (isCheckValation()) {
+   // ✅ Fix lỗi decode token khi chưa tồn tại
+   let decoded = null;
+   const token = localStorage.getItem('token');
+   if (token && token !== 'null' && token !== 'undefined') {
       try {
-         const url = 'http://localhost:8080/api/auth/login';
-         const payload = {
-            username: form.value.username,
-            password: form.value.password,
-         };
-
-         const response = await axios.post(url, payload);
-
-         if (response.data.token) {
-            const token = response.data.token;
-
-            localStorage.setItem("token", token);
-
-            const role = getUserRoleFromToken();
-            const username = getUserNameFromToken();
-
-            localStorage.setItem("role", role);
-            localStorage.setItem("username", username);
-
-            showSuccessToast();
-
-            if (role === 'admin') {
-               router.push('/admin/films');
-            } else {
-               router.push('/');
-            }
-
-            console.log('✅ Đăng nhập thành công:', username, 'với quyền', role);
-         } else {
-            showErrorAlert('Vui lòng kiểm tra lại tên đăng nhập và mật khẩu');
-         }
-      } catch (error) {
-         console.error('❌ Lỗi khi xử lý đăng nhập:', error.message);
-         showErrorAlert('Không thể kết nối đến server');
+         decoded = jwtDecode(token);
+         console.log('🔹 Token decode thành công:', decoded);
+      } catch (err) {
+         console.error('❌ Token không hợp lệ:', err.message);
       }
    }
-}
+
+   function showSuccessToast() {
+      const toastConfig = $swal.mixin({
+         toast: true,
+         position: 'top-end',
+         showConfirmButton: false,
+         timerProgressBar: true,
+         timer: 1500,
+      });
+
+      toastConfig.fire({
+         icon: 'success',
+         title: 'Đăng nhập thành công',
+      });
+   }
+
+   function showErrorAlert(message) {
+      $swal.fire({
+         icon: 'error',
+         title: 'Đăng nhập thất bại',
+         text: message || 'Sai tên đăng nhập hoặc mật khẩu',
+         confirmButtonText: 'OK',
+         customeClass: { popup: 'text-alert' },
+      });
+   }
+
+   function removeSpaces(field) {
+      form.value[field] = form.value[field].replace(/\s+/g, '');
+   }
+
+   function goHome() {
+      router.push('/');
+   }
+
+   function isCheckValation() {
+      return true;
+   }
+
+   async function handleLogin() {
+      if (isCheckValation()) {
+         try {
+            const url = `${API_BASE_URL}/auth/login`;
+            const payload = {
+               username: form.value.username,
+               password: form.value.password,
+            };
+
+            const response = await axios.post(url, payload);
+
+            if (response.data.token) {
+               const token = response.data.token;
+
+               localStorage.setItem('token', token);
+
+               const role = getUserRoleFromToken();
+               const username = getUserNameFromToken();
+
+               localStorage.setItem('role', role);
+               localStorage.setItem('username', username);
+
+               showSuccessToast();
+
+               if (role === 'admin') {
+                  router.push('/admin');
+               } else {
+                  router.push('/');
+               }
+
+               console.log('✅ Đăng nhập thành công:', username, 'với quyền', role);
+            } else {
+               showErrorAlert('Vui lòng kiểm tra lại tên đăng nhập và mật khẩu');
+            }
+         } catch (error) {
+            console.error('❌ Lỗi khi xử lý đăng nhập:', error.message);
+            showErrorAlert('Không thể kết nối đến server');
+         }
+      }
+   }
 </script>
 
-
 <style scoped>
-/* 🌈 Nền tổng thể */
-.auth-container {
-   height: 100vh;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   background: linear-gradient(120deg, #a8edea, #fed6e3);
-   font-family: 'Poppins', sans-serif;
-}
-
-/* 🌿 Card chính */
-.auth-wrapper {
-   width: 95%;
-   max-width: 500px;
-   background: rgba(255, 255, 255, 0.97);
-   border-radius: 20px;
-   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-   padding: 35px 40px;
-   animation: fadeInUp 0.5s ease;
-}
-
-.form-label {
-   font-weight: 600;
-   font-size: 14px;
-}
-
-.form-control {
-   border-radius: 8px;
-   border: 1px solid #ccc;
-   padding: 8px 10px;
-}
-
-.btn-success {
-   background-color: #94e900;
-   border: none;
-}
-
-.btn-success:hover {
-   background-color: #7ad000;
-}
-
-.text-success:hover {
-   text-decoration: underline;
-}
-
-.auth-logo img {
-   height: 75px;
-   width: auto;
-}
-
-/* 💫 Animation mượt */
-@keyframes fadeInUp {
-   from {
-      opacity: 0;
-      transform: translateY(30px);
+   /* 🌈 Nền tổng thể */
+   .auth-container {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(120deg, #a8edea, #fed6e3);
+      font-family: 'Poppins', sans-serif;
    }
 
-   to {
-      opacity: 1;
-      transform: translateY(0);
-   }
-}
-
-@media (max-width: 480px) {
+   /* 🌿 Card chính */
    .auth-wrapper {
-      padding: 25px;
+      width: 95%;
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 20px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+      padding: 35px 40px;
+      animation: fadeInUp 0.5s ease;
    }
-}
+
+   .form-label {
+      font-weight: 600;
+      font-size: 14px;
+   }
+
+   .form-control {
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+   }
+
+   .btn-success {
+      background-color: #94e900;
+      border: none;
+   }
+
+   .btn-success:hover {
+      background-color: #7ad000;
+   }
+
+   .text-success:hover {
+      text-decoration: underline;
+   }
+
+   .auth-logo img {
+      height: 75px;
+      width: auto;
+   }
+
+   /* 💫 Animation mượt */
+   @keyframes fadeInUp {
+      from {
+         opacity: 0;
+         transform: translateY(30px);
+      }
+
+      to {
+         opacity: 1;
+         transform: translateY(0);
+      }
+   }
+
+   @media (max-width: 480px) {
+      .auth-wrapper {
+         padding: 25px;
+      }
+   }
 </style>

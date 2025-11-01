@@ -1,87 +1,71 @@
-// import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
 
-// // Import các component
-// import Home from '../components/home/Home.vue';
-// import Login from '../components/home/Login.vue';
-// import Register from '../components/home/Register.vue';
-// import ForgotPassword from '../components/home/ForgotPassword.vue';
-// import FilmDetail from '../components/home/FilmDetail.vue';
-// import FilmsManager from '../components/admin/FilmsManager.vue';
+// ===== Import các component =====
+import Home from '../components/home/Home.vue'
+import Login from '../components/home/Login.vue'
+import Register from '../components/home/Register.vue'
+import ForgotPassword from '../components/home/ForgotPassword.vue'
+import FilmDetail from '../components/home/FilmDetail.vue'
+import AdminDashboard from '../components/admin/AdminDashboard.vue'
+import AccountProfile from '../components/auth/AccountProfile.vue'
 
-// // Khai báo routes
-// const routes = [
-//    {
-//       path: '/',
-//       name: 'home',
-//       component: Home,
-//    },
-//    {
-//       path: '/register',
-//       name: 'Register',
-//       component: Register,
-//    },
-//    {
-//       path: '/login',
-//       name: 'Login',
-//       component: Login,
-//    },
-//    {
-//       path: '/forgot-password',
-//       name: 'ForgotPassword',
-//       component: ForgotPassword,
-//    },
-//     {
-//       path: '/film/:id',
-//       name: 'FilmDetail',
-//       component: FilmDetail
-//    },
-//    {
-//       path: '/FilmsManager',
-//       name: 'FilmsManager',
-//       component: FilmsManager
-//    },
-// ];
-
-// // ✅ Tạo router đúng vị trí
-// const router = createRouter({
-//    history: createWebHistory(),
-//    routes,
-// });
-// export default router;
-
-import { createRouter, createWebHistory } from 'vue-router';
-import publicRoutes from '../router/public.js';   // ✅ đúng đường dẫn
-import adminRoutes from '../router/main.js';     // ✅ sửa main.js → admin.js
-// Gộp tất cả routes
+// ===== Khai báo routes =====
 const routes = [
-   ...publicRoutes,
-   ...adminRoutes
-];
+   // Public routes
+   { path: '/', name: 'Home', component: Home },
+   { path: '/register', name: 'Register', component: Register },
+   { path: '/login', name: 'Login', component: Login },
+   { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
+   { path: '/film/:id', name: 'FilmDetail', component: FilmDetail },
 
+   // Authenticated user routes
+   {
+      path: '/auth/:id',
+      name: 'Profile',
+      component: AccountProfile,
+      meta: { requiresAuth: true },
+   },
+
+   // Admin routes
+   {
+      path: '/admin',
+      name: 'AdminDashboard',
+      component: AdminDashboard,
+      meta: { requiresAuth: true, role: 'admin' },
+   },
+
+   // Fallback
+   { path: '/:pathMatch(.*)*', redirect: '/' },
+]
+
+// ===== Tạo router =====
 const router = createRouter({
    history: createWebHistory(),
-   routes
-});
+   routes,
+})
 
-router.beforeEach(function (to, from, next) {
-   const isAuthenticated = localStorage.getItem('token');
-   const userRole = localStorage.getItem('role'); // có thể là 'ROLE_ADMIN'
+// ===== Navigation Guard =====
+router.beforeEach((to, from, next) => {
+   const token = localStorage.getItem('token')
+   const userRole = localStorage.getItem('role') // e.g. ROLE_ADMIN, ROLE_USER
+   const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : ''
 
-   if (to.meta.requiresAuth) {
-      if (!isAuthenticated) {
-         return next('/login');
-      }
-
-      // 🔧 Chuẩn hóa role về lowercase, bỏ prefix ROLE_
-      const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : '';
-
-      if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
-         return next('/');
-      }
+   // ✅ Nếu đã đăng nhập, chặn truy cập lại trang Login/Register
+   if (token && (to.path === '/login' || to.path === '/register')) {
+      return next('/')
    }
 
-   next();
-});
+   // ✅ Nếu route yêu cầu đăng nhập mà chưa có token -> quay về login
+   if (to.meta.requiresAuth && !token) {
+      return next('/login')
+   }
 
-export default router;
+   // ✅ Nếu route yêu cầu quyền admin nhưng user không phải admin
+   if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
+      return next('/')
+   }
 
+   next()
+})
+
+export default router

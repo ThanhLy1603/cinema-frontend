@@ -86,6 +86,8 @@
    const confirmPassword = ref("");
    const isLoading = ref(false);
 
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
    // ===== GỬI OTP =====
    async function sendOtp() {
       if (!email.value.trim()) {
@@ -95,7 +97,7 @@
       isLoading.value = true;
       try {
          const res = await axios.post(
-            "http://localhost:8080/api/auth/send-otp-forgot",
+            `${API_BASE_URL}/auth/send-otp-forgot`,
             { email: email.value },
             { headers: { "Content-Type": "application/json" } }
          );
@@ -124,7 +126,7 @@
       }
       try {
          const res = await axios.post(
-            "http://localhost:8080/api/auth/verify-otp-forgot",
+            `${API_BASE_URL}/auth/verify-otp-forgot`,
             { email: email.value, otp: otp.value },
             { headers: { "Content-Type": "application/json" } }
          );
@@ -151,7 +153,7 @@
       }
       try {
          const res = await axios.post(
-            "http://localhost:8080/api/auth/reset-password",
+            `${API_BASE_URL}/auth/reset-password`,
             { email: email.value, newPassword: newPassword.value },
             { headers: { "Content-Type": "application/json" } }
          );
