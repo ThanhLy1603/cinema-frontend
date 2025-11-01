@@ -7,6 +7,11 @@
           <li :class="{ active: isActive('/admin/films') }">
             <router-link to="/admin/films">🎬 Quản lý phim</router-link>
           </li>
+
+          <li :class="{ active: isActive('/admin/CategoryManager') }">
+            <router-link to="/admin/CategoryManager">♥ Quản lý danh mục</router-link>
+          </li>
+
           <li>
             <button class="logout-btn" @click="logout">Đăng xuất</button>
           </li>
@@ -19,7 +24,7 @@
         <h1>{{ pageTitle }}</h1>
       </header>
       <section class="content-area">
-        <!-- Đây là nơi hiển thị các component con (FilmsManager, v.v.) -->
+     
         <router-view />
       </section>
     </main>
@@ -31,7 +36,7 @@ import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 export default {
-  name: "AdminDashboard",
+  name: "CategoryManager ",
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -60,7 +65,7 @@ export default {
       updateTitle();
     });
 
-    // Gọi lần đầu
+
     updateTitle();
 
     return {

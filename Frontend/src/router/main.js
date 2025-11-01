@@ -1,5 +1,6 @@
 import AdminDashboard from '../components/admin/AdminDashboard.vue';
 import FilmsManager from '../components/admin/FilmsManager.vue';
+import CategoryManager from "../components/admin/CategoryManager.vue";
 
 const adminRoutes = [
   {
@@ -11,7 +12,11 @@ const adminRoutes = [
         path: 'films',
         name: 'FilmsManager',
         component: FilmsManager
-      }
+      },
+
+       { path: "CategoryManager", 
+        component: 
+        CategoryManager },
     ]
   }
 ];
