@@ -2,7 +2,11 @@
    <header class="main-header">
       <!-- Banner -->
       <div class="header-banner">
-         <img src="/src/assets/header/banner_header.jpg" class="header-bg" alt="Header background" />
+         <img
+            src="/src/assets/header/banner_header.jpg"
+            class="header-bg"
+            alt="Header background"
+         />
       </div>
 
       <!-- Thanh điều hướng -->
@@ -32,6 +36,15 @@
 
                   <div v-if="profileMenuOpen" class="dropdown-menu">
                      <button @click="emitChange('AccountProfile')">Trang cá nhân</button>
+
+                     <!-- ✅ Hiển thị nút quản trị nếu có quyền admin -->
+                     <button
+                        v-if="userRoles && userRoles.includes('ROLE_ADMIN')"
+                        @click="router.push('/admin')"
+                     >
+                        Trang quản trị
+                     </button>
+
                      <button @click="logout">Đăng xuất</button>
                   </div>
                </div>
@@ -62,6 +75,7 @@ const $swal = inject('$swal');
 const menuOpen = ref(false);
 const profileMenuOpen = ref(false);
 const token = localStorage.getItem('token') || null;
+const userRoles = ref([]); // ✅ luôn là mảng, tránh undefined
 
 // Hiển thị toast thông báo
 function showToast(message) {
@@ -83,12 +97,11 @@ function closeMenu() {
    menuOpen.value = false;
 }
 
-// ✅ Khi click menu ở FilmDetail → quay lại Home và mở đúng tab
+// Khi click menu ở FilmDetail → quay lại Home và mở đúng tab
 function emitChange(componentName) {
    emit('change-component', componentName);
    closeMenu();
 
-   // Nếu không ở trang Home → chuyển về Home kèm query tab
    if (router.currentRoute.value.path !== '/') {
       router.push({ path: '/', query: { tab: componentName } });
    }
@@ -97,13 +110,6 @@ function emitChange(componentName) {
 // Toggle menu hồ sơ
 function toggleProfileMenu() {
    profileMenuOpen.value = !profileMenuOpen.value;
-}
-
-// 👉 Đi tới trang cá nhân
-function goProfile() {
-   const userInfo = jwtDecode(token);
-   router.push(`/auth/${userInfo.subject}`);
-   profileMenuOpen.value = false;
 }
 
 // 👉 Đăng xuất
@@ -115,9 +121,17 @@ function logout() {
    setTimeout(() => window.location.reload(), 500);
 }
 
-// Debug log
+// ✅ Giải mã token để lấy quyền
 onMounted(() => {
-   if (token) console.log('Thông tin token:', jwtDecode(token));
+   if (token) {
+      try {
+         const decoded = jwtDecode(token);
+         console.log('Thông tin token:', decoded);
+         userRoles.value = decoded.roles || []; // roles là mảng
+      } catch (e) {
+         console.warn('Không thể giải mã token');
+      }
+   }
 });
 </script>
 
@@ -125,6 +139,11 @@ onMounted(() => {
 .main-header {
    width: 100%;
    overflow: visible !important;
+}
+.right-group {
+   display: flex;
+   align-items: center;
+   gap: 12px; /* khoảng cách giữa hồ sơ và icon menu */
 }
 
 /* === Banner === */
@@ -134,6 +153,7 @@ onMounted(() => {
    height: 150px;
    background: linear-gradient(to right, #7cc9ff, #54a3ff);
 }
+
 .header-bg {
    width: 100%;
    height: 100%;
@@ -149,6 +169,7 @@ onMounted(() => {
    position: relative;
    z-index: 10;
 }
+
 .header-content {
    width: 95%;
    max-width: 1200px;
@@ -158,6 +179,7 @@ onMounted(() => {
    justify-content: space-between;
    z-index: 20;
 }
+
 .logo img {
    height: 70px;
 }
@@ -167,6 +189,7 @@ onMounted(() => {
    display: flex;
    gap: 25px;
 }
+
 .menu button {
    background: none;
    border: none;
@@ -178,6 +201,7 @@ onMounted(() => {
    border-radius: 8px;
    transition: all 0.25s ease;
 }
+
 .menu button:hover {
    background-color: lightgreen;
    color: black;
@@ -194,6 +218,7 @@ onMounted(() => {
    font-weight: bold;
    transition: background 0.3s;
 }
+
 .login-btn:hover {
    background-color: #7ad000;
 }
@@ -202,6 +227,7 @@ onMounted(() => {
 .profile-dropdown {
    position: relative;
 }
+
 .dropdown-menu {
    position: absolute;
    top: 45px;
@@ -216,6 +242,7 @@ onMounted(() => {
    z-index: 1000;
    animation: fadeIn 0.2s ease-in-out;
 }
+
 .dropdown-menu button {
    background: none;
    border: none;
@@ -224,6 +251,7 @@ onMounted(() => {
    cursor: pointer;
    transition: background 0.2s;
 }
+
 .dropdown-menu button:hover {
    background-color: #f0f0f0;
 }
@@ -237,6 +265,7 @@ onMounted(() => {
    user-select: none;
    transition: transform 0.3s ease;
 }
+
 .menu-toggle:hover {
    transform: scale(1.1);
 }
@@ -246,17 +275,21 @@ onMounted(() => {
    .logo img {
       height: 60px;
    }
+
    .login-btn {
       padding: 6px 12px;
    }
 }
+
 @media (max-width: 768px) {
    .header-banner {
       height: 100px;
    }
+
    .logo img {
       height: 45px;
    }
+
    .menu {
       position: absolute;
       top: 60px;
@@ -274,22 +307,27 @@ onMounted(() => {
       transition: all 0.3s ease;
       z-index: 9999;
    }
+
    .menu.active {
       opacity: 1 !important;
       pointer-events: auto;
       transform: translateY(0);
    }
+
    .menu-toggle {
       display: block;
    }
 }
+
 @media (max-width: 480px) {
    .header-banner {
       height: 80px;
    }
+
    .logo img {
       height: 40px;
    }
+
    .login-btn {
       padding: 5px 8px;
       font-size: 12px;
@@ -302,6 +340,7 @@ onMounted(() => {
       opacity: 0;
       transform: translateY(-5px);
    }
+
    to {
       opacity: 1;
       transform: translateY(0);
