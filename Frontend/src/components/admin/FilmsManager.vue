@@ -1,217 +1,598 @@
 <template>
-  <div class="films-page">
-    <div class="header">
-      <button class="btn" @click="goBack">← Trở lại</button>
-      <button class="btn primary" @click="createFilm">+ Tạo phim</button>
-    </div>
+   <div class="page-container">
+      <!-- Navigation Buttons -->
+      <div class="btn-box">
+         <button class="switch-btn" :class="{ active: !showForm }" @click="showForm = false">
+            Danh sách phim
+         </button>
 
-    <form @submit.prevent="createFilm" class="form-card">
-      <div class="grid">
-        <div class="field">
-          <label>Tên phim *</label>
-          <input v-model="film.name" required />
-        </div>
-
-        <div class="field">
-          <label>Ngày chiếu *</label>
-          <input type="date" v-model="film.releaseDate" required />
-        </div>
-
-        <div class="field">
-          <label>Trailer *</label>
-          <input v-model="film.trailer" placeholder="https://youtube.com/..." required />
-        </div>
-
-        <div class="field">
-          <label>Thời lượng (phút) *</label>
-          <input type="number" v-model.number="film.duration" required />
-        </div>
-
-        <div class="field desc">
-          <label>Mô tả *</label>
-          <textarea v-model="film.description" required></textarea>
-        </div>
-
-        <div class="field">
-          <label>Đạo diễn *</label>
-          <input v-model="film.director" required />
-        </div>
-
-        <div class="field">
-          <label>Trạng thái *</label>
-          <select v-model="film.status" required>
-            <option value="Đang chiếu">Đang chiếu</option>
-            <option value="Sắp chiếu">Sắp chiếu</option>
-            <option value="Ngừng chiếu">Ngừng chiếu</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Diễn viên *</label>
-          <input v-model="film.actor" required />
-        </div>
-
-        <div class="field">
-          <label>Quốc gia *</label>
-          <input v-model="film.country" required />
-        </div>
-
-        <div class="field">
-          <label>Poster (URL) *</label>
-          <input v-model="film.poster" placeholder="https://..." required />
-          <img v-if="film.poster" :src="film.poster" class="poster-preview" alt="Poster preview" />
-        </div>
+         <button class="switch-btn" :class="{ active: showForm }" @click="showForm = true">
+            Tạo phim mới
+         </button>
       </div>
 
-      <div class="footer">
-        <button type="submit" class="btn primary">Lưu phim</button>
-      </div>
-    </form>
+      <!-- Film List -->
+      <transition name="fade">
+         <div v-if="!showForm" class="table-container">
+            <h2 class="text-center align-center text-dark"> Danh sách phim</h2>
 
-    <div v-if="toast.message" :class="['toast', toast.type]">{{ toast.message }}</div>
-  </div>
+            <table class="film-table table-bordered table-hover">
+               <thead class="align-center text-center">
+                  <tr>
+                     <th>Poster</th>
+                     <th>Tên phim</th>
+                     <th>Thể loại</th>
+                     <th>Quốc gia</th>
+                     <th>Ngày phát hành</th>
+                     <th>Trạng thái</th>
+                     <th>Thao tác</th>
+                  </tr>
+               </thead>
+
+               <tbody class="text-center align-cebt">
+                  <tr v-for="film in films" :key="film">
+                     <td><img :src="posterSrc(film.poster)" /></td>
+                     <td>{{film.name}}</td>
+                     <td>{{getCategoryNames(film)}}</td>
+                     <td>{{film.country}}</td>
+                     <td>{{film.releaseDate}}</td>
+                     <td>{{getStatusName(film.status)}}</td>
+                     <td>
+                        <button class="btn btn-sm btn-primary mx-2" @click="handleEdit(film)">Sửa</button>
+                        <button class="btn btn-sm btn-danger mx-2">Xóa</button>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </div>
+      </transition>
+
+      <!-- Film Form -->
+      <transition name="slide">
+         <div v-if="showForm" class="form-container">
+            <h2 class="title"> Tạo phim mới</h2>
+
+            <form class="film-form">
+               <div class="form-grid">
+                  <div class="form-group">
+                     <label>Tên phim</label>
+                     <input type="text" placeholder="Nhập tên phim..." />
+                  </div>
+
+                  <div class="form-group">
+                     <label>Quốc gia</label>
+                     <input type="text" placeholder="Nhập quốc gia..." />
+                  </div>
+
+                  <div class="form-group">
+                     <label>Đạo diễn</label>
+                     <input type="text" placeholder="Nhập tên đạo diễn..." />
+                  </div>
+
+                  <div class="form-group">
+                     <label>Ngày phát hành</label>
+                     <input type="date" />
+                  </div>
+               </div>
+
+               <div class="form-group">
+                  <label>Diễn viên</label>
+                  <textarea placeholder="Danh sách diễn viên..."></textarea>
+               </div>
+
+               <div class="form-group">
+                  <label>Mô tả</label>
+                  <textarea placeholder="Mô tả nội dung phim..."></textarea>
+               </div>
+
+               <div class="form-group">
+                  <label>Thời lượng (phút)</label>
+                  <input type="number" min="1" placeholder="VD: 120" />
+               </div>
+
+               <div class="form-group">
+                  <label>Thể loại phim</label>
+                  <div class="checkbox-group">
+                     <label><input type="checkbox" /> Hành động</label>
+                     <label><input type="checkbox" /> Tình cảm</label>
+                     <label><input type="checkbox" /> Kinh dị</label>
+                     <label><input type="checkbox" /> Hoạt hình</label>
+                  </div>
+               </div>
+
+               <div class="form-group">
+                  <label>Poster</label>
+                  <input type="file" @change="handlePoster" accept="image/*" />
+               </div>
+
+               <div class="form-group">
+                  <label>Trailer</label>
+                  <input type="file" @change="handleTrailer" accept="video/*" />
+               </div>
+
+               <div class="form-group">
+                  <label>Trạng thái</label>
+                  <select>
+                     <option value="coming">Sắp chiếu</option>
+                     <option value="showing">Đang chiếu</option>
+                     <option value="ended">Đã kết thúc</option>
+                  </select>
+               </div>
+
+               <div class="btn-actions">
+                  <button type="submit" class="btn save"> {{ isEditing ? 'Sửa' : 'Lưu' }}</button>
+                  <button type="reset" class="btn reset"> Làm mới</button>
+               </div>
+            </form>
+         </div>
+      </transition>
+   </div>
 </template>
 
-<script>
-import { ref } from "vue";
+<script setup>
+   import axios from 'axios';
+   import { ref, onMounted } from 'vue';
+   const showForm = ref(false);
+   
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+   const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
+   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL;
 
-export default {
-  name: "FilmsManager",
-  emits: ["open"], 
-  setup(props, { emit }) {
-    const API_URL = "http://localhost:8080/api/films";
+   const films = ref([]);
+   const categories = ref([]);
+   const isEditing = ref(false);
 
-    const film = ref({
-      name: "",
-      country: "",
-      director: "",
-      actor: "",
-      description: "",
-      duration: "",
-      poster: "",
-      trailer: "",
-      releaseDate: "",
-      status: "Sắp chiếu",
-      isDeleted: false
-    });
+   const filmForm = ref({
+      name: '',
+      country: '',
+      director: '',
+      releaseDate: '',
+      actor: '',
+      description: '',
+      duration: '',
+      status: 'upcoming',
+      categories: [],
+      poster: null,
+      trailer: null,
+   });
 
-    const toast = ref({ message: "", type: "" });
-
-    function showToast(msg, type) {
-      if (type === undefined) type = "success";
-      toast.value = { message: msg, type: type };
-      setTimeout(function () {
-        toast.value.message = "";
-      }, 2500);
-    }
-
-    // ✅ Sửa lại goBack: gửi sự kiện về cha, không dùng history.back()
-    function goBack() {
-      emit("open", null);
-    }
-
-    async function createFilm() {
+   async function getFilms() {
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(film.value)
-        });
+         const url = `${API_BASE_URL}/admin/films`;
+         const response = await axios.get(url);
 
-        if (!response.ok) {
-          throw new Error("HTTP " + response.status);
-        }
+         films.value = response.data;
 
-        showToast("Tạo phim thành công!");
-        for (var key in film.value) {
-          if (key !== "status" && key !== "isDeleted") {
-            film.value[key] = "";
-          }
-          if (key === "isDeleted") film.value[key] = false;
-        }
+         console.log("Films: ", films.value);
       } catch (error) {
-        console.error(error);
-        showToast("Tạo phim thất bại!", "error");
+         console.error("Lỗi khi láy dữ liệu từ Films: ", error.message);
       }
-    }
+   }
 
-    return {
-      film,
-      toast,
-      showToast,
-      goBack,
-      createFilm
-    };
-  }
-};
+   async function getCategories() {
+      try {
+         const url = `${API_BASE_URL}/admin/films/categories`;
+
+         const response = await axios.get(url);
+         
+         categories.value = await response.data;
+
+         console.log("Categories: ", categories.value);
+      } catch (error) {
+         console.error("Lỗi khi lấy dữ liệu từ categories: ", error.message);
+      }
+   }
+
+   function getCategoryNames(film) {
+      return film.categories?.length 
+         ? film.categories.map((category) => category.name).join(', ')
+         :'Đang cập nhật...';
+   }
+
+   function getStatusName(status) {
+      const statusMap = {
+         active: 'Đang chiếu',
+         upcoming: 'Sắp chiếu',
+         inactive: 'Đã ngừng chiếu'
+      };
+
+      return statusMap[status] || 'Không xác định';
+   }
+
+   function handleEdit(film) {
+      isEditing.value = true;
+   }
+
+   function handlePoster(event) {
+      const file = event.target.files[0];
+      if (file) {
+         filmForm.value.poster = file; 
+      }
+   }
+
+   function handleTrailer(event) {
+      const file = event.target.files[0];
+      if (file) {
+         filmForm.value.trailer = file; 
+      }
+   }
+
+   async function saveFilm() {
+      const formData = new FormData();
+   }
+
+   function posterSrc(poster) {
+      return IMAGE_URL + poster;
+   }
+
+   onMounted(() => {
+      getFilms();
+      getCategories();
+   });
 </script>
 
 <style scoped>
-.films-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.btn {
-  background: #e5e7eb;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-weight: 600;
-}
-.btn.primary {
-  background: #16a34a;
-  color: #fff;
-}
-.form-card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-}
-.desc {
-  grid-column: 1 / span 2;
-}
-.poster-preview {
-  margin-top: 6px;
-  max-height: 160px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  object-fit: cover;
-}
-.footer {
-  margin-top: 16px;
-  text-align: right;
-}
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 10px 16px;
-  color: #fff;
-  border-radius: 8px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-.toast.success {
-  background: #10b981;
-}
-.toast.error {
-  background: #ef4444;
-}
+   .page-container {
+      padding: 20px;
+      background: #f5f6fa;
+      min-height: 100vh;
+   }
+
+   /* switch btn box */
+   .btn-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 230px;
+      margin-bottom: 20px;
+   }
+
+   /* button style like image */
+   .switch-btn {
+      background: #7ee07e;
+      border: 2px solid #2b2b2b;
+      padding: 14px 20px;
+      font-size: 18px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+   }
+
+   .switch-btn:hover {
+      background: #8cf78c;
+   }
+
+   /* Form & Table wrappers */
+   .form-container,
+   .table-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+   }
+
+   /* Form */
+   .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+   }
+
+   .form-group {
+      margin-bottom: 12px;
+   }
+   input,
+   textarea,
+   select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+   }
+   textarea {
+      height: 70px;
+   }
+
+   /* Checkbox */
+   .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+   }
+
+   /* Buttons */
+   .btn-actions {
+      display: flex;
+      gap: 10px;
+   }
+   .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+   }
+   .save {
+      background: #2ecc71;
+   }
+   .reset {
+      background: #e74c3c;
+   }
+
+   /* Table */
+   .film-table {
+      width: 100%;
+      border-collapse: collapse;
+   }
+   .film-table th,
+   .film-table td {
+      padding: 10px;
+      border-bottom: 1px solid #e0e0e0;
+   }
+   .film-table img {
+      width: 60px;
+      height: 90px;
+      border-radius: 4px;
+   }
+
+   /* Responsive */
+   @media (max-width: 768px) {
+      .form-grid {
+         grid-template-columns: 1fr;
+      }
+      .btn-box {
+         width: 100%;
+         flex-direction: row;
+      }
+      .switch-btn {
+         flex: 1;
+         text-align: center;
+      }
+   }
+
+   .page-container {
+      padding: 20px;
+      background: #eef1f5;
+      min-height: 100vh;
+      transition: 0.3s;
+   }
+
+   /* Switch buttons */
+   .btn-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+   }
+
+   .switch-btn {
+      background: #b8deb8;
+      border: 2px solid #2b2b2b;
+      padding: 14px 20px;
+      font-size: 18px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+   }  
+
+   .switch-btn:hover {
+      transform: translateY(-2px);
+   }
+
+   /* Active Tab */
+   .switch-btn.active {
+      background: #7ee07e;
+      box-shadow: 0 0 10px rgba(0, 200, 0, 0.3);
+   }
+
+   /* Card container */
+   .form-container,
+   .table-container {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.35s ease;
+   }
+
+   .title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 15px;
+   }
+
+   /* Input Elements */
+   input,
+   textarea,
+   select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #c7c7c7;
+      transition: box-shadow 0.2s ease;
+   }
+
+   input:focus,
+   textarea:focus,
+   select:focus {
+      outline: none;
+      box-shadow: 0 0 6px #7ee07e;
+   }
+
+   /* Form grid */
+   .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+   }
+   .form-group {
+      margin-bottom: 12px;
+   }
+
+   /* Buttons */
+   .btn-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+   }
+   .btn {
+      padding: 12px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+   }
+   .save {
+      background: #2ecc71;
+   }
+   .reset {
+      background: #e74c3c;
+   }
+
+   .btn:hover {
+      transform: scale(1.05);
+   }
+
+   /* Table */
+   .film-table {
+      width: 100%;
+      border-collapse: collapse;
+   }
+   .film-table th {
+      background: #dfffe0;
+      padding: 10px;
+   }
+   .film-table td {
+      padding: 10px;
+      border-bottom: 1px solid #ececec;
+   }
+   .film-table tr:hover {
+      background: #f7fff7;
+   }
+
+   /* Animations */
+   .fade-enter-active,
+   .fade-leave-active {
+      transition: opacity 0.25s;
+   }
+   .fade-enter-from,
+   .fade-leave-to {
+      opacity: 0;
+   }
+
+   .slide-enter-active {
+      animation: slideIn 0.2s ease;
+   }
+   @keyframes slideIn {
+      from {
+         transform: translateY(20px);
+         opacity: 0;
+      }
+      to {
+         transform: translateY(0);
+         opacity: 1;
+      }
+   }
+
+   /* 📌 Tablet (<= 1024px) */
+   @media (max-width: 1024px) {
+      .page-container {
+         padding: 15px;
+      }
+
+      .form-grid {
+         grid-template-columns: 1fr; /* form xuống 1 cột */
+         gap: 10px;
+      }
+
+      .btn-box {
+         gap: 8px;
+      }
+
+      .switch-btn {
+         font-size: 15px;
+         padding: 10px;
+      }
+   }
+
+   /* 📌 Mobile (<= 768px) */
+   @media (max-width: 768px) {
+      .btn-box {
+         width: 100%;
+         display: flex;
+         flex-wrap: wrap;
+         gap: 8px;
+      }
+
+      .switch-btn {
+         flex: 1;
+         font-size: 14px;
+         padding: 10px 8px;
+         border-radius: 10px;
+      }
+
+      .title {
+         font-size: 18px;
+         text-align: center;
+      }
+
+      .form-container,
+      .table-container {
+         padding: 16px;
+      }
+
+      input,
+      textarea,
+      select {
+         padding: 10px;
+         font-size: 14px;
+      }
+
+      /* 📌 Table scroll khi nhỏ */
+      .film-table {
+         display: block;
+         overflow-x: auto;
+         white-space: nowrap;
+      }
+
+      .film-table th,
+      .film-table td {
+         font-size: 13px;
+         padding: 8px;
+      }
+
+      .film-table img {
+         width: 50px;
+         height: 70px;
+      }
+
+      /* Button nhỏ hơn */
+      .btn {
+         padding: 8px 12px;
+         font-size: 13px;
+      }
+   }
+
+   /* 📌 Very small screens (<= 480px) */
+   @media (max-width: 480px) {
+      .switch-btn {
+         font-size: 13px;
+         padding: 8px;
+      }
+
+      .title {
+         font-size: 16px;
+      }
+
+      .btn-actions {
+         flex-direction: column;
+      }
+
+      .btn {
+         width: 100%;
+         text-align: center;
+      }
+   }
 </style>
