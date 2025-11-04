@@ -65,10 +65,7 @@
                         <tr v-for="st in paginatedShowTimes" :key="st.id">
                            <td class="fw-semibold">{{ st.startTime }}</td>
                            <td>
-                              <button
-                                 class="btn btn-danger btn-sm"
-                                 @click="deleteShowTime(st)"
-                              >
+                              <button class="btn btn-danger btn-sm" @click="deleteShowTime(st)">
                                  Xóa
                               </button>
                            </td>
@@ -123,155 +120,150 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import axios from 'axios'
+   import { ref, onMounted, computed, watch } from 'vue';
+   import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/showtimes'
+   const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const showTimes = ref([])
-const showTime = ref({ startTime: '' })
-const toast = ref({ message: '', type: '' })
-const searchQuery = ref('')
+   const showTimes = ref([]);
+   const showTime = ref({ startTime: '' });
+   const toast = ref({ message: '', type: '' });
+   const searchQuery = ref('');
 
-const currentPage = ref(1)
-const itemsPerPage = 10
+   const currentPage = ref(1);
+   const itemsPerPage = 10;
 
-function showToast(msg, type = 'success') {
-  toast.value = { message: msg, type }
-  setTimeout(() => (toast.value.message = ''), 2500)
-}
+   function showToast(msg, type = 'success') {
+      toast.value = { message: msg, type };
+      setTimeout(() => (toast.value.message = ''), 2500);
+   }
 
-/* ===== Load dữ liệu ===== */
-async function loadShowTimes() {
-  try {
-    const res = await axios.get(API_URL);
-    // ✅ Chỉ hiển thị giờ chưa bị ẩn
-    showTimes.value = res.data.filter(st => !st.isDeleted);
-  } catch (error) {
-    showToast('Không thể tải danh sách giờ chiếu', 'error');
-  }
-}
+   /* ===== Load dữ liệu ===== */
+   async function loadShowTimes() {
+      try {
+         const url = `${API_URL}/admin/show-times`;
+         const res = await axios.get(url);
+         // ✅ Chỉ hiển thị giờ chưa bị ẩn
+         showTimes.value = res.data.filter((st) => !st.isDeleted);
+      } catch (error) {
+         showToast('Không thể tải danh sách giờ chiếu', 'error');
+      }
+   }
 
+   /* ===== Validate giờ chiếu ===== */
+   function validateShowTime() {
+      const inputTime = showTime.value.startTime;
+      if (!inputTime) {
+         showToast('Vui lòng chọn giờ chiếu!', 'error');
+         return false;
+      }
 
-/* ===== Validate giờ chiếu ===== */
-function validateShowTime() {
-  const inputTime = showTime.value.startTime
-  if (!inputTime) {
-    showToast('Vui lòng chọn giờ chiếu!', 'error')
-    return false
-  }
+      const [hour, minute] = inputTime.split(':').map(Number);
 
-  const [hour, minute] = inputTime.split(':').map(Number)
+      // Check khung giờ hợp lệ
+      if (hour < 8 || (hour === 24 && minute > 0) || hour > 23) {
+         showToast('Giờ chiếu phải nằm trong khoảng 08:00 - 24:00!', 'error');
+         return false;
+      }
 
-  // Check khung giờ hợp lệ
-  if (hour < 8 || (hour === 24 && minute > 0) || hour > 23) {
-    showToast('Giờ chiếu phải nằm trong khoảng 08:00 - 24:00!', 'error')
-    return false
-  }
+      // Check trùng giờ (FE)
+      const exists = showTimes.value.some(
+         (st) => st.startTime && st.startTime.substring(0, 5) === inputTime.substring(0, 5)
+      );
 
-  // Check trùng giờ (FE)
-  const exists = showTimes.value.some(
-    (st) =>
-      st.startTime &&
-      st.startTime.substring(0, 5) === inputTime.substring(0, 5)
-  )
+      if (exists) {
+         showToast(`Giờ chiếu ${inputTime} đã tồn tại!`, 'error');
+         return false;
+      }
 
-  if (exists) {
-    showToast(`Giờ chiếu ${inputTime} đã tồn tại!`, 'error')
-    return false
-  }
+      return true;
+   }
 
-  return true
-}
+   /* ===== Thêm giờ chiếu ===== */
+   async function handleSubmit() {
+      if (!validateShowTime()) return;
+      const url = `${API_URL}/admin/show-times/create`;
+      console.log("show time: ", showTime.value);
+      try {
+         await axios.post(url, showTime.value);
+         showToast('Thêm giờ chiếu thành công!');
+         showTime.value = { startTime: '' };
+         await loadShowTimes();
+      } catch (error) {
+         const msg = error.response?.data?.message || 'Lỗi khi thêm giờ chiếu!';
+         showToast(msg, 'error');
+      }
+   }
 
-/* ===== Thêm giờ chiếu ===== */
-async function handleSubmit() {
-  if (!validateShowTime()) return
+   /* ===== Xóa (ẩn) giờ chiếu ===== */
+   async function deleteShowTime(st) {
+      if (!confirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`)) return;
+      try {
+         await axios.delete(`${API_URL}/admin/show-times/delete/${st.id}`);
+         showToast('Giờ chiếu đã được ẩn!');
+         await loadShowTimes();
+      } catch (error) {
+         const msg = error.response?.data?.message || 'Không thể ẩn giờ chiếu này!';
+         showToast(msg, 'error');
+      }
+   }
 
-  try {
-    await axios.post(API_URL, showTime.value)
-    showToast('Thêm giờ chiếu thành công!')
-    showTime.value = { startTime: '' }
-    await loadShowTimes()
-  } catch (error) {
-    const msg = error.response?.data?.message || 'Lỗi khi thêm giờ chiếu!'
-    showToast(msg, 'error')
-  }
-}
+   /* ===== Tìm kiếm + Phân trang ===== */
+   const filteredShowTimes = computed(() => {
+      const query = searchQuery.value.trim().toLowerCase();
+      if (!query) return showTimes.value;
+      return showTimes.value.filter(
+         (st) => st.startTime && st.startTime.toLowerCase().includes(query)
+      );
+   });
 
-/* ===== Xóa (ẩn) giờ chiếu ===== */
-async function deleteShowTime(st) {
-  if (!confirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`)) return
-  try {
-    await axios.delete(`${API_URL}/${st.id}`)
-    showToast('Giờ chiếu đã được ẩn!')
-    await loadShowTimes()
-  } catch (error) {
-    const msg =
-      error.response?.data?.message ||
-      'Không thể ẩn giờ chiếu này!'
-    showToast(msg, 'error')
-  }
-}
+   const totalPages = computed(() => Math.ceil(filteredShowTimes.value.length / itemsPerPage));
 
-/* ===== Tìm kiếm + Phân trang ===== */
-const filteredShowTimes = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  if (!query) return showTimes.value
-  return showTimes.value.filter(
-    (st) => st.startTime && st.startTime.toLowerCase().includes(query)
-  )
-})
+   const paginatedShowTimes = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      return filteredShowTimes.value.slice(start, start + itemsPerPage);
+   });
 
-const totalPages = computed(() =>
-  Math.ceil(filteredShowTimes.value.length / itemsPerPage)
-)
+   function setPage(page) {
+      if (page >= 1 && page <= totalPages.value) currentPage.value = page;
+   }
+   function nextPage() {
+      if (currentPage.value < totalPages.value) currentPage.value++;
+   }
+   function prevPage() {
+      if (currentPage.value > 1) currentPage.value--;
+   }
 
-const paginatedShowTimes = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredShowTimes.value.slice(start, start + itemsPerPage)
-})
+   watch(searchQuery, () => (currentPage.value = 1));
 
-function setPage(page) {
-  if (page >= 1 && page <= totalPages.value) currentPage.value = page
-}
-function nextPage() {
-  if (currentPage.value < totalPages.value) currentPage.value++
-}
-function prevPage() {
-  if (currentPage.value > 1) currentPage.value--
-}
-
-watch(searchQuery, () => (currentPage.value = 1))
-
-onMounted(() => {
-  loadShowTimes()
-  document.documentElement.lang = 'vi'
-})
+   onMounted(() => {
+      loadShowTimes();
+      document.documentElement.lang = 'vi';
+   });
 </script>
 
 <style scoped>
-.showtimes-page {
-  font-family: 'Segoe UI', sans-serif;
-}
-.toast-custom {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 8px;
-  padding: 10px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: 0.3s ease;
-  z-index: 1055;
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+   .showtimes-page {
+      font-family: 'Segoe UI', sans-serif;
+   }
+   .toast-custom {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 10px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: 0.3s ease;
+      z-index: 1055;
+   }
+   .fade-enter-active,
+   .fade-leave-active {
+      transition: opacity 0.3s;
+   }
+   .fade-enter-from,
+   .fade-leave-to {
+      opacity: 0;
+   }
 </style>
