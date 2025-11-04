@@ -1,131 +1,184 @@
 <template>
-   <div class="page-container">
-      <!-- Navigation Buttons -->
-      <div class="btn-box">
-         <button class="switch-btn" :class="{ active: !showForm }" @click="showForm = false">
-            Danh sách phim
-         </button>
+   <div class="container-fluid">
+      <div class="page-container">
+         <!-- Navigation Buttons -->
+         <div class="btn-box">
+            <button class="switch-btn" :class="{ active: !showForm }" @click="showForm = false">
+               Danh sách phim
+            </button>
 
-         <button class="switch-btn" :class="{ active: showForm }" @click="showForm = true">
-            Tạo phim mới
-         </button>
+            <button class="switch-btn" :class="{ active: showForm }" @click="showForm = true">
+               Tạo phim mới
+            </button>
+         </div>
+
+         <!-- Film List -->
+         <transition name="fade">
+            <div v-if="!showForm" class="table-container">
+               <table class="film-table table-bordered table-hover">
+                  <thead class="align-center text-center">
+                     <tr>
+                        <th>Poster</th>
+                        <th>Tên phim</th>
+                        <th>Thể loại</th>
+                        <th>Quốc gia</th>
+                        <th>Ngày phát hành</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                     </tr>
+                  </thead>
+
+                  <tbody class="text-center align-cebt">
+                     <tr v-for="film in films" :key="film">
+                        <td><img :src="posterSrc(film.poster)" /></td>
+                        <td>{{ film.name }}</td>
+                        <td>{{ getCategoryNames(film) }}</td>
+                        <td>{{ film.country }}</td>
+                        <td>{{ film.releaseDate }}</td>
+                        <td>{{ getStatusName(film.status) }}</td>
+                        <td>
+                           <button class="btn btn-sm btn-primary mx-2" @click="handleEdit(film)">
+                              Sửa
+                           </button>
+                           <button class="btn btn-sm btn-danger mx-2">Xóa</button>
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </transition>
+
+         <!-- Film Form -->
+         <transition name="slide">
+            <div v-if="showForm" class="form-container">
+               <form @submit.prevent="" class="film-form">
+                  <div class="form-grid">
+                     <div class="form-group">
+                        <label class="fw-bold">Tên phim</label>
+                        <input
+                           type="text"
+                           v-model="form.name"
+                           placeholder="Nhập tên phim..."
+                           required
+                        />
+                     </div>
+
+                     <div class="form-group">
+                        <label>Quốc gia</label>
+                        <input
+                           type="text"
+                           v-model="form.country"
+                           placeholder="Nhập quốc gia..."
+                           required
+                        />
+                     </div>
+
+                     <div class="form-group">
+                        <label>Đạo diễn</label>
+                        <input
+                           type="text"
+                           v-model="form.director"
+                           placeholder="Nhập tên đạo diễn..."
+                           required
+                        />
+                     </div>
+
+                     <div class="form-group">
+                        <label>Ngày phát hành</label>
+                        <input type="date" v-model="form.releaseDate" required />
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Diễn viên</label>
+                     <textarea
+                        v-model="form.actor"
+                        placeholder="Danh sách diễn viên..."
+                        required
+                     ></textarea>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Mô tả</label>
+                     <textarea
+                        v-model="form.description"
+                        placeholder="Mô tả nội dung phim..."
+                        required
+                     ></textarea>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Thời lượng (phút)</label>
+                     <input
+                        type="number"
+                        v-model="form.duration"
+                        min="1"
+                        placeholder="VD: 120"
+                        required
+                     />
+                  </div>
+
+                  <div class="form-group">
+                     <label>Thể loại phim</label>
+                     <div class="checkbox-group">
+                        <label v-for="category in categories" :key="category">
+                           <input type="checkbox" :value="category" v-model="form.categories" required/>
+                           {{ category.name }}
+                        </label>
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Poster</label>
+
+                     <!-- Nếu đang edit và chưa chọn file mới thì preview ảnh cũ -->
+                     <div v-if="form.poster && typeof form.poster === 'string'">
+                        <img
+                           :src="posterSrc(form.poster)"
+                           alt="Poster"
+                           style="width: 120px; border-radius: 8px; margin-bottom: 8px"
+                        />
+                     </div>
+
+                     <input type="file" @change="handlePoster" accept="image/*" required/>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Trailer</label>
+
+                     <!-- Link xem trailer nếu có -->
+                     <div v-if="form.trailer && typeof form.trailer === 'string'">
+                        <a
+                           :href="trailerSrc(form.trailer)"
+                           target="_blank"
+                           style="display: block; margin-bottom: 8px; color: blue"
+                        >
+                           Xem trailer hiện tại
+                        </a>
+                     </div>
+
+                     <input type="file" @change="handleTrailer" accept="video/*" required/>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Trạng thái</label>
+                     <select v-model="form.status" required>
+                        <option value="upcoming">Sắp chiếu</option>
+                        <option value="active">Đang chiếu</option>
+                        <option value="inactive">Đã kết thúc</option>
+                     </select>
+                  </div>
+
+                  <div class="btn-actions">
+                     <button type="submit" class="btn save" @click="handleCreateUpdate">
+                        {{ showBtnUpdate ? 'Sửa' : 'Lưu' }}
+                     </button>
+                     <button type="reset" class="btn reset" @click="handleReset()">Làm mới</button>
+                  </div>
+               </form>
+            </div>
+         </transition>
       </div>
-
-      <!-- Film List -->
-      <transition name="fade">
-         <div v-if="!showForm" class="table-container">
-            <h2 class="text-center align-center text-dark"> Danh sách phim</h2>
-
-            <table class="film-table table-bordered table-hover">
-               <thead class="align-center text-center">
-                  <tr>
-                     <th>Poster</th>
-                     <th>Tên phim</th>
-                     <th>Thể loại</th>
-                     <th>Quốc gia</th>
-                     <th>Ngày phát hành</th>
-                     <th>Trạng thái</th>
-                     <th>Thao tác</th>
-                  </tr>
-               </thead>
-
-               <tbody class="text-center align-cebt">
-                  <tr v-for="film in films" :key="film">
-                     <td><img :src="posterSrc(film.poster)" /></td>
-                     <td>{{film.name}}</td>
-                     <td>{{getCategoryNames(film)}}</td>
-                     <td>{{film.country}}</td>
-                     <td>{{film.releaseDate}}</td>
-                     <td>{{getStatusName(film.status)}}</td>
-                     <td>
-                        <button class="btn btn-sm btn-primary mx-2" @click="handleEdit(film)">Sửa</button>
-                        <button class="btn btn-sm btn-danger mx-2">Xóa</button>
-                     </td>
-                  </tr>
-               </tbody>
-            </table>
-         </div>
-      </transition>
-
-      <!-- Film Form -->
-      <transition name="slide">
-         <div v-if="showForm" class="form-container">
-            <h2 class="title"> Tạo phim mới</h2>
-
-            <form class="film-form">
-               <div class="form-grid">
-                  <div class="form-group">
-                     <label>Tên phim</label>
-                     <input type="text" placeholder="Nhập tên phim..." />
-                  </div>
-
-                  <div class="form-group">
-                     <label>Quốc gia</label>
-                     <input type="text" placeholder="Nhập quốc gia..." />
-                  </div>
-
-                  <div class="form-group">
-                     <label>Đạo diễn</label>
-                     <input type="text" placeholder="Nhập tên đạo diễn..." />
-                  </div>
-
-                  <div class="form-group">
-                     <label>Ngày phát hành</label>
-                     <input type="date" />
-                  </div>
-               </div>
-
-               <div class="form-group">
-                  <label>Diễn viên</label>
-                  <textarea placeholder="Danh sách diễn viên..."></textarea>
-               </div>
-
-               <div class="form-group">
-                  <label>Mô tả</label>
-                  <textarea placeholder="Mô tả nội dung phim..."></textarea>
-               </div>
-
-               <div class="form-group">
-                  <label>Thời lượng (phút)</label>
-                  <input type="number" min="1" placeholder="VD: 120" />
-               </div>
-
-               <div class="form-group">
-                  <label>Thể loại phim</label>
-                  <div class="checkbox-group">
-                     <label><input type="checkbox" /> Hành động</label>
-                     <label><input type="checkbox" /> Tình cảm</label>
-                     <label><input type="checkbox" /> Kinh dị</label>
-                     <label><input type="checkbox" /> Hoạt hình</label>
-                  </div>
-               </div>
-
-               <div class="form-group">
-                  <label>Poster</label>
-                  <input type="file" @change="handlePoster" accept="image/*" />
-               </div>
-
-               <div class="form-group">
-                  <label>Trailer</label>
-                  <input type="file" @change="handleTrailer" accept="video/*" />
-               </div>
-
-               <div class="form-group">
-                  <label>Trạng thái</label>
-                  <select>
-                     <option value="coming">Sắp chiếu</option>
-                     <option value="showing">Đang chiếu</option>
-                     <option value="ended">Đã kết thúc</option>
-                  </select>
-               </div>
-
-               <div class="btn-actions">
-                  <button type="submit" class="btn save"> {{ isEditing ? 'Sửa' : 'Lưu' }}</button>
-                  <button type="reset" class="btn reset"> Làm mới</button>
-               </div>
-            </form>
-         </div>
-      </transition>
    </div>
 </template>
 
@@ -133,16 +186,17 @@
    import axios from 'axios';
    import { ref, onMounted } from 'vue';
    const showForm = ref(false);
-   
+
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
    const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
    const VIDEO_URL = import.meta.env.VITE_VIDEO_URL;
 
    const films = ref([]);
    const categories = ref([]);
-   const isEditing = ref(false);
+   const showBtnUpdate = ref(false);
+   const token = localStorage.getItem("token");
 
-   const filmForm = ref({
+   const form = ref({
       name: '',
       country: '',
       director: '',
@@ -150,10 +204,11 @@
       actor: '',
       description: '',
       duration: '',
-      status: 'upcoming',
+      status: '',
       categories: [],
       poster: null,
       trailer: null,
+      categories: [],
    });
 
    async function getFilms() {
@@ -163,9 +218,9 @@
 
          films.value = response.data;
 
-         console.log("Films: ", films.value);
+         console.log('Films: ', films.value);
       } catch (error) {
-         console.error("Lỗi khi láy dữ liệu từ Films: ", error.message);
+         console.error('Lỗi khi láy dữ liệu từ Films: ', error.message);
       }
    }
 
@@ -174,55 +229,124 @@
          const url = `${API_BASE_URL}/admin/films/categories`;
 
          const response = await axios.get(url);
-         
+
          categories.value = await response.data;
 
-         console.log("Categories: ", categories.value);
+         console.log('Categories: ', categories.value);
       } catch (error) {
-         console.error("Lỗi khi lấy dữ liệu từ categories: ", error.message);
+         console.error('Lỗi khi lấy dữ liệu từ categories: ', error.message);
       }
    }
 
    function getCategoryNames(film) {
-      return film.categories?.length 
+      return film.categories?.length
          ? film.categories.map((category) => category.name).join(', ')
-         :'Đang cập nhật...';
+         : 'Đang cập nhật...';
    }
 
    function getStatusName(status) {
       const statusMap = {
          active: 'Đang chiếu',
          upcoming: 'Sắp chiếu',
-         inactive: 'Đã ngừng chiếu'
+         inactive: 'Đã ngừng chiếu',
       };
 
       return statusMap[status] || 'Không xác định';
    }
 
+   async function handleCreateUpdate() {
+      const formData = new FormData();
+      formData.append('name', form.value.name);
+      formData.append('country', form.value.country);
+      formData.append('director', form.value.director);
+      formData.append('releaseDate', form.value.releaseDate);
+      formData.append('actor', form.value.actor);
+      formData.append('description', form.value.description);
+      formData.append('duration', form.value.duration);
+      formData.append('status', form.value.status);
+
+      form.value.categories.forEach(id => formData.append("categoriesId", id));
+
+      if (form.value.poster instanceof File) {
+         formData.append('poster', form.value.poster);
+      }
+
+      if (form.value.trailer instanceof File) {
+         formData.append('trailer', form.value.trailer);
+      }
+
+      for (let [key, value] of formData.entries()) {
+         console.log(key, value);
+      }
+
+      if (!showBtnUpdate.value) {
+         try {
+            console.log('form data create: ', formData);
+            const url = `${API_BASE_URL}/admin/films/create`;
+            const response = await axios.post(
+               url, 
+               formData,
+            {
+               headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'multipart/form-data',
+               },
+            });
+
+            console.log(response.data.message);
+         } catch (error) {
+            console.log('Lỗi khi thêm film ', error.message);
+         }
+      } else {
+      }
+   }
+
    function handleEdit(film) {
-      isEditing.value = true;
+      console.log('film edit: ', film);
+      showBtnUpdate.value = true;
+      showForm.value = true;
+      form.value = { ...film };
+   }
+
+   function handleReset() {
+      form.value = {
+         name: '',
+         country: '',
+         director: '',
+         releaseDate: '',
+         actor: '',
+         description: '',
+         duration: '',
+         status: '',
+         categories: [],
+         poster: null,
+         trailer: null,
+         categories: [],
+      };
+
+      showBtnUpdate.value = false;
    }
 
    function handlePoster(event) {
       const file = event.target.files[0];
       if (file) {
-         filmForm.value.poster = file; 
+         form.value.poster = file;
       }
    }
 
    function handleTrailer(event) {
       const file = event.target.files[0];
       if (file) {
-         filmForm.value.trailer = file; 
+         form.value.trailer = file;
       }
-   }
-
-   async function saveFilm() {
-      const formData = new FormData();
    }
 
    function posterSrc(poster) {
       return IMAGE_URL + poster;
+   }
+
+   function trailerSrc(trailer) {
+      return VIDEO_URL + trailer;
    }
 
    onMounted(() => {
@@ -361,6 +485,7 @@
    /* Switch buttons */
    .btn-box {
       display: flex;
+      justify-content: center;
       gap: 10px;
       margin-bottom: 20px;
    }
@@ -368,12 +493,12 @@
    .switch-btn {
       background: #b8deb8;
       border: 2px solid #2b2b2b;
-      padding: 14px 20px;
+      padding: 5px 10px;
       font-size: 18px;
       border-radius: 15px;
       cursor: pointer;
       font-weight: bold;
-   }  
+   }
 
    .switch-btn:hover {
       transform: translateY(-2px);
@@ -485,6 +610,7 @@
    .slide-enter-active {
       animation: slideIn 0.2s ease;
    }
+
    @keyframes slideIn {
       from {
          transform: translateY(20px);
