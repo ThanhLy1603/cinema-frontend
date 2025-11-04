@@ -49,7 +49,7 @@
                   </div>
 
                   <div>
-                     <h5 class="fw-semibold mb-1">{{ form.firstName + ' ' + form.lastName }}</h5>
+                     <h5 class="fw-semibold mb-1">{{ form.lastName + ' ' + form.firstName }}</h5>
                   </div>
                </div>
 
@@ -61,17 +61,6 @@
                      <div class="col-md-6 mb-3">
                         <label class="form-label">Họ *</label>
                         <input
-                           v-model="form.firstName"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.firstName }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.firstName }}</div>
-                     </div>
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Tên đệm và tên *</label>
-                        <input
                            v-model="form.lastName"
                            type="text"
                            class="form-control"
@@ -79,6 +68,17 @@
                            :disabled="!isEditing"
                         />
                         <div class="invalid-feedback">{{ errors.lastName }}</div>
+                     </div>
+                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên đệm và tên *</label>
+                        <input
+                           v-model="form.firstName"
+                           type="text"
+                           class="form-control"
+                           :class="{ 'is-invalid': errors.firstName }"
+                           :disabled="!isEditing"
+                        />
+                        <div class="invalid-feedback">{{ errors.firstName }}</div>
                      </div>
                      <div class="col-12 mb-3">
                         <label class="form-label">Email *</label>
