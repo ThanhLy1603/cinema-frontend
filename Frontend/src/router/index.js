@@ -35,8 +35,8 @@ const routes = [
       meta: { requiresAuth: true, role: 'admin' },
    },
    {
-      path: '/productsdetail/:id',
-      name: 'DetailProduct',
+      path: '/products/:id',
+      name: 'ProductDetails',
       component: ProductDetails,
       meta: { requiresAuth: true },
    },
