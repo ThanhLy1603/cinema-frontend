@@ -38,6 +38,7 @@
                      <div v-if="profileMenuOpen" class="dropdown-menu">
                         <button @click="emitChange('AccountProfile')">Trang cá nhân</button>
                         <button @click="logout">Đăng xuất</button>
+                        <button v-if="isAdmin" @click="goAdmin">Trang quản trị</button>
                      </div>
                   </div>
 
@@ -64,6 +65,7 @@
    const emit = defineEmits(['change-component']);
    const router = useRouter();
    const $swal = inject('$swal');
+   const isAdmin = ref(false);
 
    const menuOpen = ref(false);
    const profileMenuOpen = ref(false);
@@ -91,7 +93,6 @@
 
    // ✅ Khi click menu ở FilmDetail → quay lại Home và mở đúng tab
    function emitChange(componentName) {
-
       emit('change-component', componentName);
       closeMenu();
 
@@ -127,9 +128,20 @@
       setTimeout(() => window.location.reload(), 500);
    }
 
+   // Đi tới trang quản trị
+   function goAdmin() {
+      s;
+      router.push('/admin');
+      profileMenuOpen.value = false;
+   }
+
    // Debug log
    onMounted(() => {
-      if (token) console.log('Thông tin token:', jwtDecode(token));
+      if (token) {
+         const decoded = jwtDecode(token);
+         console.log('Thông tin token:', decoded);
+         isAdmin.value = decoded.roles?.includes('ROLE_ADMIN');
+      }
    });
 </script>
 
@@ -244,6 +256,12 @@
    .dropdown-menu button:hover {
       background-color: #f0f0f0;
    }
+   .right-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      position: relative;
+   }
 
    /* === Menu di động === */
    .menu-toggle {
@@ -253,6 +271,7 @@
       font-weight: bold;
       user-select: none;
       transition: transform 0.3s ease;
+      line-height: 1; 
    }
    .menu-toggle:hover {
       transform: scale(1.1);
@@ -289,7 +308,7 @@
          pointer-events: none;
          transform: translateY(-10px);
          transition: all 0.3s ease;
-         z-index: 9999;
+         z-index: 9999; 
       }
       .menu.active {
          opacity: 1 !important;
