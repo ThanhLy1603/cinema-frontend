@@ -130,7 +130,6 @@
 
    // Đi tới trang quản trị
    function goAdmin() {
-      s;
       router.push('/admin');
       profileMenuOpen.value = false;
    }
