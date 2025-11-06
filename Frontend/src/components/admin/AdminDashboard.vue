@@ -1,23 +1,27 @@
 <template>
   <div class="admin-dashboard">
-    <Header></Header>
+    <aside class="sidebar">
+      <h2 class="logo">Admin</h2>
+      <nav>
+        <ul>
+          <li :class="{ active: isActive('/admin/films') }">
+            <router-link to="/admin/films">🎬 Quản lý phim</router-link>
+          </li>
+          <li>
+            <button class="logout-btn" @click="logout">Đăng xuất</button>
+          </li>
+        </ul>
+      </nav>
+    </aside>
 
-    <main class="admin-main">
-      <div class="breadcrumb">
-        <span @click="goBack" class="link">Hạng mục quản lý</span>
-        <template v-if="activeComponent">
-          <span> / </span>
-          <span>{{ activeTitle }}</span>
-        </template>
-      </div>
-
-      <div class="content-area">
-        <!-- Hiển thị component động -->
-        <component
-          :is="currentComponent"
-          @open="handleOpen"
-        />
-      </div>
+    <main class="main-content">
+      <header class="topbar">
+        <h1>{{ pageTitle }}</h1>
+      </header>
+      <section class="content-area">
+        <!-- Đây là nơi hiển thị các component con (FilmsManager, v.v.) -->
+        <router-view />
+      </section>
     </main>
 
     <footer class="footer">footer</footer>
@@ -33,8 +37,11 @@ import ShowTimes from "../admin/ShowTimes.vue";
 
 export default {
   name: "AdminDashboard",
+<<<<<<< HEAD
+=======
   components: { Header, AdminIndex, FilmsManager,ShowTimes},
 
+>>>>>>> 17f5846663e8448bd9ef7f0b9be236db971ceb27
   setup() {
     const activeComponent = ref(null);
 
@@ -60,9 +67,12 @@ export default {
       activeComponent.value = componentName;
     }
 
-    function goBack() {
-      activeComponent.value = null;
-    }
+    watch(route, function () {
+      updateTitle();
+    });
+
+    // Gọi lần đầu
+    updateTitle();
 
     return {
       activeComponent,
