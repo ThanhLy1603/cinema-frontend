@@ -18,6 +18,7 @@
                <table class="film-table table-bordered table-hover">
                   <thead class="align-center text-center">
                      <tr>
+                        <th>STT</th>
                         <th>Poster</th>
                         <th>Trailer</th>
                         <th>Tên phim</th>
@@ -30,7 +31,8 @@
                   </thead>
 
                   <tbody class="text-center align-cebt">
-                     <tr v-for="film in films" :key="film">
+                     <tr v-for="(film, index) in films" :key="index">
+                        <td>{{index + 1}}</td>
                         <td><img :src="posterSrc(film.poster)" /></td>
                         <td>
                            <a
@@ -299,7 +301,16 @@
    }
 
    async function handleCreateUpdate() {
-      console.log("categories: ", form.value.categories);
+      const duplicate = films.value.find(
+         (film) => film.name.trim().toLowerCase() === form.value.name.trim().toLowerCase() &&
+               film.id !== filmId.value // tránh báo trùng khi đang sửa
+      );
+
+      if (duplicate) {
+         showToast('Tên phim đã tồn tại. Vui lòng nhập tên khác!', 'error');
+         return;
+      }
+
       const formData = new FormData();
       formData.append('name', form.value.name);
       formData.append('country', form.value.country);
@@ -321,13 +332,8 @@
          formData.append('trailer', form.value.trailer);
       }
 
-      for (let [key, value] of formData.entries()) {
-         console.log(key, value);
-      }
-
       if (!showBtnUpdate.value) {
          try {
-            console.log('form data create: ', formData);
             const url = `${API_BASE_URL}/admin/films/create`;
             const response = await axios.post(
                url, 
@@ -400,7 +406,6 @@
 
 
    function handleEdit(film) {
-      console.log('film edit: ', film);
       showBtnUpdate.value = true;
       showForm.value = true;
       form.value = { ...film };
@@ -424,7 +429,6 @@
       };
 
       filmId.value = '';
-
       showBtnUpdate.value = false;
    }
 
