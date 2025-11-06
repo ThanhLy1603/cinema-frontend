@@ -23,7 +23,8 @@ export default {
       { name: "Phim", component: "FilmsManager" },
       { name: "Nhân viên", component: "StaffManager" },
       { name: "Lịch chiếu", component: "ScheduleManager" },
-      { name: "Vé", component: "TicketManager" }
+      { name: "Vé", component: "TicketManager" },
+      { name: "Thời gian chiếu", component: "ShowTimes" }
     ];
 
     // Hàm mở component con

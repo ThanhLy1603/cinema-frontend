@@ -33,15 +33,22 @@ import { ref, computed } from "vue";
 import Header from "../header/Header.vue";
 import AdminIndex from "../admin/AdminIndex.vue";
 import FilmsManager from "../admin/FilmsManager.vue";
+import ShowTimes from "../admin/ShowTimes.vue";
 
 export default {
   name: "AdminDashboard",
+<<<<<<< HEAD
+=======
+  components: { Header, AdminIndex, FilmsManager,ShowTimes},
+
+>>>>>>> 17f5846663e8448bd9ef7f0b9be236db971ceb27
   setup() {
     const activeComponent = ref(null);
 
     const components = {
       AdminIndex,
       FilmsManager,
+      ShowTimes,
     };
 
     const currentComponent = computed(function () {
@@ -50,7 +57,8 @@ export default {
 
     const activeTitle = computed(function () {
       var map = {
-        FilmsManager: "Phim",
+        FilmsManager: " Phim",
+        ShowTimes:" Giờ chiếu",
       };
       return map[activeComponent.value] || "";
     });

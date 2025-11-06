@@ -1,60 +1,61 @@
 <template>
-   <div class="container account-page my-5">
-      <h4 class="text-center mb-4 fw-bold">Thông tin cá nhân</h4>
-      <div class="row g-4">
-         <!-- LEFT COLUMN -->
-         <div class="col-lg-8">
-            <div class="card p-4 shadow-sm">
-               <div class="d-flex align-items-center mb-3">
-                  <!-- <img
-                     :src="`${IMAGE_URL + form.avatarUrl || 'https://via.placeholder.com/100x100.png?text=Avatar'}`"
-                     alt="Avatar"
-                     class="rounded-circle me-3 border"
-                     style="width: 100px; height: 100px; object-fit: cover"
-                  /> -->
-
-                  <div class="position-relative d-inline-block mb-3">
-                     <!-- Avatar hiển thị -->
-                     <img
-                        :src="
-                           form.avatarPreview ||
-                           (form.avatarUrl
-                              ? IMAGE_URL + form.avatarUrl
-                              : 'https://via.placeholder.com/100x100.png?text=Avatar')
-                        "
+   <div class="container-fluid">
+      <div class="container account-page my-5">
+         <h4 class="text-center mb-4 fw-bold">Thông tin cá nhân</h4>
+         <div class="row g-4">
+            <!-- LEFT COLUMN -->
+            <div class="col-lg-8">
+               <div class="card p-4 shadow-sm">
+                  <div class="d-flex align-items-center mb-3">
+                     <!-- <img
+                        :src="`${IMAGE_URL + form.avatarUrl || 'https://via.placeholder.com/100x100.png?text=Avatar'}`"
                         alt="Avatar"
-                        class="rounded-circle border"
-                        style="width: 120px; height: 120px; object-fit: cover"
-                     />
+                        class="rounded-circle me-3 border"
+                        style="width: 100px; height: 100px; object-fit: cover"
+                     /> -->
 
-                     <!-- Icon tải ảnh -->
-                     <label
-                        v-if="isEditing"
-                        for="avatar-upload"
-                        class="camera-btn position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow"
-                        style="width: 32px; height: 32px; cursor: pointer; border: 2px solid white"
-                     >
-                        <i class="bi bi-camera-fill" style="font-size: 16px"></i>
-                     </label>
+                     <div class="position-relative d-inline-block mb-3">
+                        <!-- Avatar hiển thị -->
+                        <img
+                           :src="
+                              form.avatarPreview ||
+                              (form.avatarUrl
+                                 ? IMAGE_URL + form.avatarUrl
+                                 : 'https://via.placeholder.com/100x100.png?text=Avatar')
+                           "
+                           alt="Avatar"
+                           class="rounded-circle border"
+                           style="width: 120px; height: 120px; object-fit: cover"
+                        />
 
-                     <!-- Input file ẩn -->
-                     <input
-                        v-if="isEditing"
-                        type="file"
-                        id="avatar-upload"
-                        accept="image/*"
-                        @change="previewAvatar"
-                        style="display: none"
-                     />
-                  </div>
+                        <!-- Icon tải ảnh -->
+                        <label
+                           v-if="isEditing"
+                           for="avatar-upload"
+                           class="camera-btn position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow"
+                           style="width: 32px; height: 32px; cursor: pointer; border: 2px solid white"
+                        >
+                           <i class="bi bi-camera-fill" style="font-size: 16px"></i>
+                        </label>
+
+                        <!-- Input file ẩn -->
+                        <input
+                           v-if="isEditing"
+                           type="file"
+                           id="avatar-upload"
+                           accept="image/*"
+                           @change="previewAvatar"
+                           style="display: none"
+                        />
+                     </div>
 
                   <div>
                      <h5 class="fw-semibold mb-1">{{ form.firstName + ' ' + form.lastName }}</h5>
                   </div>
                </div>
 
-               <!-- <div v-if="error" class="alert alert-danger">{{ error }}</div>
-               <div v-if="success" class="alert alert-success">{{ success }}</div> -->
+                  <!-- <div v-if="error" class="alert alert-danger">{{ error }}</div>
+                  <div v-if="success" class="alert alert-success">{{ success }}</div> -->
 
                <form @submit.prevent="updateInfo">
                   <div class="row">
@@ -92,200 +93,201 @@
                         <div class="invalid-feedback">{{ errors.email }}</div>
                      </div>
 
-                     <div class="col-md-3 mb-3 d-flex align-items-end">
-                        <button
-                           type="button"
-                           class="btn btn-outline-success w-100"
-                           @click="showChangePassword = !showChangePassword"
-                        >
-                           ĐỔI MẬT KHẨU
-                        </button>
-                     </div>
-
-                     <div class="col-12 mb-3">
-                        <label class="form-label">Số điện thoại *</label>
-                        <input
-                           v-model="form.phone"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.phone }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.phone }}</div>
-                     </div>
-
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Giới tính *</label>
-                        <select
-                           v-model="form.gender"
-                           class="form-select"
-                           :class="{ 'is-invalid': errors.gender }"
-                           :disabled="!isEditing"
-                           required
-                        >
-                           <option value="">Chọn giới tính</option>
-                           <option value="true">Nam</option>
-                           <option value="false">Nữ</option>
-                        </select>
-                        <div class="invalid-feedback">{{ errors.gender }}</div>
-                     </div>
-
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Ngày sinh *</label>
-                        <div class="d-flex gap-2">
-                           <select
-                              v-model.number="form.day"
-                              class="form-select"
-                              :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing"
-                              required
+                        <div class="col-md-3 mb-3 d-flex align-items-end">
+                           <button
+                              type="button"
+                              class="btn btn-outline-success w-100"
+                              @click="showChangePassword = !showChangePassword"
                            >
-                              <option value="">Ngày</option>
-                              <option v-for="d in 31" :key="d" :value="d">
-                                 {{ d.toString().padStart(2, '0') }}
-                              </option>
-                           </select>
-                           <select
-                              v-model.number="form.month"
-                              class="form-select"
-                              :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing"
-                              required
-                           >
-                              <option value="">Tháng</option>
-                              <option v-for="month in 12" :key="month" :value="month">
-                                 {{ month.toString().padStart(2, '0') }}
-                              </option>
-                           </select>
-                           <select
-                              v-model.number="form.year"
-                              class="form-select"
-                              :class="{ 'is-invalid': errors.dob }"
-                              :disabled="!isEditing"
-                           >
-                              <option value="">Năm</option>
-                              <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-                           </select>
+                              ĐỔI MẬT KHẨU
+                           </button>
                         </div>
-                        <div class="invalid-feedback">{{ errors.dob }}</div>
+
+                        <div class="col-12 mb-3">
+                           <label class="form-label">Số điện thoại *</label>
+                           <input
+                              v-model="form.phone"
+                              type="text"
+                              class="form-control"
+                              :class="{ 'is-invalid': errors.phone }"
+                              :disabled="!isEditing"
+                           />
+                           <div class="invalid-feedback">{{ errors.phone }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Giới tính *</label>
+                           <select
+                              v-model="form.gender"
+                              class="form-select"
+                              :class="{ 'is-invalid': errors.gender }"
+                              :disabled="!isEditing"
+                              required
+                           >
+                              <option value="">Chọn giới tính</option>
+                              <option value="true">Nam</option>
+                              <option value="false">Nữ</option>
+                           </select>
+                           <div class="invalid-feedback">{{ errors.gender }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Ngày sinh *</label>
+                           <div class="d-flex gap-2">
+                              <select
+                                 v-model.number="form.day"
+                                 class="form-select"
+                                 :class="{ 'is-invalid': errors.dob }"
+                                 :disabled="!isEditing"
+                                 required
+                              >
+                                 <option value="">Ngày</option>
+                                 <option v-for="d in 31" :key="d" :value="d">
+                                    {{ d.toString().padStart(2, '0') }}
+                                 </option>
+                              </select>
+                              <select
+                                 v-model.number="form.month"
+                                 class="form-select"
+                                 :class="{ 'is-invalid': errors.dob }"
+                                 :disabled="!isEditing"
+                                 required
+                              >
+                                 <option value="">Tháng</option>
+                                 <option v-for="month in 12" :key="month" :value="month">
+                                    {{ month.toString().padStart(2, '0') }}
+                                 </option>
+                              </select>
+                              <select
+                                 v-model.number="form.year"
+                                 class="form-select"
+                                 :class="{ 'is-invalid': errors.dob }"
+                                 :disabled="!isEditing"
+                              >
+                                 <option value="">Năm</option>
+                                 <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+                              </select>
+                           </div>
+                           <div class="invalid-feedback">{{ errors.dob }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Tỉnh/Thành phố *</label>
+                           <select
+                              v-model="form.city"
+                              class="form-select"
+                              :class="{ 'is-invalid': errors.city }"
+                              :disabled="!isEditing"
+                           >
+                              <option value="">Chọn tỉnh/thành</option>
+                              <option>Hà Nội</option>
+                              <option>Hồ Chí Minh</option>
+                              <option>Đà Nẵng</option>
+                           </select>
+                           <div class="invalid-feedback">{{ errors.city }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Địa chỉ *</label>
+                           <input
+                              v-model="form.address"
+                              type="text"
+                              class="form-control"
+                              :class="{ 'is-invalid': errors.address }"
+                              :disabled="!isEditing"
+                           />
+                           <div class="invalid-feedback">{{ errors.address }}</div>
+                        </div>
                      </div>
 
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Tỉnh/Thành phố *</label>
-                        <select
-                           v-model="form.city"
-                           class="form-select"
-                           :class="{ 'is-invalid': errors.city }"
-                           :disabled="!isEditing"
+                     <div class="text-center mt-3">
+                        <button
+                           v-if="!isEditing"
+                           type="button"
+                           class="btn btn-primary px-4 fw-semibold"
+                           @click="isEditing = true"
                         >
-                           <option value="">Chọn tỉnh/thành</option>
-                           <option>Hà Nội</option>
-                           <option>Hồ Chí Minh</option>
-                           <option>Đà Nẵng</option>
-                        </select>
-                        <div class="invalid-feedback">{{ errors.city }}</div>
-                     </div>
-
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Địa chỉ *</label>
-                        <input
-                           v-model="form.address"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.address }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.address }}</div>
-                     </div>
-                  </div>
-
-                  <div class="text-center mt-3">
-                     <button
-                        v-if="!isEditing"
-                        type="button"
-                        class="btn btn-primary px-4 fw-semibold"
-                        @click="isEditing = true"
-                     >
-                        CHỈNH SỬA
-                     </button>
-                     <button
-                        v-if="isEditing"
-                        type="submit"
-                        class="btn btn-success px-4 fw-semibold mx-2"
-                     >
-                        CẬP NHẬT
-                     </button>
-                     <button
-                        v-if="isEditing"
-                        type="button"
-                        class="btn btn-outline-secondary ms-2 mx-2"
-                        @click="isEditing = false"
-                     >
-                        HỦY
-                     </button>
-                  </div>
-               </form>
-            </div>
-         </div>
-
-         <!-- RIGHT COLUMN -->
-         <div class="col-lg-4">
-            <div class="card p-4 shadow-sm text-center">
-               <div class="text-start small mb-3">
-                  <p class="mb-1"><strong>Tên đăng nhập:</strong> {{ form.email }}</p>
-                  <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
-               </div>
-               <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">
-                  ĐĂNG XUẤT
-               </button>
-
-               <!-- Form đổi mật khẩu -->
-               <div v-if="showChangePassword" class="mt-4">
-                  <h5 class="fw-semibold mb-3">Đổi mật khẩu</h5>
-                  <form @submit.prevent="changePassword">
-                     <div class="mb-3">
-                        <label class="form-label">Mật khẩu cũ *</label>
-                        <input
-                           v-model="passwordForm.oldPassword"
-                           type="password"
-                           class="form-control form-control-sm"
-                           :class="{ 'is-invalid': errors.oldPassword }"
-                        />
-                        <div class="invalid-feedback">{{ errors.oldPassword }}</div>
-                     </div>
-                     <div class="mb-3">
-                        <label class="form-label">Mật khẩu mới *</label>
-                        <input
-                           v-model="passwordForm.newPassword"
-                           type="password"
-                           class="form-control form-control-sm"
-                           :class="{ 'is-invalid': errors.newPassword }"
-                        />
-                        <div class="invalid-feedback">{{ errors.newPassword }}</div>
-                     </div>
-                     <div class="mb-3">
-                        <label class="form-label">Xác nhận mật khẩu *</label>
-                        <input
-                           v-model="passwordForm.confirmPassword"
-                           type="password"
-                           class="form-control form-control-sm"
-                           :class="{ 'is-invalid': errors.confirmPassword }"
-                        />
-                        <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
-                     </div>
-                     <div class="text-center">
-                        <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold mx-2">
-                           LƯU MẬT KHẨU
+                           CHỈNH SỬA
                         </button>
                         <button
+                           v-if="isEditing"
+                           type="submit"
+                           class="btn btn-success px-4 fw-semibold mx-2"
+                        >
+                           CẬP NHẬT
+                        </button>
+                        <button
+                           v-if="isEditing"
                            type="button"
-                           class="btn btn-outline-secondary btn-sm ms-2 mx-2"
-                           @click="showChangePassword = false"
+                           class="btn btn-outline-secondary ms-2 mx-2"
+                           @click="isEditing = false"
                         >
                            HỦY
                         </button>
                      </div>
                   </form>
+               </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-lg-4">
+               <div class="card p-4 shadow-sm text-center">
+                  <div class="text-start small mb-3">
+                     <p class="mb-1"><strong>Tên đăng nhập:</strong> {{ form.email }}</p>
+                     <p class="mb-0"><strong>Ngày đăng ký:</strong> 20/09/2025</p>
+                  </div>
+                  <button class="btn btn-success w-100 fw-semibold mb-2" @click="logout">
+                     ĐĂNG XUẤT
+                  </button>
+
+                  <!-- Form đổi mật khẩu -->
+                  <div v-if="showChangePassword" class="mt-4">
+                     <h5 class="fw-semibold mb-3">Đổi mật khẩu</h5>
+                     <form @submit.prevent="changePassword">
+                        <div class="mb-3">
+                           <label class="form-label">Mật khẩu cũ *</label>
+                           <input
+                              v-model="passwordForm.oldPassword"
+                              type="password"
+                              class="form-control form-control-sm"
+                              :class="{ 'is-invalid': errors.oldPassword }"
+                           />
+                           <div class="invalid-feedback">{{ errors.oldPassword }}</div>
+                        </div>
+                        <div class="mb-3">
+                           <label class="form-label">Mật khẩu mới *</label>
+                           <input
+                              v-model="passwordForm.newPassword"
+                              type="password"
+                              class="form-control form-control-sm"
+                              :class="{ 'is-invalid': errors.newPassword }"
+                           />
+                           <div class="invalid-feedback">{{ errors.newPassword }}</div>
+                        </div>
+                        <div class="mb-3">
+                           <label class="form-label">Xác nhận mật khẩu *</label>
+                           <input
+                              v-model="passwordForm.confirmPassword"
+                              type="password"
+                              class="form-control form-control-sm"
+                              :class="{ 'is-invalid': errors.confirmPassword }"
+                           />
+                           <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
+                        </div>
+                        <div class="text-center">
+                           <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold mx-2">
+                              LƯU MẬT KHẨU
+                           </button>
+                           <button
+                              type="button"
+                              class="btn btn-outline-secondary btn-sm ms-2 mx-2"
+                              @click="showChangePassword = false"
+                           >
+                              HỦY
+                           </button>
+                        </div>
+                     </form>
+                  </div>
                </div>
             </div>
          </div>
