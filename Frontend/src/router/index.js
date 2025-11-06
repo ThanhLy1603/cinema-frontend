@@ -38,7 +38,6 @@ const routes = [
       path: '/products/:id',
       name: 'ProductDetails',
       component: ProductDetails,
-      meta: { requiresAuth: true },
    },
 
    // Fallback
