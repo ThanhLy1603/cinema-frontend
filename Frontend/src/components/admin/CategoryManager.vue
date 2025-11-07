@@ -226,7 +226,7 @@ onMounted(fetchCategories);
   position: fixed;
   top: 20px;
   right: 20px;
-  color: #fff1;
+  color: #fff;
   font-weight: 600;
   border-radius: 8px;
   padding: 10px 16px;
