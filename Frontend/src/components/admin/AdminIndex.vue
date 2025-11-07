@@ -1,24 +1,23 @@
 <template>
-   <div class="container-fluid">
-      <div class="admin-index">
-         <div class="management-grid">
-            <button
-               v-for="item in managementItems"
-               :key="item.name"
-               class="management-button"
-               @click="openComponent(item.component)"
-            >
-               {{ item.name }}
-            </button>
-         </div>
-      </div>
-   </div>
+  <div class="admin-index">
+    <div class="management-grid">
+      <button
+        v-for="item in managementItems"
+        :key="item.name"
+        class="management-button"
+        @click="openComponent(item.component)"
+      >
+        {{ item.name }}
+      </button>
+    </div>
+  </div>
 </template>
 
-<script setup>
-   const emit = defineEmits(['open']);
+<script>
+export default {
+  name: "AdminIndex",
+  emits: ["open"],
 
-<<<<<<< HEAD
   setup(props, context) {
     const managementItems = [
       { name: "Phim", component: "FilmsManager" },
@@ -26,47 +25,45 @@
       { name: "Lịch chiếu", component: "ScheduleManager" },
       { name: "Vé", component: "TicketManager" },
       { name: "Thời gian chiếu", component: "ShowTimes" },
-      { name: "Danh mục", component: "CategoryManager" }
+      { name: "Danh mục", component: "CategoryManager" },
+      { name: "Sản phẩm", component: "foodmanager" }
       
     ];
-=======
-   const managementItems = [
-      { name: 'Phim', component: 'FilmsManager' },
-      { name: 'Nhân viên', component: 'StaffManager' },
-      { name: 'Lịch chiếu', component: 'ScheduleManager' },
-      { name: 'Vé', component: 'TicketManager' },
-      { name: 'Giờ chiếu', component: 'ShowTimes' },
-      { name: 'Phòng chiếu', component: 'RoomsManager' },
-   ];
->>>>>>> 5e71edd4b95186b55435fb8319d8fb7c6ffd487d
 
-   // Hàm mở component con
-   function openComponent(componentName) {
-      emit('open', componentName);
-   }
+    // Hàm mở component con
+    function openComponent(componentName) {
+      context.emit("open", componentName);
+    }
+
+    return {
+      managementItems,
+      openComponent
+    };
+  }
+};
 </script>
 
 <style scoped>
-   .management-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
-   }
+.management-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
 
-   .management-button {
-      text-align: center;
-      padding: 12px 10px;
-      background-color: #5cb85c;
-      color: white;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background-color 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-   }
+.management-button {
+  text-align: center;
+  padding: 12px 10px;
+  background-color: #5cb85c;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
 
-   .management-button:hover {
-      background-color: #4cae4c;
-   }
+.management-button:hover {
+  background-color: #4cae4c;
+}
 </style>
