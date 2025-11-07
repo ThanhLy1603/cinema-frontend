@@ -2,12 +2,12 @@
    <div class="container-fluid">
       <div class="page-container">
          <!-- Navigation Buttons -->
-         <div class="btn-box">
-            <button class="switch-btn" :class="{ active: !showForm }" @click="showForm = false">
+         <div class="d-flex justify-content-center align-items-center my-3">
+            <button class="switch-btn mx-2" :class="{ active: !showForm }" @click="showForm = false">
                Danh sách phim
             </button>
 
-            <button class="switch-btn" :class="{ active: showForm }" @click="showForm = true">
+            <button class="switch-btn mx-2" :class="{ active: showForm }" @click="showForm = true">
                Tạo phim mới
             </button>
          </div>
@@ -18,7 +18,9 @@
                <table class="film-table table-bordered table-hover">
                   <thead class="align-center text-center">
                      <tr>
+                        <th>STT</th>
                         <th>Poster</th>
+                        <th>Trailer</th>
                         <th>Tên phim</th>
                         <th>Thể loại</th>
                         <th>Quốc gia</th>
@@ -29,8 +31,18 @@
                   </thead>
 
                   <tbody class="text-center align-cebt">
-                     <tr v-for="film in films" :key="film">
+                     <tr v-for="(film, index) in films" :key="index">
+                        <td>{{index + 1}}</td>
                         <td><img :src="posterSrc(film.poster)" /></td>
+                        <td>
+                           <a
+                              :href="trailerSrc(film.trailer)"
+                              target="_blank"
+                              style="display: block; margin-bottom: 8px; color: blue"
+                           >
+                              Nhấn để xem trailer
+                           </a>
+                        </td>
                         <td>{{ film.name }}</td>
                         <td>{{ getCategoryNames(film) }}</td>
                         <td>{{ film.country }}</td>
@@ -40,7 +52,7 @@
                            <button class="btn btn-sm btn-primary mx-2" @click="handleEdit(film)">
                               Sửa
                            </button>
-                           <button class="btn btn-sm btn-danger mx-2">Xóa</button>
+                           <button class="btn btn-sm btn-danger mx-2" @click="handleDelete(film.id)">Xóa</button>
                         </td>
                      </tr>
                   </tbody>
@@ -51,7 +63,7 @@
          <!-- Film Form -->
          <transition name="slide">
             <div v-if="showForm" class="form-container">
-               <form @submit.prevent="" class="film-form">
+               <form @submit.prevent="handleCreateUpdate" class="film-form">
                   <div class="form-grid">
                      <div class="form-group">
                         <label class="fw-bold">Tên phim</label>
@@ -122,7 +134,7 @@
                      <label>Thể loại phim</label>
                      <div class="checkbox-group">
                         <label v-for="category in categories" :key="category">
-                           <input type="checkbox" :value="category" v-model="form.categories" required/>
+                           <input type="checkbox" :value="category" v-model="form.categories"/>
                            {{ category.name }}
                         </label>
                      </div>
@@ -140,7 +152,7 @@
                         />
                      </div>
 
-                     <input type="file" @change="handlePoster" accept="image/*" required/>
+                     <input type="file" @change="handlePoster" accept="image/*"/>
                   </div>
 
                   <div class="form-group">
@@ -157,7 +169,7 @@
                         </a>
                      </div>
 
-                     <input type="file" @change="handleTrailer" accept="video/*" required/>
+                     <input type="file" @change="handleTrailer" accept="video/*"/>
                   </div>
 
                   <div class="form-group">
@@ -170,7 +182,7 @@
                   </div>
 
                   <div class="btn-actions">
-                     <button type="submit" class="btn save" @click="handleCreateUpdate">
+                     <button type="submit" class="btn save">
                         {{ showBtnUpdate ? 'Sửa' : 'Lưu' }}
                      </button>
                      <button type="reset" class="btn reset" @click="handleReset()">Làm mới</button>
@@ -179,12 +191,23 @@
             </div>
          </transition>
       </div>
+
+      <transition name="fade">
+         <div
+            v-if="toast.message"
+            class="toast-custom"
+            :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
+         >
+            {{ toast.message }}
+         </div>
+      </transition>
    </div>
 </template>
 
 <script setup>
    import axios from 'axios';
    import { ref, onMounted } from 'vue';
+   import Swal from 'sweetalert2';
    const showForm = ref(false);
 
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -195,6 +218,9 @@
    const categories = ref([]);
    const showBtnUpdate = ref(false);
    const token = localStorage.getItem("token");
+   const toast = ref({ message: '', type: '' });
+
+   const filmId = ref();
 
    const form = ref({
       name: '',
@@ -205,11 +231,31 @@
       description: '',
       duration: '',
       status: '',
-      categories: [],
       poster: null,
       trailer: null,
       categories: [],
    });
+
+   function showToast(msg, type = 'success') {
+      toast.value = { message: msg, type };
+      setTimeout(() => (toast.value.message = ''), 2500);
+   }
+
+   async function showConfirm(message) {
+      const result = await Swal.fire({
+         title: message,
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonText: 'Xác nhận',
+         cancelButtonText: 'Huỷ',
+         confirmButtonColor: '#d33',
+         cancelButtonColor: '#6c757d',
+         reverseButtons: true
+      });
+
+      return result.isConfirmed; // Trả về true nếu người dùng bấm "Xác nhận"
+   }
+
 
    async function getFilms() {
       try {
@@ -220,7 +266,7 @@
 
          console.log('Films: ', films.value);
       } catch (error) {
-         console.error('Lỗi khi láy dữ liệu từ Films: ', error.message);
+         showToast('Lỗi khi tải danh sách phim', 'error');
       }
    }
 
@@ -234,7 +280,7 @@
 
          console.log('Categories: ', categories.value);
       } catch (error) {
-         console.error('Lỗi khi lấy dữ liệu từ categories: ', error.message);
+         showToast('Lỗi khi tải danh sách thể loại phim', 'error');
       }
    }
 
@@ -255,6 +301,16 @@
    }
 
    async function handleCreateUpdate() {
+      const duplicate = films.value.find(
+         (film) => film.name.trim().toLowerCase() === form.value.name.trim().toLowerCase() &&
+               film.id !== filmId.value // tránh báo trùng khi đang sửa
+      );
+
+      if (duplicate) {
+         showToast('Tên phim đã tồn tại. Vui lòng nhập tên khác!', 'error');
+         return;
+      }
+
       const formData = new FormData();
       formData.append('name', form.value.name);
       formData.append('country', form.value.country);
@@ -265,7 +321,8 @@
       formData.append('duration', form.value.duration);
       formData.append('status', form.value.status);
 
-      form.value.categories.forEach(id => formData.append("categoriesId", id));
+      const categoriesId = form.value.categories.map(category => category.id);
+      formData.append("categoriesIdJSON", JSON.stringify(categoriesId));
 
       if (form.value.poster instanceof File) {
          formData.append('poster', form.value.poster);
@@ -275,13 +332,8 @@
          formData.append('trailer', form.value.trailer);
       }
 
-      for (let [key, value] of formData.entries()) {
-         console.log(key, value);
-      }
-
       if (!showBtnUpdate.value) {
          try {
-            console.log('form data create: ', formData);
             const url = `${API_BASE_URL}/admin/films/create`;
             const response = await axios.post(
                url, 
@@ -293,19 +345,71 @@
                },
             });
 
-            console.log(response.data.message);
+            getFilms();
+
+            showToast(response.data.messagem, 'success');
          } catch (error) {
-            console.log('Lỗi khi thêm film ', error.message);
+            showToast('Lỗi khi thêm phim mới', 'error');
          }
       } else {
+         try {
+            const url = `${API_BASE_URL}/admin/films/update/${filmId.value}`;
+
+            const response = await axios.put(url, formData, 
+               {
+                  headers: {
+                     Authorization: `Bearer ${token}`,
+                     'Content-Type': 'multipart/form-data',             
+                  }
+               }
+            );
+            getFilms();
+            showToast(response.data.message, 'success');
+         } catch (error) {
+            showToast("Lỗi khi sửa thông tin phim: ", 'error');
+         }
       }
    }
 
+   async function handleDelete(id) {
+      const confirmed = await showConfirm('Bạn có chắc muốn xoá phim này?');
+      
+      if (!confirmed) {
+         Swal.fire({
+            icon: 'info',
+            title: 'Đã huỷ xoá phim',
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+         });
+         return;
+      }
+
+      try {
+         const url = `${API_BASE_URL}/admin/films/delete/${id}`;
+         const response = await axios.delete(url, {
+            headers: { Authorization: `Bearer ${token}` },
+         });
+
+         await getFilms();
+
+         showToast(response.data.message || 'Xoá phim thành công');
+      } catch (error) {
+         Swal.fire({
+            icon: 'error',
+            title: 'Xoá phim thất bại!',
+            text: error.message,
+         });
+      }
+   }
+
+
    function handleEdit(film) {
-      console.log('film edit: ', film);
       showBtnUpdate.value = true;
       showForm.value = true;
       form.value = { ...film };
+      filmId.value = film.id;
    }
 
    function handleReset() {
@@ -324,6 +428,7 @@
          categories: [],
       };
 
+      filmId.value = '';
       showBtnUpdate.value = false;
    }
 
@@ -356,6 +461,19 @@
 </script>
 
 <style scoped>
+   .toast-custom {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 10px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: 0.3s ease;
+      z-index: 1055;
+   }
+
    .page-container {
       padding: 20px;
       background: #f5f6fa;
