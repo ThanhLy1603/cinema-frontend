@@ -30,10 +30,11 @@ import Header from "../header/Header.vue";
 import AdminIndex from "../admin/AdminIndex.vue";
 import FilmsManager from "../admin/FilmsManager.vue";
 import ShowTimes from "../admin/ShowTimes.vue";
+import CategoryManager from "../admin/CategoryManager.vue";
 
 export default {
   name: "AdminDashboard",
-  components: { Header, AdminIndex, FilmsManager,ShowTimes},
+  components: { Header, AdminIndex, FilmsManager,ShowTimes,CategoryManager},
 
   setup() {
     const activeComponent = ref(null);
@@ -42,6 +43,7 @@ export default {
       AdminIndex,
       FilmsManager,
       ShowTimes,
+      CategoryManager
     };
 
     const currentComponent = computed(function () {

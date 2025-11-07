@@ -1,252 +1,245 @@
 <template>
-  <div class="categories-page">
-    <div class="header">
-      <button class="btn" @click="goBack">← Trở lại</button>
+  <div class="container-fluid categories-page mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold text-success">📂 Quản lý Danh Mục</h3>
+      <button class="btn btn-success" @click="fetchCategories">⟳ Tải lại</button>
     </div>
 
-    <!-- Form tạo danh mục -->
-    <form @submit.prevent="createCategory" class="form-card">
-      <div class="grid">
-        <div class="field">
-          <label>Tên danh mục *</label>
-          <input v-model="category.name" placeholder="Nhập tên danh mục..." required />
+    <div class="row g-3">
+      <!-- Form tạo danh mục -->
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title text-success text-center mb-3">+ Thêm danh mục mới</h5>
+
+            <form @submit.prevent="createCategory">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Tên danh mục *</label>
+                <input
+                  v-model="category.name"
+                  type="text"
+                  class="form-control"
+                  placeholder="Nhập tên danh mục..."
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-success w-100">
+                + Thêm danh mục
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
-      <div class="footer">
-        <button type="submit" class="btn primary">+ Tạo danh mục</button>
-      </div>
-    </form>
+      <!-- Danh sách danh mục -->
+      <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title fw-bold mb-0">Danh sách danh mục</h5>
+              <div class="input-group" style="width: 240px">
+                <span class="input-group-text bg-success text-white">Tìm kiếm</span>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="searchQuery"
+                  placeholder="Tìm danh mục..."
+                />
+              </div>
+            </div>
 
-    <!-- Danh sách danh mục -->
-    <div class="list-card" v-if="categories.length">
-      <h3>Danh sách danh mục</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên danh mục</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in categories" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>
-              <span :class="item.isDeleted ? 'status deleted' : 'status active'">
-                {{ item.isDeleted ? 'Đã xóa' : 'Hoạt động' }}
-              </span>
-            </td>
-            <td>
-              <button class="btn danger" @click="deleteCategory(item.id)">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <table class="table table-hover align-middle text-center">
+              <thead class="table-success">
+                <tr>
+                  <th>Tên danh mục</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="paginatedCategories.length === 0">
+                  <td colspan="3" class="text-muted fst-italic">
+                    Không tìm thấy danh mục nào.
+                  </td>
+                </tr>
+
+                <tr v-for="item in paginatedCategories" :key="item.id">
+                  <td class="fw-semibold">{{ item.name }}</td>
+                  <td>
+                    <span
+                      :class="item.isDeleted ? 'badge bg-danger' : 'badge bg-success'"
+                    >
+                      {{ item.isDeleted ? 'Đã xóa' : 'Hoạt động' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-danger"
+                      @click="deleteCategory(item)"
+                    >
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Phân trang -->
+            <nav v-if="filteredCategories.length > itemsPerPage">
+              <ul class="pagination justify-content-center">
+                <li
+                  class="page-item"
+                  :class="{ disabled: currentPage === 1 }"
+                  @click="prevPage"
+                >
+                  <span class="page-link">←</span>
+                </li>
+                <li
+                  v-for="page in totalPages"
+                  :key="page"
+                  class="page-item"
+                  :class="{ active: currentPage === page }"
+                  @click="setPage(page)"
+                >
+                  <span class="page-link">{{ page }}</span>
+                </li>
+                <li
+                  class="page-item"
+                  :class="{ disabled: currentPage === totalPages }"
+                  @click="nextPage"
+                >
+                  <span class="page-link">→</span>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div v-else class="empty">Chưa có danh mục nào.</div>
-
-    <div v-if="toast.message" :class="['toast', toast.type]">{{ toast.message }}</div>
+    <!-- Toast -->
+    <transition name="fade">
+      <div
+        v-if="toast.message"
+        class="toast-custom"
+        :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
+      >
+        {{ toast.message }}
+      </div>
+    </transition>
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from "vue";
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue';
+import axios from 'axios';
 
-export default {
-  name: "Categories",
-  setup() {
-    const API_URL = "http://localhost:8080/api/categories";
-    const category = ref({ name: "" });
-    const categories = ref([]);
-    const toast = ref({ message: "", type: "" });
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/admin/categories';
 
-    function showToast(msg, type = "success") {
-      toast.value = { message: msg, type };
-      setTimeout(() => (toast.value.message = ""), 2500);
-    }
+const categories = ref([]);
+const category = ref({ name: '' });
+const toast = ref({ message: '', type: '' });
+const searchQuery = ref('');
+const currentPage = ref(1);
+const itemsPerPage = 10;
 
-    function goBack() {
-      history.back();
-    }
+/* ===== Toast ===== */
+function showToast(msg, type = 'success') {
+  toast.value = { message: msg, type };
+  setTimeout(() => (toast.value.message = ''), 2500);
+}
 
-    async function fetchCategories() {
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        categories.value = await res.json();
-      } catch (err) {
-        console.error(err);
-        showToast("Không thể tải danh mục!", "error");
-      }
-    }
+/* ===== Lấy danh sách danh mục ===== */
+async function fetchCategories() {
+  try {
+    const res = await axios.get(API_URL);
+    categories.value = res.data.filter((c) => !c.isDeleted);
+  } catch (err) {
+    showToast('Không thể tải danh mục!', 'error');
+  }
+}
 
-    async function createCategory() {
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: category.value.name,
-            isDeleted: false,
-          }),
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        showToast("Tạo danh mục thành công!");
-        category.value.name = "";
-        fetchCategories();
-      } catch (err) {
-        console.error(err);
-        showToast("Tạo danh mục thất bại!", "error");
-      }
-    }
+/* ===== Tạo danh mục ===== */
+async function createCategory() {
+  if (!category.value.name.trim()) {
+    showToast('Vui lòng nhập tên danh mục!', 'error');
+    return;
+  }
+  try {
+    await axios.post(API_URL, category.value);
+    showToast('Thêm danh mục thành công!');
+    category.value = { name: '' };
+    await fetchCategories();
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Lỗi khi thêm danh mục!';
+    showToast(msg, 'error');
+  }
+}
 
-    async function deleteCategory(id) {
-      if (!confirm("Bạn có chắc muốn xóa danh mục này?")) return;
-      try {
-        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        showToast("Xóa thành công!");
-        fetchCategories();
-      } catch (err) {
-        console.error(err);
-        showToast("Xóa thất bại!", "error");
-      }
-    }
+/* ===== Xóa danh mục ===== */
+async function deleteCategory(item) {
+  if (!confirm(`Xác nhận xóa danh mục "${item.name}"?`)) return;
+  try {
+    await axios.delete(`${API_URL}/${item.id}`);
+    showToast('Danh mục đã được xóa!');
+    await fetchCategories();
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Không thể xóa danh mục này!';
+    showToast(msg, 'error');
+  }
+}
 
-    onMounted(fetchCategories);
+/* ===== Tìm kiếm + Phân trang ===== */
+const filteredCategories = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return categories.value;
+  return categories.value.filter((c) => c.name.toLowerCase().includes(query));
+});
 
-    return {
-      category,
-      categories,
-      toast,
-      goBack,
-      createCategory,
-      deleteCategory,
-    };
-  },
-};
+const totalPages = computed(() =>
+  Math.ceil(filteredCategories.value.length / itemsPerPage)
+);
+
+const paginatedCategories = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return filteredCategories.value.slice(start, start + itemsPerPage);
+});
+
+function setPage(page) {
+  if (page >= 1 && page <= totalPages.value) currentPage.value = page;
+}
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++;
+}
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--;
+}
+
+watch(searchQuery, () => (currentPage.value = 1));
+
+onMounted(fetchCategories);
 </script>
 
 <style scoped>
-.categories-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.btn {
-  background: #e5e7eb;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
-}
-
-.btn:hover {
-  opacity: 0.85;
-}
-
-.btn.primary {
-  background: #16a34a;
-  color: #fff;
-}
-
-.btn.danger {
-  background: #dc2626;
-  color: #fff;
-}
-
-.form-card,
-.list-card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer {
-  margin-top: 16px;
-  text-align: right;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-}
-
-.table th,
-.table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-
-.table th {
-  background: #f3f4f6;
-}
-
-.empty {
-  text-align: center;
-  color: #6b7280;
-}
-
-.status {
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.status.active {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.status.deleted {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.toast {
+.toast-custom {
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 10px 16px;
   color: #fff;
-  border-radius: 8px;
   font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: 0.3s ease;
+  z-index: 1055;
 }
-
-.toast.success {
-  background: #10b981;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
 }
-
-.toast.error {
-  background: #ef4444;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

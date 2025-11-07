@@ -17,9 +17,8 @@
                      <div class="mb-3">
                         <label class="form-label fw-semibold">Giờ chiếu *</label>
                         <input
-                           type="time" lang="vi"
+                           type="time" 
                            v-model="showTime.startTime"
-                           step="60"
                            class="form-control"
                            required
                         />
