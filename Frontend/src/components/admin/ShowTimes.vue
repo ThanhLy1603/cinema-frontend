@@ -17,7 +17,7 @@
                      <div class="mb-3">
                         <label class="form-label fw-semibold">Giờ chiếu *</label>
                         <input
-                           type="time" 
+                           type="time"
                            v-model="showTime.startTime"
                            class="form-control"
                            required
@@ -121,6 +121,7 @@
 <script setup>
    import { ref, onMounted, computed, watch } from 'vue';
    import axios from 'axios';
+   import Swal from 'sweetalert2';
 
    const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -128,6 +129,7 @@
    const showTime = ref({ startTime: '' });
    const toast = ref({ message: '', type: '' });
    const searchQuery = ref('');
+   const token = localStorage.getItem('token');
 
    const currentPage = ref(1);
    const itemsPerPage = 10;
@@ -137,11 +139,31 @@
       setTimeout(() => (toast.value.message = ''), 2500);
    }
 
+   async function showConfirm(message) {
+      const result = await Swal.fire({
+         title: message,
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonText: 'Xác nhận',
+         cancelButtonText: 'Huỷ',
+         confirmButtonColor: '#d33',
+         cancelButtonColor: '#6c757d',
+         reverseButtons: true
+      });
+
+      return result.isConfirmed; // Trả về true nếu người dùng bấm "Xác nhận"
+   }
+
    /* ===== Load dữ liệu ===== */
    async function loadShowTimes() {
       try {
          const url = `${API_URL}/admin/show-times`;
-         const res = await axios.get(url);
+         const res = await axios.get(url, {
+            headers: {
+               Authorization: `Bearer ${token}`,
+               'Content-Type': 'application/json',
+            },
+         });
          // ✅ Chỉ hiển thị giờ chưa bị ẩn
          showTimes.value = res.data.filter((st) => !st.isDeleted);
       } catch (error) {
@@ -182,7 +204,12 @@
    async function handleSubmit() {
       if (!validateShowTime()) return;
       const url = `${API_URL}/admin/show-times/create`;
-      console.log("show time: ", showTime.value);
+      console.log('show time: ', showTime.value, {
+         headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+         },
+      });
       try {
          await axios.post(url, showTime.value);
          showToast('Thêm giờ chiếu thành công!');
@@ -196,9 +223,28 @@
 
    /* ===== Xóa (ẩn) giờ chiếu ===== */
    async function deleteShowTime(st) {
-      if (!confirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`)) return;
+      // if (!confirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`)) return;
+      const confirmed = await showConfirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`);
+
+      if (!confirmed) {
+         Swal.fire({
+            icon: 'info',
+            title: 'Đã huỷ xoá giờ chiếu',
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+         });
+         return;
+      }
+
       try {
-         await axios.delete(`${API_URL}/admin/show-times/delete/${st.id}`);
+         await axios.delete(`${API_URL}/admin/show-times/delete/${st.id}`, {
+            headers: {
+               Authorization: `Bearer ${token}`,
+               'Content-Type': 'application/json',
+            },
+         });
          showToast('Giờ chiếu đã được ẩn!');
          await loadShowTimes();
       } catch (error) {

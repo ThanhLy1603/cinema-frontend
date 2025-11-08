@@ -130,8 +130,8 @@
       try {
          loading.value = true;
          const [prodRes, allRes] = await Promise.all([
-            axios.get(`${API_BASE_URL}/products/${id}`),
-            axios.get(`${API_BASE_URL}/products`),
+            axios.get(`${API_BASE_URL}/foods/${id}`),
+            axios.get(`${API_BASE_URL}/foods`),
          ]);
 
          product.value = prodRes.data;
