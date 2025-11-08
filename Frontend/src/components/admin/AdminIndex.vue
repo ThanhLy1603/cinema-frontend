@@ -25,6 +25,7 @@
       { name: 'Vé', component: 'TicketManager' },
       { name: 'Giờ chiếu', component: 'ShowTimes' },
       { name: 'Phòng chiếu', component: 'RoomsManager' },
+      { name: 'Ghế ngồi', component: 'SeatsManager'}
    ];
 
    // Hàm mở component con

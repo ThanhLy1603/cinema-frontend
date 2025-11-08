@@ -31,6 +31,7 @@
    import FilmsManager from '../admin/FilmsManager.vue';
    import ShowTimes from '../admin/ShowTimes.vue';
    import RoomsManager from '../admin/RoomsManager.vue';
+   import SeatsManager from './SeatsManager.vue';
 
    const activeComponent = ref(null);
 
@@ -39,6 +40,7 @@
       FilmsManager,
       ShowTimes,
       RoomsManager,
+      SeatsManager
    };
 
    // Tự động chọn component hiển thị
@@ -52,6 +54,7 @@
          FilmsManager: 'Phim',
          ShowTimes: 'Giờ chiếu',
          RoomsManager: 'Phòng chiếu',
+         SeatsManager: 'Ghế ngồi'
       };
       return map[activeComponent.value] || '';
    });
