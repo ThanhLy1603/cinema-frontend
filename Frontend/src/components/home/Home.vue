@@ -31,6 +31,7 @@
    import About from '../load/About.vue';
    import AccountProfile from '../auth/AccountProfile.vue';
    import FilmDetail from '../home/FilmDetail.vue';
+   import ProductDetails from './ProductDetails.vue';
 
    // === Biến chính ===
    const current = ref('Films'); // mặc định trang phim
@@ -48,6 +49,7 @@
       About,
       AccountProfile,
       FilmDetail,
+      ProductDetails,
    };
 
    // Component hiện tại được tính toán

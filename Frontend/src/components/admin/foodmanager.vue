@@ -1,50 +1,72 @@
 <template>
-  <div class="container-fluid categories-page mt-3">
+  <div class="container-fluid foods-page mt-3">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="fw-bold text-success">📂 Quản lý Danh Mục</h3>
-      <button class="btn btn-success" @click="fetchCategories">⟳ Tải lại</button>
+      <h3 class="fw-bold text-success">🍔 Quản lý Sản phẩm</h3>
+      <button class="btn btn-success" @click="fetchFoods">⟳ Tải lại</button>
     </div>
 
     <div class="row g-3">
-      <!-- Form tạo danh mục -->
+      <!-- Form thêm sản phẩm -->
       <div class="col-md-4">
         <div class="card shadow-sm border-0">
           <div class="card-body">
-            <h5 class="card-title text-success text-center mb-3">+ Thêm danh mục mới</h5>
+            <h5 class="card-title text-success text-center mb-3">+ Thêm sản phẩm mới</h5>
 
-            <form @submit.prevent="createCategory">
+            <form @submit.prevent="createFood">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Tên danh mục *</label>
+                <label class="form-label fw-semibold">Tên sản phẩm *</label>
                 <input
-                  v-model="category.name"
+                  v-model="food.name"
                   type="text"
                   class="form-control"
-                  placeholder="Nhập tên danh mục..."
+                  placeholder="Nhập tên sản phẩm..."
                   required
                 />
               </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Mô tả *</label>
+                <textarea
+                  v-model="food.description"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Nhập mô tả sản phẩm..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Ảnh sản phẩm (URL)</label>
+                <input
+                  v-model="food.poster"
+                  type="text"
+                  class="form-control"
+                  placeholder="Nhập đường dẫn ảnh..."
+                />
+              </div>
+
               <button type="submit" class="btn btn-success w-100">
-                + Thêm danh mục
+                + Thêm sản phẩm
               </button>
             </form>
           </div>
         </div>
       </div>
 
-      <!-- Danh sách danh mục -->
+      <!-- Danh sách sản phẩm -->
       <div class="col-md-8">
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title fw-bold mb-0">Danh sách danh mục</h5>
+              <h5 class="card-title fw-bold mb-0">Danh sách sản phẩm</h5>
               <div class="input-group" style="width: 240px">
                 <span class="input-group-text bg-success text-white">Tìm kiếm</span>
                 <input
                   type="text"
                   class="form-control"
                   v-model="searchQuery"
-                  placeholder="Tìm danh mục..."
+                  placeholder="Tìm sản phẩm..."
                 />
               </div>
             </div>
@@ -52,31 +74,38 @@
             <table class="table table-hover align-middle text-center">
               <thead class="table-success">
                 <tr>
-                  <th>Tên danh mục</th>
-                  <th>Trạng thái</th>
+                  <th>Ảnh</th>
+                  <th>Tên sản phẩm</th>
+                  <th>Mô tả</th>
                   <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="paginatedCategories.length === 0">
-                  <td colspan="3" class="text-muted fst-italic">
-                    Không tìm thấy danh mục nào.
+                <tr v-if="paginatedFoods.length === 0">
+                  <td colspan="4" class="text-muted fst-italic">
+                    Không tìm thấy sản phẩm nào.
                   </td>
                 </tr>
 
-                <tr v-for="item in paginatedCategories" :key="item.id">
-                  <td class="fw-semibold">{{ item.name }}</td>
+                <tr v-for="item in paginatedFoods" :key="item.id">
                   <td>
-                    <span
-                      :class="item.isDeleted ? 'badge bg-danger' : 'badge bg-success'"
-                    >
-                      {{ item.isDeleted ? 'Đã xóa' : 'Hoạt động' }}
-                    </span>
+                    <img
+                      v-if="item.poster"
+                      :src="item.poster"
+                      alt="poster"
+                      class="rounded"
+                      style="width: 60px; height: 60px; object-fit: cover"
+                    />
+                    <span v-else class="text-muted fst-italic">Không có ảnh</span>
                   </td>
-                  <td>
+                  <td class="fw-semibold align-middle">{{ item.name }}</td>
+                  <td class="text-wrap text-center align-middle" style="max-width: 350px; white-space: normal;">
+                    {{ item.description }}
+                  </td>
+                  <td class="align-middle">
                     <button
                       class="btn btn-sm btn-danger"
-                      @click="deleteCategory(item)"
+                      @click="deleteFood(item)"
                     >
                       Xóa
                     </button>
@@ -86,7 +115,7 @@
             </table>
 
             <!-- Phân trang -->
-            <nav v-if="filteredCategories.length > itemsPerPage">
+            <nav v-if="filteredFoods.length > itemsPerPage">
               <ul class="pagination justify-content-center">
                 <li
                   class="page-item"
@@ -135,10 +164,10 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL + '/admin/categories';
+const API_URL = import.meta.env.VITE_API_BASE_URL + '/admin/foods';
 
-const categories = ref([]);
-const category = ref({ name: '' });
+const foods = ref([]);
+const food = ref({ name: '', description: '', poster: '' });
 const toast = ref({ message: '', type: '' });
 const searchQuery = ref('');
 const currentPage = ref(1);
@@ -150,60 +179,60 @@ function showToast(msg, type = 'success') {
   setTimeout(() => (toast.value.message = ''), 2500);
 }
 
-/* ===== Lấy danh sách danh mục ===== */
-async function fetchCategories() {
+/* ===== Lấy danh sách sản phẩm ===== */
+async function fetchFoods() {
   try {
     const res = await axios.get(API_URL);
-    categories.value = res.data.filter((c) => !c.isDeleted);
+    foods.value = res.data.filter((f) => !f.isDeleted);
   } catch (err) {
-    showToast('Không thể tải danh mục!', 'error');
+    showToast('Không thể tải danh sách sản phẩm!', 'error');
   }
 }
 
-/* ===== Tạo danh mục ===== */
-async function createCategory() {
-  if (!category.value.name.trim()) {
-    showToast('Vui lòng nhập tên danh mục!', 'error');
+/* ===== Tạo sản phẩm ===== */
+async function createFood() {
+  if (!food.value.name.trim() || !food.value.description.trim()) {
+    showToast('Vui lòng nhập đầy đủ thông tin sản phẩm!', 'error');
     return;
   }
   try {
-    await axios.post(API_URL, category.value);
-    showToast('Thêm danh mục thành công!');
-    category.value = { name: '' };
-    await fetchCategories();
+    await axios.post(API_URL, food.value);
+    showToast('Thêm sản phẩm thành công!');
+    food.value = { name: '', description: '', poster: '' };
+    await fetchFoods();
   } catch (err) {
-    const msg = err.response?.data?.message || 'Lỗi khi thêm danh mục!';
+    const msg = err.response?.data?.message || 'Lỗi khi thêm sản phẩm!';
     showToast(msg, 'error');
   }
 }
 
-/* ===== Xóa danh mục ===== */
-async function deleteCategory(item) {
-  if (!confirm(`Xác nhận xóa danh mục "${item.name}"?`)) return;
+/* ===== Xóa sản phẩm ===== */
+async function deleteFood(item) {
+  if (!confirm(`Xác nhận xóa sản phẩm "${item.name}"?`)) return;
   try {
     await axios.delete(`${API_URL}/${item.id}`);
-    showToast('Danh mục đã được xóa!');
-    await fetchCategories();
+    showToast('Sản phẩm đã được xóa!');
+    await fetchFoods();
   } catch (err) {
-    const msg = err.response?.data?.message || 'Không thể xóa danh mục này!';
+    const msg = err.response?.data?.message || 'Không thể xóa sản phẩm này!';
     showToast(msg, 'error');
   }
 }
 
 /* ===== Tìm kiếm + Phân trang ===== */
-const filteredCategories = computed(() => {
+const filteredFoods = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
-  if (!query) return categories.value;
-  return categories.value.filter((c) => c.name.toLowerCase().includes(query));
+  if (!query) return foods.value;
+  return foods.value.filter((f) => f.name.toLowerCase().includes(query));
 });
 
 const totalPages = computed(() =>
-  Math.ceil(filteredCategories.value.length / itemsPerPage)
+  Math.ceil(filteredFoods.value.length / itemsPerPage)
 );
 
-const paginatedCategories = computed(() => {
+const paginatedFoods = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
-  return filteredCategories.value.slice(start, start + itemsPerPage);
+  return filteredFoods.value.slice(start, start + itemsPerPage);
 });
 
 function setPage(page) {
@@ -218,7 +247,7 @@ function prevPage() {
 
 watch(searchQuery, () => (currentPage.value = 1));
 
-onMounted(fetchCategories);
+onMounted(fetchFoods);
 </script>
 
 <style scoped>
@@ -241,5 +270,14 @@ onMounted(fetchCategories);
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+.text-wrap {
+  white-space: normal !important;
+  word-wrap: break-word;
+}
+.table td,
+.table th {
+  vertical-align: middle;
+  text-align: center;
 }
 </style>

@@ -1,88 +1,74 @@
 <template>
-  <div class="admin-dashboard">
-    <aside class="sidebar">
-      <h2 class="logo">Admin</h2>
-      <nav>
-        <ul>
-          <li :class="{ active: isActive('/admin/films') }">
-            <router-link to="/admin/films">🎬 Quản lý phim</router-link>
-          </li>
-          <li>
-            <button class="logout-btn" @click="logout">Đăng xuất</button>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+  <div class="container-fluid">
+    <div class="admin-dashboard">
+      <Header></Header>
 
-    <main class="main-content">
-      <header class="topbar">
-        <h1>{{ pageTitle }}</h1>
-      </header>
-      <section class="content-area">
-        <!-- Đây là nơi hiển thị các component con (FilmsManager, v.v.) -->
-        <router-view />
-      </section>
-    </main>
+      <main class="admin-main">
+        <div class="breadcrumb">
+          <span @click="goBack" class="link">Hạng mục quản lý</span>
+          <template v-if="activeComponent">
+            <span> / </span>
+            <span>{{ activeTitle }}</span>
+          </template>
+        </div>
 
-    <footer class="footer">footer</footer>
+        <div class="content-area">
+          <!-- Hiển thị component động -->
+          <component :is="currentComponent" @open="handleOpen" />
+        </div>
+      </main>
+
+      <footer class="footer">footer</footer>
+    </div>
   </div>
 </template>
 
-<script>
-import { ref, computed } from "vue";
-import Header from "../header/Header.vue";
-import AdminIndex from "../admin/AdminIndex.vue";
-import FilmsManager from "../admin/FilmsManager.vue";
-import ShowTimes from "../admin/ShowTimes.vue";
+<script setup>
+import { ref, computed } from 'vue';
+import Header from '../header/Header.vue';
+import AdminIndex from '../admin/AdminIndex.vue';
+import FilmsManager from '../admin/FilmsManager.vue';
+import ShowTimes from '../admin/ShowTimes.vue';
+import RoomsManager from '../admin/RoomsManager.vue';
+import CategoryManager from '../admin/CategoryManager.vue';
+import foodmanager from '../admin/foodmanager.vue';
 
-export default {
-  name: "AdminDashboard",
-<<<<<<< HEAD
-=======
-  components: { Header, AdminIndex, FilmsManager,ShowTimes},
+const activeComponent = ref(null);
 
->>>>>>> 17f5846663e8448bd9ef7f0b9be236db971ceb27
-  setup() {
-    const activeComponent = ref(null);
-
-    const components = {
-      AdminIndex,
-      FilmsManager,
-      ShowTimes,
-    };
-
-    const currentComponent = computed(function () {
-      return activeComponent.value ? components[activeComponent.value] : AdminIndex;
-    });
-
-    const activeTitle = computed(function () {
-      var map = {
-        FilmsManager: " Phim",
-        ShowTimes:" Giờ chiếu",
-      };
-      return map[activeComponent.value] || "";
-    });
-
-    function handleOpen(componentName) {
-      activeComponent.value = componentName;
-    }
-
-    watch(route, function () {
-      updateTitle();
-    });
-
-    // Gọi lần đầu
-    updateTitle();
-
-    return {
-      activeComponent,
-      currentComponent,
-      activeTitle,
-      handleOpen,
-      goBack
-    };
-  }
+const components = {
+  AdminIndex,
+  FilmsManager,
+  ShowTimes,
+  RoomsManager,
+  CategoryManager,
+  foodmanager
 };
+
+// Tự động chọn component hiển thị
+const currentComponent = computed(() => {
+  return activeComponent.value ? components[activeComponent.value] : AdminIndex;
+});
+
+// Map tên sang tiêu đề
+const activeTitle = computed(() => {
+  const map = {
+    FilmsManager: 'Phim',
+    ShowTimes: 'Giờ chiếu',
+    RoomsManager: 'Phòng chiếu',
+    CategoryManager: 'Danh mục'
+  };
+  return map[activeComponent.value] || '';
+});
+
+// Mở component con
+function handleOpen(componentName) {
+  activeComponent.value = componentName;
+}
+
+// Quay lại trang chính
+function goBack() {
+  activeComponent.value = null;
+}
 </script>
 
 <style scoped>

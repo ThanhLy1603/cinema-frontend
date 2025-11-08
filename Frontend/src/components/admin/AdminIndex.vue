@@ -24,7 +24,10 @@ export default {
       { name: "Nhân viên", component: "StaffManager" },
       { name: "Lịch chiếu", component: "ScheduleManager" },
       { name: "Vé", component: "TicketManager" },
-      { name: "Thời gian chiếu", component: "ShowTimes" }
+      { name: "Thời gian chiếu", component: "ShowTimes" },
+      { name: "Danh mục", component: "CategoryManager" },
+      { name: "Sản phẩm", component: "foodmanager" }
+      
     ];
 
     // Hàm mở component con

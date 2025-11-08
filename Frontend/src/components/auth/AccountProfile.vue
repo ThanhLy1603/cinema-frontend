@@ -489,8 +489,8 @@
          console.log(' Dữ liệu hồ sơ nhận được:', data);
 
          form.value = {
-            lastName: data.fullName ? data.fullName.split(' ').slice(0, -1).join(' ') : '',
-            firstName: data.fullName ? data.fullName.split(' ').slice(-1)[0] : '',
+            firstName: data.fullName ? data.fullName.split(' ').slice(0, -1).join(' ') : '',
+            lastName: data.fullName ? data.fullName.split(' ').slice(-1)[0] : '',
             email: data.email || '',
             phone: data.phone || '',
             gender: data.gender !== null ? data.gender.toString() : '',
