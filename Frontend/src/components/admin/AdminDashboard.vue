@@ -33,6 +33,7 @@
    import CategoryManager from '../admin/CategoryManager.vue';
    import ProductManager from './ProductsManager.vue';
    import SeatsManager from '../admin/SeatsManager.vue';
+   import ScheduleManager from './ScheduleManager.vue';
 
    // Component đang hoạt động
    const activeComponent = ref(null);
@@ -46,6 +47,7 @@
       CategoryManager,
       ProductManager,
       SeatsManager,
+      ScheduleManager
    };
 
    // Component hiện tại hiển thị (nếu null → AdminIndex)
@@ -62,6 +64,7 @@
          CategoryManager: 'Danh mục',
          ProductManager: 'Đồ ăn',
          SeatsManager: 'Ghế ngồi',
+         ScheduleManager: 'Lịch chiếu'
       };
       return map[activeComponent.value] || '';
    });

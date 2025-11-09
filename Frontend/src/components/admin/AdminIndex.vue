@@ -13,35 +13,27 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "AdminIndex",
-  emits: ["open"],
+<script setup>
+   import { defineEmits } from 'vue';
 
-  setup(props, context) {
-    const managementItems = [
-      { name: "Phim", component: "FilmsManager" },
-      { name: "Nhân viên", component: "StaffManager" },
-      { name: "Lịch chiếu", component: "ScheduleManager" },
-      { name: "Vé", component: "TicketManager" },
-      { name: "Giờ chiếu", component: "ShowTimes" },
-      { name: "Phòng chiếu", component: "RoomsManager" },
-      { name: "Ghế ngồi", component: "SeatsManager" },
-      { name: "Danh mục", component: "CategoryManager" },
-      { name: "Đồ ăn", component: "ProductManager" }
-    ];
+   const emit = defineEmits(['open']);
 
-    // Hàm mở component con
-    function openComponent(componentName) {
-      context.emit("open", componentName);
-    }
+   const managementItems = [
+   { name: "Phim", component: "FilmsManager" },
+   { name: "Nhân viên", component: "StaffManager" },
+   { name: "Lịch chiếu", component: "ScheduleManager" },
+   { name: "Vé", component: "TicketManager" },
+   { name: "Giờ chiếu", component: "ShowTimes" },
+   { name: "Phòng chiếu", component: "RoomsManager" },
+   { name: "Ghế ngồi", component: "SeatsManager" },
+   { name: "Danh mục", component: "CategoryManager" },
+   { name: "Đồ ăn", component: "ProductManager" },
+   ];
 
-    return {
-      managementItems,
-      openComponent
-    };
-  }
-};
+
+   function openComponent(componentName) {
+   emit('open', componentName);
+   }
 </script>
 
 <style scoped>

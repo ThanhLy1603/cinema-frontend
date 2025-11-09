@@ -253,7 +253,7 @@
          reverseButtons: true
       });
 
-      return result.isConfirmed; // Trả về true nếu người dùng bấm "Xác nhận"
+      return result.isConfirmed;
    }
 
 
