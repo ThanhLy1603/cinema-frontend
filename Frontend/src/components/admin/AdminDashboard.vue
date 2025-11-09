@@ -31,7 +31,7 @@
    import ShowTimes from '../admin/ShowTimes.vue';
    import RoomsManager from '../admin/RoomsManager.vue';
    import CategoryManager from '../admin/CategoryManager.vue';
-   import FoodManager from './FoodsManager.vue';
+   import ProductManager from './ProductsManager.vue';
    import SeatsManager from '../admin/SeatsManager.vue';
 
    // Component đang hoạt động
@@ -44,7 +44,7 @@
       ShowTimes,
       RoomsManager,
       CategoryManager,
-      FoodManager,
+      ProductManager,
       SeatsManager,
    };
 
@@ -60,7 +60,7 @@
          ShowTimes: 'Giờ chiếu',
          RoomsManager: 'Phòng chiếu',
          CategoryManager: 'Danh mục',
-         FoodManager: 'Đồ ăn',
+         ProductManager: 'Đồ ăn',
          SeatsManager: 'Ghế ngồi',
       };
       return map[activeComponent.value] || '';

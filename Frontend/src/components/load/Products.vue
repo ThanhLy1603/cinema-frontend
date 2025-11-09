@@ -63,7 +63,7 @@
 
    async function getproducts() {
       try {
-         const url = `${API_BASE_URL}/foods`;
+         const url = `${API_BASE_URL}/products`;
          const response = await axios.get(url);
          products.value = response.data;
 

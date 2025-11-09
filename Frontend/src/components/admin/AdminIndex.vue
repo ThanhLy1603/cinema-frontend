@@ -28,7 +28,7 @@ export default {
       { name: "Phòng chiếu", component: "RoomsManager" },
       { name: "Ghế ngồi", component: "SeatsManager" },
       { name: "Danh mục", component: "CategoryManager" },
-      { name: "Đồ ăn", component: "FoodManager" }
+      { name: "Đồ ăn", component: "ProductManager" }
     ];
 
     // Hàm mở component con

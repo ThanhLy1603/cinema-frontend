@@ -1,9 +1,9 @@
 <template>
-   <div class="container-fluid foods-page mt-3">
+   <div class="container-fluid products-page mt-3">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-3">
          <h3 class="fw-bold text-success">Quản lý Sản phẩm</h3>
-         <button class="btn btn-success" @click="fetchFoods">⟳ Tải lại</button>
+         <button class="btn btn-success" @click="fetchProducts">⟳ Tải lại</button>
       </div>
 
       <div class="row g-3">
@@ -13,11 +13,11 @@
                <div class="card-body">
                   <h5 class="card-title text-success text-center mb-3">Thêm sản phẩm mới</h5>
 
-                  <form @submit.prevent="createFood">
+                  <form @submit.prevent="createProduct">
                      <div class="mb-3">
                         <label class="form-label fw-semibold">Tên sản phẩm *</label>
                         <input
-                           v-model="food.name"
+                           v-model="product.name"
                            type="text"
                            class="form-control"
                            placeholder="Nhập tên sản phẩm..."
@@ -28,7 +28,7 @@
                      <div class="mb-3">
                         <label class="form-label fw-semibold">Mô tả *</label>
                         <textarea
-                           v-model="food.description"
+                           v-model="product.description"
                            class="form-control"
                            rows="3"
                            placeholder="Nhập mô tả sản phẩm..."
@@ -44,9 +44,9 @@
                            accept="image/*"
                            @change="handlePoster"
                         />
-                        <div v-if="food.preview" class="mt-2">
+                        <div v-if="product.preview" class="mt-2">
                            <img
-                              :src="food.preview"
+                              :src="product.preview"
                               alt="Preview"
                               class="rounded"
                               style="width: 100px; height: 100px; object-fit: cover"
@@ -87,13 +87,13 @@
                         </tr>
                      </thead>
                      <tbody>
-                        <tr v-if="paginatedFoods.length === 0">
+                        <tr v-if="paginatedProducts.length === 0">
                            <td colspan="4" class="text-muted fst-italic">
                               Không tìm thấy sản phẩm nào.
                            </td>
                         </tr>
 
-                        <tr v-for="item in paginatedFoods" :key="item.id">
+                        <tr v-for="item in paginatedProducts" :key="item.id">
                            <td>
                               <img
                                  v-if="item.poster"
@@ -112,7 +112,7 @@
                               {{ item.description }}
                            </td>
                            <td class="align-middle">
-                              <button class="btn btn-sm btn-danger" @click="deleteFood(item)">
+                              <button class="btn btn-sm btn-danger" @click="deleteProduct(item)">
                                  Xóa
                               </button>
                            </td>
@@ -121,7 +121,7 @@
                   </table>
 
                   <!-- Phân trang -->
-                  <nav v-if="filteredFoods.length > itemsPerPage">
+                  <nav v-if="filteredProducts.length > itemsPerPage">
                      <ul class="pagination justify-content-center">
                         <li
                            class="page-item"
@@ -171,11 +171,11 @@
    import axios from 'axios';
    import Swal from 'sweetalert2';
 
-   const API_URL = import.meta.env.VITE_API_BASE_URL + '/admin/foods';
+   const API_URL = import.meta.env.VITE_API_BASE_URL + '/admin/products';
    const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
 
-   const foods = ref([]);
-   const food = ref({ name: '', description: '', poster: '', preview: '' });
+   const products = ref([]);
+   const product = ref({ name: '', description: '', poster: '', preview: '' });
    const toast = ref({ message: '', type: '' });
    const searchQuery = ref('');
    const currentPage = ref(1);
@@ -205,26 +205,26 @@
    }
 
    /* ===== Lấy danh sách sản phẩm ===== */
-   async function fetchFoods() {
+   async function fetchProducts() {
       try {
          const res = await axios.get(API_URL);
-         foods.value = res.data.filter((f) => !f.isDeleted);
+         products.value = res.data.filter((f) => !f.isDeleted);
       } catch (err) {
          showToast('Không thể tải danh sách sản phẩm!', 'error');
       }
    }
 
    /* ===== Tạo sản phẩm ===== */
-   async function createFood() {
-      if (!food.value.name.trim() || !food.value.description.trim()) {
+   async function createProduct() {
+      if (!product.value.name.trim() || !product.value.description.trim()) {
          showToast('Vui lòng nhập đầy đủ thông tin sản phẩm!', 'error');
          return;
       }
 
       const formData = new FormData();
-      formData.append('name', food.value.name);
-      formData.append('description', food.value.description);
-      formData.append('poster', food.value.poster);
+      formData.append('name', product.value.name);
+      formData.append('description', product.value.description);
+      formData.append('poster', product.value.poster);
 
       console.log('Form Data Create: ', formData);
       try {
@@ -235,8 +235,8 @@
             }
          });
          showToast('Thêm sản phẩm thành công!');
-         food.value = { name: '', description: '', poster: null, preview: null };
-         await fetchFoods();
+         product.value = { name: '', description: '', poster: null, preview: null };
+         await fetchProducts();
       } catch (err) {
          const msg = err.response?.data?.message || 'Lỗi khi thêm sản phẩm!';
          showToast(msg, 'error');
@@ -244,7 +244,7 @@
    }
 
    /* ===== Xóa sản phẩm ===== */
-   async function deleteFood(item) {
+   async function deleteProduct(item) {
       // if (!confirm(`Xác nhận xóa sản phẩm "${item.name}"?`)) return;
       const confirmed = await showConfirm(`Xác nhận xóa sản phẩm "${item.name}"?`);
 
@@ -269,7 +269,7 @@
             }
          );
          showToast('Sản phẩm đã được xóa!');
-         await fetchFoods();
+         await fetchProducts();
       } catch (err) {
          const msg = err.response?.data?.message || 'Không thể xóa sản phẩm này!';
          showToast(msg, 'error');
@@ -277,17 +277,17 @@
    }
 
    /* ===== Tìm kiếm + Phân trang ===== */
-   const filteredFoods = computed(() => {
+   const filteredProducts = computed(() => {
       const query = searchQuery.value.trim().toLowerCase();
-      if (!query) return foods.value;
-      return foods.value.filter((f) => f.name.toLowerCase().includes(query));
+      if (!query) return products.value;
+      return products.value.filter((f) => f.name.toLowerCase().includes(query));
    });
 
-   const totalPages = computed(() => Math.ceil(filteredFoods.value.length / itemsPerPage));
+   const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
 
-   const paginatedFoods = computed(() => {
+   const paginatedProducts = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage;
-      return filteredFoods.value.slice(start, start + itemsPerPage);
+      return filteredProducts.value.slice(start, start + itemsPerPage);
    });
 
    function setPage(page) {
@@ -308,11 +308,11 @@
       const file = event.target.files[0];
 
       if (file) {
-         food.value.poster = file;
+         product.value.poster = file;
 
          const reader = new FileReader();
          reader.onload = (e) => {
-            food.value.preview = e.target.result;
+            product.value.preview = e.target.result;
          };
          reader.readAsDataURL(file);
       }
@@ -320,7 +320,7 @@
 
    watch(searchQuery, () => (currentPage.value = 1));
 
-   onMounted(fetchFoods);
+   onMounted(fetchProducts);
 </script>
 
 <style scoped>
