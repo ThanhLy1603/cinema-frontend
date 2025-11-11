@@ -3,7 +3,6 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="fw-bold text-success">🍔 Quản lý Sản phẩm</h3>
-      <button class="btn btn-success" @click="fetchFoods">⟳ Tải lại</button>
     </div>
 
     <div class="row g-3">
@@ -11,7 +10,9 @@
       <div class="col-md-4">
         <div class="card shadow-sm border-0">
           <div class="card-body">
-            <h5 class="card-title text-success text-center mb-3">+ Thêm sản phẩm mới</h5>
+            <h5 class="card-title text-success text-center mb-3">
+              + Thêm sản phẩm mới
+            </h5>
 
             <form @submit.prevent="createFood">
               <div class="mb-3">
@@ -99,7 +100,10 @@
                     <span v-else class="text-muted fst-italic">Không có ảnh</span>
                   </td>
                   <td class="fw-semibold align-middle">{{ item.name }}</td>
-                  <td class="text-wrap text-center align-middle" style="max-width: 350px; white-space: normal;">
+                  <td
+                    class="text-wrap text-center align-middle"
+                    style="max-width: 350px; white-space: normal"
+                  >
                     {{ item.description }}
                   </td>
                   <td class="align-middle">
@@ -115,30 +119,35 @@
             </table>
 
             <!-- Phân trang -->
-            <nav v-if="filteredFoods.length > itemsPerPage">
+            <nav v-if="totalPages > 1">
               <ul class="pagination justify-content-center">
                 <li
                   class="page-item"
                   :class="{ disabled: currentPage === 1 }"
-                  @click="prevPage"
                 >
-                  <span class="page-link">←</span>
+                  <button class="page-link" @click="prevPage" :disabled="currentPage === 1">
+                    ←
+                  </button>
                 </li>
+
                 <li
                   v-for="page in totalPages"
                   :key="page"
                   class="page-item"
                   :class="{ active: currentPage === page }"
-                  @click="setPage(page)"
                 >
-                  <span class="page-link">{{ page }}</span>
+                  <button class="page-link" @click="setPage(page)">
+                    {{ page }}
+                  </button>
                 </li>
+
                 <li
                   class="page-item"
                   :class="{ disabled: currentPage === totalPages }"
-                  @click="nextPage"
                 >
-                  <span class="page-link">→</span>
+                  <button class="page-link" @click="nextPage" :disabled="currentPage === totalPages">
+                    →
+                  </button>
                 </li>
               </ul>
             </nav>
@@ -227,7 +236,7 @@ const filteredFoods = computed(() => {
 });
 
 const totalPages = computed(() =>
-  Math.ceil(filteredFoods.value.length / itemsPerPage)
+  Math.max(1, Math.ceil(filteredFoods.value.length / itemsPerPage))
 );
 
 const paginatedFoods = computed(() => {
@@ -279,5 +288,8 @@ onMounted(fetchFoods);
 .table th {
   vertical-align: middle;
   text-align: center;
+}
+.page-link {
+  cursor: pointer;
 }
 </style>
