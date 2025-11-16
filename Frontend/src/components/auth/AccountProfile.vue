@@ -60,7 +60,7 @@
                   <form @submit.prevent="updateInfo">
                      <div class="row">
                         <div class="col-md-6 mb-3">
-                           <label class="form-label">Họ *</label>
+                           <label class="form-label">Họ và tên đệm *</label>
                            <input
                               v-model="form.firstName"
                               type="text"
@@ -71,7 +71,7 @@
                            <div class="invalid-feedback">{{ errors.firstName }}</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                           <label class="form-label">Tên đệm và tên *</label>
+                           <label class="form-label">Tên *</label>
                            <input
                               v-model="form.lastName"
                               type="text"
