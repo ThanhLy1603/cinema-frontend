@@ -8,7 +8,7 @@ import ForgotPassword from '../components/home/ForgotPassword.vue'
 import FilmDetail from '../components/home/FilmDetail.vue'
 import AdminDashboard from '../components/admin/AdminDashboard.vue'
 import AccountProfile from '../components/auth/AccountProfile.vue'
-import ProductDetails from '../components/load/ProductDetails.vue'
+import ProductDetails from '../components/home/ProductDetails.vue'
 
 // ===== Khai báo routes =====
 const routes = [

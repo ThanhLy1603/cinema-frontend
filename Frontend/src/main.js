@@ -5,6 +5,9 @@ import App from './App.vue';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+// Import Vue3 Select
+import 'vue3-select/dist/vue3-select.css'
+
 // Import SweetAlert2
 import VueSweetalert2 from 'vue-sweetalert2'; 
 import 'sweetalert2/dist/sweetalert2.min.css';

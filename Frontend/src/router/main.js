@@ -1,5 +1,6 @@
 // adminRoutes.js
 import AdminDashboard from '../components/admin/AdminDashboard.vue';
+import FilmsManager from '../components/admin/FilmsManager.vue';
 
 const adminRoutes = [
   {
@@ -7,6 +8,13 @@ const adminRoutes = [
     name: 'AdminDashboard',
     component: AdminDashboard,
     meta: { requiresAuth: true, role: 'admin' },
+    children: [
+      {
+        path: 'films',
+        name: 'FilmsManager',
+        component: FilmsManager
+      }
+    ]
   }
 ];
 
