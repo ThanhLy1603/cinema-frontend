@@ -182,7 +182,7 @@
          <div v-else class="col-12">
             <h4 class="text-center mb-3">Thêm lịch chiếu</h4>
             <div class="table-responsive">
-               <table class="table table-bordered align-middle">
+               <table class="table table-bordered table-hover align-middle">
                   <thead class="table-warning text-center">
                      <tr>
                         <th style="width: 5%">STT</th>

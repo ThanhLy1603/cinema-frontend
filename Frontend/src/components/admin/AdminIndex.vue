@@ -30,9 +30,8 @@
    { name: "Đồ ăn", component: "ProductManager" },
    ];
 
-
    function openComponent(componentName) {
-   emit('open', componentName);
+      emit('open', componentName);
    }
 </script>
 

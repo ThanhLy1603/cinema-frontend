@@ -3,7 +3,7 @@
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-3">
          <h3 class="fw-bold text-success">🎬 Quản lý Giờ Chiếu</h3>
-         <button class="btn btn-success" @click="loadShowTimes">⟳ Tải lại</button>
+         <!-- <button class="btn btn-success" @click="loadShowTimes">⟳ Tải lại</button> -->
       </div>
 
       <div class="row g-3">
@@ -11,7 +11,7 @@
          <div class="col-md-4">
             <div class="card shadow-sm border-0">
                <div class="card-body">
-                  <h5 class="card-title text-success text-center mb-3">+ Thêm giờ chiếu mới</h5>
+                  <h5 class="card-title text-success text-center mb-3">Thêm giờ chiếu mới</h5>
 
                   <form @submit.prevent="handleSubmit">
                      <div class="mb-3">
@@ -224,7 +224,7 @@
    /* ===== Xóa (ẩn) giờ chiếu ===== */
    async function deleteShowTime(st) {
       // if (!confirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`)) return;
-      const confirmed = await showConfirm(`Xác nhận ẩn giờ chiếu ${st.startTime}?`);
+      const confirmed = await showConfirm(`Xác nhận xoá giờ chiếu ${st.startTime}?`);
 
       if (!confirmed) {
          Swal.fire({
@@ -245,7 +245,7 @@
                'Content-Type': 'application/json',
             },
          });
-         showToast('Giờ chiếu đã được ẩn!');
+         showToast('Xoá giờ chiếu thành công!');
          await loadShowTimes();
       } catch (error) {
          const msg = error.response?.data?.message || 'Không thể ẩn giờ chiếu này!';
