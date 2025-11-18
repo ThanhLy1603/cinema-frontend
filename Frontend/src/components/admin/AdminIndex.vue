@@ -28,6 +28,7 @@
    { name: "Ghế ngồi", component: "SeatsManager" },
    { name: "Danh mục", component: "CategoryManager" },
    { name: "Đồ ăn", component: "ProductManager" },
+   { name: "Khuyến mại", component: "PromotionManager" },
    ];
 
 
