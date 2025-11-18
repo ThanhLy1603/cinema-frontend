@@ -332,7 +332,7 @@
    async function getShowtimes() {
       if (!film.value.id) return;
       try {
-         const res = await axios.get(`${API_BASE_URL}/schedules/${film.value.id}`);
+         const res = await axios.get(`${API_BASE_URL}/customer/schedules/${film.value.id}`);
          if (Array.isArray(res.data)) {
             showtimes.value = res.data.map((s) => ({
                id: s.id,
