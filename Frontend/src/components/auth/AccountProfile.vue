@@ -57,41 +57,42 @@
                   <!-- <div v-if="error" class="alert alert-danger">{{ error }}</div>
                   <div v-if="success" class="alert alert-success">{{ success }}</div> -->
 
-               <form @submit.prevent="updateInfo">
-                  <div class="row">
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Họ *</label>
-                        <input
-                           v-model="form.firstName"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.firstName }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.firstName }}</div>
-                     </div>
-                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Tên đệm và tên *</label>
-                        <input
-                           v-model="form.lastName"
-                           type="text"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.lastName }"
-                           :disabled="!isEditing"
-                        />
-                        <div class="invalid-feedback">{{ errors.lastName }}</div>
-                     </div>
-                     <div class="col-12 mb-3">
-                        <label class="form-label">Email *</label>
-                        <input
-                           v-model="form.email"
-                           type="email"
-                           class="form-control"
-                           :class="{ 'is-invalid': errors.email }"
-                           readonly
-                        />
-                        <div class="invalid-feedback">{{ errors.email }}</div>
-                     </div>
+<<<<<<< HEAD
+                  <form @submit.prevent="updateInfo">
+                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Họ và tên đệm *</label>
+                           <input
+                              v-model="form.firstName"
+                              type="text"
+                              class="form-control"
+                              :class="{ 'is-invalid': errors.firstName }"
+                              :disabled="!isEditing"
+                           />
+                           <div class="invalid-feedback">{{ errors.firstName }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                           <label class="form-label">Tên *</label>
+                           <input
+                              v-model="form.lastName"
+                              type="text"
+                              class="form-control"
+                              :class="{ 'is-invalid': errors.lastName }"
+                              :disabled="!isEditing"
+                           />
+                           <div class="invalid-feedback">{{ errors.lastName }}</div>
+                        </div>
+                        <div class="col-12 mb-3">
+                           <label class="form-label">Email *</label>
+                           <input
+                              v-model="form.email"
+                              type="email"
+                              class="form-control"
+                              :class="{ 'is-invalid': errors.email }"
+                              readonly
+                           />
+                           <div class="invalid-feedback">{{ errors.email }}</div>
+                        </div>
 
                         <div class="col-md-3 mb-3 d-flex align-items-end">
                            <button
