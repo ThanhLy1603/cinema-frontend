@@ -1,243 +1,231 @@
 <template>
-   <div class="card p-3 shadow-sm">
-      <el-steps :active="step" finish-status="success" class="mb-3">
+   <div class="promo-wrapper">
+      <el-steps :active="step" finish-status="success" class="promo-steps">
          <el-step title="Tạo chương trình"></el-step>
          <el-step title="Chọn sản phẩm"></el-step>
          <el-step title="Luật áp dụng"></el-step>
       </el-steps>
 
-      <!-- STEP 1 -->
-      <div v-show="step === 0">
-         <div class="mb-3">
-            <label>Tên chương trình *</label>
-            <input v-model="promotion.name" class="form-control" />
-         </div>
+      <!-- CARD KHUNG -->
+      <div class="promo-card">
 
-         <div class="mb-3">
-            <label>Mô tả *</label>
-            <textarea v-model="promotion.description" class="form-control" rows="3"></textarea>
-         </div>
+         <!-- STEP 1 -->
+         <div v-show="step === 0" class="step-container fade-in">
 
-         <div class="row mb-3">
-            <div class="col-md-6">
-               <label>Bắt đầu</label>
-               <input type="datetime-local" v-model="promotion.startDate" class="form-control" />
+            <div class="form-group">
+               <label class="form-label">Tên chương trình *</label>
+               <input v-model="promotion.name" class="form-control ui-input" />
             </div>
-            <div class="col-md-6">
-               <label>Kết thúc</label>
-               <input type="datetime-local" v-model="promotion.endDate" class="form-control" />
+
+            <div class="form-group">
+               <label class="form-label">Mô tả *</label>
+               <textarea
+                  v-model="promotion.description"
+                  class="form-control ui-textarea"
+                  rows="3"
+               ></textarea>
             </div>
-         </div>
 
-         <div class="mb-3">
-            <label>Loại khuyến mại</label>
-            <select v-model="promotion.type" class="form-select">
-               <option v-for="rt in ruleTypes" :key="rt.value" :value="rt.value">
-                  {{ rt.label }}
-               </option>
-            </select>
-         </div>
-
-         <div v-if="promotion.type === 'PERCENT'" class="mb-3">
-            <label>Giảm theo %</label>
-            <input type="number" v-model.number="promotion.discountPercent" class="form-control" />
-         </div>
-
-         <div v-if="promotion.type === 'AMOUNT'" class="mb-3">
-            <label>Giảm giá cố định</label>
-            <input type="number" v-model.number="promotion.discountAmount" class="form-control" />
-         </div>
-
-         <div class="mb-3">
-            <label>Poster</label>
-            <input type="file" @change="onFileChange" class="form-control" />
-         </div>
-
-         <div class="d-flex gap-2 mt-2">
-            <button class="btn btn-secondary" @click="goBack">Quay lại</button>
-            <button class="btn btn-success flex-grow-1" @click="savePromotion">Lưu & Tiếp</button>
-         </div>
-      </div>
-
-      <!-- STEP 2 -->
-      <div v-show="step === 1">
-         <h5>Chọn sản phẩm áp dụng</h5>
-
-         <input v-model="searchQuery" placeholder="Tìm sản phẩm..." class="form-control mb-2" />
-
-         <table class="table table-hover">
-            <thead class="table-success">
-               <tr>
-                  <th></th>
-                  <th>Ảnh</th>
-                  <th>Tên</th>
-                  <th>Mô tả</th>
-                  <th>Note</th>
-               </tr>
-            </thead>
-
-            <tbody>
-               <tr v-for="p in paginatedProducts" :key="p.id">
-                  <td><input type="checkbox" v-model="selectedProducts" :value="p.id" /></td>
-                  <td>
-                     <img
-                        :src="IMG + p.poster"
-                        style="width: 60px; height: 60px; object-fit: cover"
-                        class="rounded"
-                        loading="lazy"
-                     />
-                  </td>
-                  <td>{{ p.name }}</td>
-                  <td>{{ p.description }}</td>
-                  <td>
-                     <input
-                        v-model="productNotes[p.id]"
-                        placeholder="Ghi chú"
-                        class="form-control"
-                     />
-                  </td>
-               </tr>
-            </tbody>
-         </table>
-
-         <div class="d-flex gap-2 mt-2">
-            <button class="btn btn-secondary" @click="step--">Quay lại</button>
-            <button class="btn btn-success flex-grow-1" @click="applyProducts">Lưu & Tiếp</button>
-         </div>
-      </div>
-
-      <!-- STEP 3 -->
-      <div v-show="step === 2">
-         <h5>Luật áp dụng</h5>
-
-         <!-- ADD RULE -->
-         <div class="mb-3 border p-3 rounded">
-            <div class="row g-2">
-               <div class="col-md-4">
-                  <label>Loại luật</label>
-                  <select v-model="newRule.ruleType" class="form-select">
-                     <option v-for="rt in ruleTypes" :value="rt.value">{{ rt.label }}</option>
-                  </select>
+            <div class="row">
+               <div class="col-md-6 form-group">
+                  <label class="form-label">Bắt đầu</label>
+                  <input type="datetime-local" v-model="promotion.startDate" class="form-control ui-input" />
                </div>
 
-               <div class="col-md-8">
-                  <!-- PERCENT -->
-                  <div v-if="['PERCENT', 'TOTAL_PERCENT'].includes(newRule.ruleType)">
-                     <label>% giảm</label>
-                     <input type="number" v-model.number="newRule.percent" class="form-control" />
+               <div class="col-md-6 form-group">
+                  <label class="form-label">Kết thúc</label>
+                  <input type="datetime-local" v-model="promotion.endDate" class="form-control ui-input" />
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label class="form-label">Loại khuyến mại</label>
+               <select v-model="promotion.type" class="form-select ui-input">
+                  <option v-for="rt in ruleTypes" :key="rt.value" :value="rt.value">
+                     {{ rt.label }}
+                  </option>
+               </select>
+            </div>
+
+            <div v-if="promotion.type === 'PERCENT'" class="form-group">
+               <label class="form-label">Giảm theo %</label>
+               <input type="number" v-model.number="promotion.discountPercent" class="form-control ui-input" />
+            </div>
+
+            <div v-if="promotion.type === 'AMOUNT'" class="form-group">
+               <label class="form-label">Giảm giá cố định</label>
+               <input type="number" v-model.number="promotion.discountAmount" class="form-control ui-input" />
+            </div>
+
+            <div class="form-group">
+               <label class="form-label">Poster</label>
+               <input type="file" @change="onFileChange" class="form-control ui-input small-file" />
+            </div>
+
+            <div class="btn-group-footer">
+               <button class="btn ui-btn-secondary" @click="goBack">Quay lại</button>
+               <button class="btn ui-btn-primary flex-grow-1" @click="savePromotion">
+                  Lưu & Tiếp
+               </button>
+            </div>
+         </div>
+
+         <!-- STEP 2 -->
+         <div v-show="step === 1" class="step-container fade-in">
+            <h5 class="section-title">Chọn sản phẩm áp dụng</h5>
+
+            <input
+               v-model="searchQuery"
+               placeholder="Tìm sản phẩm..."
+               class="form-control ui-input mb-3"
+            />
+
+            <table class="table table-hover table-custom">
+               <thead>
+                  <tr>
+                     <th></th>
+                     <th>Ảnh</th>
+                     <th>Tên</th>
+                     <th>Mô tả</th>
+                     <th>Note</th>
+                  </tr>
+               </thead>
+
+               <tbody>
+                  <tr v-for="p in paginatedProducts" :key="p.id">
+                     <td>
+                        <input type="checkbox" v-model="selectedProducts" :value="p.id" />
+                     </td>
+                     <td>
+                        <img :src="IMG + p.poster" class="product-img" />
+                     </td>
+                     <td>{{ p.name }}</td>
+                     <td>{{ p.description }}</td>
+                     <td>
+                        <input v-model="productNotes[p.id]" class="form-control ui-input" />
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <div class="btn-group-footer">
+               <button class="btn ui-btn-secondary" @click="step--">Quay lại</button>
+               <button class="btn ui-btn-primary flex-grow-1" @click="applyProducts">
+                  Lưu & Tiếp
+               </button>
+            </div>
+         </div>
+
+         <!-- STEP 3 -->
+         <div v-show="step === 2" class="step-container fade-in">
+            <h5 class="section-title">Luật áp dụng</h5>
+
+            <div class="rule-box">
+               <div class="row g-2">
+                  <div class="col-md-4">
+                     <label class="form-label">Loại luật</label>
+                     <select v-model="newRule.ruleType" class="form-select ui-input">
+                        <option v-for="rt in ruleTypes" :value="rt.value">{{ rt.label }}</option>
+                     </select>
                   </div>
 
-                  <!-- BUY X GET Y -->
-                  <div v-if="newRule.ruleType === 'BUY_X_GET_Y'" class="d-flex gap-2">
-                     <div>
-                        <label>Mua X</label>
-                        <input type="number" v-model.number="newRule.buy" class="form-control" />
-                     </div>
-                     <div>
-                        <label>Tặng Y</label>
-                        <input type="number" v-model.number="newRule.get" class="form-control" />
-                     </div>
-                  </div>
+                  <div class="col-md-8">
 
-                  <!-- FIXED COMBO -->
-                  <div v-if="newRule.ruleType === 'FIXED_COMBO'">
-                     <label>Sản phẩm combo</label>
-                     <div class="d-flex flex-wrap gap-2 mb-2">
-                        <div
-                           v-for="p in products"
-                           :key="p.id"
-                           class="border p-1 rounded text-center"
-                           :class="{
-                              'border-primary': newRule.items.some((i) => i.name === p.name),
-                           }"
-                           style="cursor: pointer; width: 100px"
-                           @click="toggleComboItem(p)"
-                        >
-                           <img
-                              :src="IMG + p.poster"
-                              style="width: 80px; height: 80px; object-fit: cover"
-                              loading="lazy"
-                           />
-                           <div style="font-size: 12px">{{ p.name }}</div>
+                     <div v-if="['PERCENT','TOTAL_PERCENT'].includes(newRule.ruleType)">
+                        <label class="form-label">% giảm</label>
+                        <input type="number" v-model.number="newRule.percent" class="form-control ui-input" />
+                     </div>
+
+                     <div v-if="newRule.ruleType === 'BUY_X_GET_Y'" class="d-flex gap-2">
+                        <div>
+                           <label class="form-label">Mua X</label>
+                           <input type="number" v-model.number="newRule.buy" class="form-control ui-input" />
+                        </div>
+                        <div>
+                           <label class="form-label">Tặng Y</label>
+                           <input type="number" v-model.number="newRule.get" class="form-control ui-input" />
                         </div>
                      </div>
 
-                     <label>Giá combo</label>
-                     <input type="number" v-model.number="newRule.price" class="form-control" />
-                  </div>
-               </div>
-
-               <div class="col-md-2 d-flex align-items-end">
-                  <button class="btn btn-primary w-100" @click="addNewRule">Thêm luật</button>
-               </div>
-            </div>
-         </div>
-
-         <!-- TABLE RULES -->
-         <table class="table table-bordered text-center">
-            <thead class="table-success">
-               <tr>
-                  <th>Loại luật</th>
-                  <th>Điều kiện</th>
-                  <th>Hành động</th>
-               </tr>
-            </thead>
-
-            <tbody>
-               <tr v-for="r in rules" :key="r.id">
-                  <td>{{ r.label }}</td>
-
-                  <td>
-                     <!-- FIXED COMBO -->
-                     <div v-if="r.label === 'FIXED_COMBO'">
-                        <strong>Giá: {{ r.condition.price }} ₫</strong>
-
-                        <div class="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                     <div v-if="newRule.ruleType === 'FIXED_COMBO'">
+                        <label class="form-label">Sản phẩm combo</label>
+                        <div class="combo-container">
                            <div
-                              v-for="item in r.condition.items"
-                              :key="item.name"
-                              class="border p-1 rounded text-center"
-                              style="width: 70px"
+                              v-for="p in products"
+                              :key="p.id"
+                              class="combo-item"
+                              :class="{ active: newRule.items.some(i => i.name === p.name) }"
+                              @click="toggleComboItem(p)"
                            >
-                              <img
-                                 :src="IMG + item.poster"
-                                 style="width: 60px; height: 60px; object-fit: cover"
-                                 loading="lazy"
-                              />
-                              <div style="font-size: 12px">{{ item.name }}</div>
+                              <img :src="IMG + p.poster" class="combo-img" />
+                              <div class="combo-name">{{ p.name }}</div>
                            </div>
                         </div>
+
+                        <label class="form-label">Giá combo</label>
+                        <input type="number" v-model.number="newRule.price" class="form-control ui-input" />
                      </div>
+                  </div>
 
-                     <!-- PERCENT -->
-                     <div v-else-if="['PERCENT', 'TOTAL_PERCENT'].includes(r.label)">
-                        Giảm: <strong>{{ r.condition.percent }} %</strong>
-                     </div>
+                  <div class="col-md-2 d-flex align-items-end">
+                     <button class="btn ui-btn-primary w-100" @click="addNewRule">Thêm luật</button>
+                  </div>
+               </div>
+            </div>
 
-                     <!-- BUY X GET Y -->
-                     <div v-else-if="r.label === 'BUY_X_GET_Y'">
-                        Mua <strong>{{ r.condition.buy }}</strong> – Tặng
-                        <strong>{{ r.condition.get }}</strong>
-                     </div>
-                  </td>
+            <table class="table table-custom text-center mt-3">
+               <thead>
+                  <tr>
+                     <th>Loại luật</th>
+                     <th>Điều kiện</th>
+                     <th>Hành động</th>
+                  </tr>
+               </thead>
 
-                  <td>
-                     <button class="btn btn-success btn-sm" @click="applyRule(r.id)">
-                        Áp dụng
-                     </button>
-                     <button class="btn btn-danger btn-sm" @click="removeRule(r)">Xóa</button>
-                  </td>
-               </tr>
-            </tbody>
-         </table>
+               <tbody>
+                  <tr v-for="r in rules" :key="r.id">
+                     <td>{{ r.label }}</td>
 
-         <div class="d-flex gap-2 mt-2">
-            <button class="btn btn-secondary" @click="step--">Quay lại</button>
-            <button class="btn btn-primary w-100" @click="finishPromotion">Hoàn tất</button>
+                     <td>
+                        <div v-if="r.label === 'FIXED_COMBO'">
+                           <strong>Giá: {{ r.condition.price }} ₫</strong>
+
+                           <div class="combo-preview">
+                              <div v-for="item in r.condition.items" :key="item.name" class="combo-preview-item">
+                                 <img :src="IMG + item.poster" />
+                                 <div>{{ item.name }}</div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div v-else-if="['PERCENT','TOTAL_PERCENT'].includes(r.label)">
+                           Giảm: <strong>{{ r.condition.percent }} %</strong>
+                        </div>
+
+                        <div v-else-if="r.label === 'BUY_X_GET_Y'">
+                           Mua <strong>{{ r.condition.buy }}</strong> – tặng <strong>{{ r.condition.get }}</strong>
+                        </div>
+                     </td>
+
+                     <td>
+                        <button class="btn btn-success btn-sm" @click="applyRule(r.id)">Áp dụng</button>
+                        <button class="btn btn-danger btn-sm" @click="removeRule(r)">Xóa</button>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+
+            <div class="btn-group-footer">
+               <button class="btn ui-btn-secondary" @click="step--">Quay lại</button>
+               <button class="btn ui-btn-primary flex-grow-1" @click="finishPromotion">
+                  Hoàn tất
+               </button>
+            </div>
          </div>
       </div>
    </div>
 </template>
+
 
 <script setup>
    import { ref, computed, watch, onMounted } from 'vue';
@@ -482,7 +470,148 @@
 </script>
 
 <style scoped>
-   .table td {
-      vertical-align: middle;
-   }
+.promo-wrapper {
+   padding: 20px;
+}
+
+.promo-card {
+   background: #fff;
+   padding: 20px;
+   border-radius: 20px;
+   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+.promo-steps {
+   margin-bottom: 25px;
+}
+
+/* Form */
+.form-group {
+   margin-bottom: 16px;
+}
+
+.form-label {
+   font-weight: 600;
+   margin-bottom: 6px;
+   display: block;
+}
+
+.ui-input {
+   border-radius: 12px !important;
+   padding: 10px 14px !important;
+}
+
+.ui-textarea {
+   border-radius: 12px;
+   padding: 12px 14px;
+}
+
+/* Buttons */
+.btn-group-footer {
+   margin-top: 20px;
+   display: flex;
+   gap: 14px;
+   justify-content: space-between;
+}
+
+.ui-btn-primary {
+   background: #2ecc71 !important;
+   border: none !important;
+   color: #fff !important;
+   padding: 10px 18px;
+   border-radius: 30px;
+   font-weight: 600;
+}
+
+.ui-btn-primary:hover {
+   background: #27ae60 !important;
+}
+
+.ui-btn-secondary {
+   background: #ecf0f1 !important;
+   border: none;
+   padding: 10px 18px;
+   border-radius: 30px;
+   font-weight: 600;
+}
+
+/* Table */
+.table-custom thead {
+   background: #e9f7ef;
+   font-weight: 600;
+}
+
+.product-img {
+   width: 60px;
+   height: 60px;
+   object-fit: cover;
+   border-radius: 10px;
+}
+
+/* Combo */
+.combo-container {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+}
+
+.combo-item {
+   width: 90px;
+   padding: 6px;
+   border: 2px solid transparent;
+   border-radius: 12px;
+   text-align: center;
+   cursor: pointer;
+   transition: 0.2s;
+}
+
+.combo-item.active {
+   border-color: #2ecc71;
+   background: #eafaf1;
+}
+
+.combo-img {
+   width: 70px;
+   height: 70px;
+   border-radius: 10px;
+   object-fit: cover;
+}
+
+.combo-name {
+   font-size: 12px;
+   margin-top: 4px;
+}
+
+.combo-preview {
+   display: flex;
+   justify-content: center;
+   flex-wrap: wrap;
+   gap: 8px;
+}
+
+.combo-preview-item img {
+   width: 50px;
+   height: 50px;
+   border-radius: 10px;
+   object-fit: cover;
+}
+
+.small-file {
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  height: 36px !important;
+  line-height: 26px !important;
+}
+
+
+/* Animation */
+.fade-in {
+   animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+   from { opacity: 0; transform: translateY(10px); }
+   to   { opacity: 1; transform: translateY(0); }
+}
 </style>
+
