@@ -12,6 +12,7 @@
     "axios": "^1.13.2",
     "bootstrap-vue": "^2.23.1",
     "inject": "^1.0.0beta2",
+    "lodash": "^4.17.21",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1",
     "vue3-select": "^0.1.2"

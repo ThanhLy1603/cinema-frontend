@@ -84,6 +84,7 @@
                         :src="IMG + p.poster"
                         style="width: 60px; height: 60px; object-fit: cover"
                         class="rounded"
+                        loading="lazy"
                      />
                   </td>
                   <td>{{ p.name }}</td>
@@ -155,6 +156,7 @@
                            <img
                               :src="IMG + p.poster"
                               style="width: 80px; height: 80px; object-fit: cover"
+                              loading="lazy"
                            />
                            <div style="font-size: 12px">{{ p.name }}</div>
                         </div>
@@ -200,6 +202,7 @@
                               <img
                                  :src="IMG + item.poster"
                                  style="width: 60px; height: 60px; object-fit: cover"
+                                 loading="lazy"
                               />
                               <div style="font-size: 12px">{{ item.name }}</div>
                            </div>
@@ -240,16 +243,16 @@
    import { ref, computed, watch, onMounted } from 'vue';
    import axios from 'axios';
    import Swal from 'sweetalert2';
+   import { debounce } from 'lodash';
 
    const props = defineProps({ promotionData: Object });
-   const emit = defineEmits(['saved', 'close']);
+   const emit = defineEmits(['saved', 'close', 'reload']);
 
    const step = ref(0);
    const API_PROMO = import.meta.env.VITE_API_BASE_URL + '/admin/promotions';
    const API_PRODUCT = import.meta.env.VITE_API_BASE_URL + '/admin/products';
    const IMG = import.meta.env.VITE_IMAGE_URL;
 
-   // DATA
    const promotion = ref({
       id: null,
       name: '',
@@ -279,7 +282,7 @@
 
    const newRule = ref({ ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 });
 
-   // COMPUTED
+   // Computed
    const filteredProducts = computed(() => {
       const q = searchQuery.value.trim().toLowerCase();
       return q ? products.value.filter((p) => p.name.toLowerCase().includes(q)) : products.value;
@@ -290,15 +293,23 @@
       return filteredProducts.value.slice(start, start + itemsPerPage);
    });
 
-   // LOAD PRODUCTS
+   // Debounce search
+   watch(
+      searchQuery,
+      debounce(() => {
+         currentPage.value = 1;
+      }, 300)
+   );
+
+   // Load products
    onMounted(() => {
       axios.get(API_PRODUCT).then((res) => (products.value = res.data));
    });
 
-   // WATCH EDIT MODE
+   // Watch edit mode
    watch(
       () => props.promotionData,
-      async (data) => {
+      (data) => {
          if (!data) {
             rules.value = [];
             selectedProducts.value = [];
@@ -313,18 +324,13 @@
          });
 
          selectedProducts.value = data.items?.map((i) => i.productId) || [];
-
-         // NOTES
          productNotes.value = {};
          data.items?.forEach((i) => {
             productNotes.value[i.productId] = i.note || '';
          });
 
-         // PARSE RULES
          rules.value = (data.rules || []).map((r) => {
             let ruleVal = r.ruleValue;
-
-            // parse JSON if string
             if (typeof ruleVal === 'string') {
                try {
                   ruleVal = JSON.parse(ruleVal);
@@ -332,21 +338,13 @@
                   ruleVal = {};
                }
             }
-
-            // FIX COMBO → convert name→object
             if (r.ruleType === 'FIXED_COMBO') {
                ruleVal.items = (ruleVal.items || []).map((name) => {
                   const p = products.value.find((x) => x.name === name);
                   return { name, poster: p ? p.poster : '' };
                });
             }
-
-            return {
-               id: r.id,
-               label: r.ruleType,
-               condition: ruleVal,
-               isNew: false,
-            };
+            return { id: r.id, label: r.ruleType, condition: ruleVal, isNew: false };
          });
 
          step.value = 0;
@@ -354,12 +352,11 @@
       { immediate: true }
    );
 
-   // STEP FUNCTIONS
+   // Functions
    function goBack() {
-      emit('close'); // thông báo parent đóng form
+      emit('close');
       emit('reload');
    }
-
    function onFileChange(e) {
       promotion.value.posterFile = e.target.files[0];
    }
@@ -375,38 +372,36 @@
       fd.append('type', promotion.value.type);
       fd.append('discountPercent', promotion.value.discountPercent || 0);
       fd.append('discountAmount', promotion.value.discountAmount || 0);
-      if (promotion.value.posterFile) fd.append('posterFile', promotion.value.posterFile);
-
-      if (promotion.value.id) {
-         axios
-            .put(API_PROMO + '/' + promotion.value.id, fd)
-            .then(() => {
-               step.value = 1;
-               toast('Cập nhật thành công', 'success');
-            })
-            .catch(() => toast('Lỗi lưu promotion', 'error'));
-      } else {
-         axios
-            .post(API_PROMO, fd)
-            .then((res) => {
-               promotion.value.id = res.data.id;
-               step.value = 1;
-               toast('Tạo thành công', 'success');
-            })
-            .catch(() => toast('Lỗi khi lưu', 'error'));
+      if (promotion.value.posterFile) {
+         fd.append('posterFile', promotion.value.posterFile);
       }
+
+      const req = promotion.value.id
+         ? axios.put(API_PROMO + '/' + promotion.value.id, fd)
+         : axios.post(API_PROMO, fd).then((res) => (promotion.value.id = res.data.id));
+
+      req.then(() => {
+         step.value = 1;
+         toast('Lưu thành công', 'success');
+      }).catch(() => toast('Lỗi lưu promotion', 'error'));
    }
 
    function applyProducts() {
       if (!promotion.value.id) return toast('Promotion chưa được tạo', 'error');
 
-      const payload = selectedProducts.value.map((id) => ({
-         productId: id,
-         note: productNotes.value[id] || '',
-      }));
+      // Lọc chỉ những product mới
+      const existingIds = props.promotionData?.items?.map((i) => i.productId) || [];
+      const newItems = selectedProducts.value
+         .filter((id) => !existingIds.includes(id))
+         .map((id) => ({ productId: id, note: productNotes.value[id] || '' }));
+
+      if (!newItems.length) {
+         step.value = 2; // không có gì mới, chuyển luôn
+         return toast('Không có sản phẩm mới để thêm', 'info');
+      }
 
       axios
-         .post(`${API_PROMO}/${promotion.value.id}/items`, payload)
+         .post(`${API_PROMO}/${promotion.value.id}/items`, newItems)
          .then(() => {
             step.value = 2;
             toast('Đã áp dụng sản phẩm', 'success');
@@ -416,31 +411,20 @@
 
    function addNewRule() {
       let condition = {};
-
       if (['PERCENT', 'TOTAL_PERCENT'].includes(newRule.value.ruleType))
          condition = { percent: newRule.value.percent };
       else if (newRule.value.ruleType === 'BUY_X_GET_Y')
          condition = { buy: newRule.value.buy, get: newRule.value.get };
       else if (newRule.value.ruleType === 'FIXED_COMBO')
-         condition = {
-            items: [...newRule.value.items],
-            price: newRule.value.price,
-         };
+         condition = { items: [...newRule.value.items], price: newRule.value.price };
 
-      rules.value.push({
-         id: Date.now(),
-         label: newRule.value.ruleType,
-         condition,
-         isNew: true,
-      });
-
+      rules.value.push({ id: Date.now(), label: newRule.value.ruleType, condition, isNew: true });
       newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
    }
 
    function applyRule(ruleId) {
       const rule = rules.value.find((r) => r.id === ruleId);
       if (!rule) return;
-
       axios
          .post(`${API_PROMO}/${promotion.value.id}/rules`, [
             { ruleType: rule.label, ruleValue: rule.condition },
@@ -454,8 +438,6 @@
 
    function removeRule(rule) {
       if (!promotion.value.id) return;
-
-      // Nếu là luật mới chưa lưu thì chỉ xóa UI
       if (rule.isNew) {
          rules.value = rules.value.filter((r) => r.id !== rule.id);
          return;
@@ -472,23 +454,19 @@
          if (result.isConfirmed) {
             axios
                .delete(`${API_PROMO}/rules/${rule.id}`)
-               .then((res) => {
-                  // Cập nhật danh sách luật sau khi xóa thành công
+               .then(() => {
                   rules.value = rules.value.filter((r) => r.id !== rule.id);
                   toast('Đã xóa luật', 'success');
                })
-               .catch((err) => {
-                  console.error(err);
-                  toast('Lỗi khi xóa luật', 'error');
-               });
+               .catch(() => toast('Lỗi khi xóa luật', 'error'));
          }
       });
    }
 
    function finishPromotion() {
       Swal.fire('Hoàn tất', 'Promotion đã được lưu!', 'success').then(() => {
-         emit('saved'); // parent sẽ close form
-         emit('reload'); // parent sẽ gọi lại danh sách
+         emit('saved');
+         emit('reload');
       });
    }
 
@@ -496,15 +474,10 @@
       Swal.fire({ icon: type, text: msg, timer: 1800, showConfirmButton: false });
    }
 
-   // CLICK PRODUCT IN FIXED COMBO
    function toggleComboItem(p) {
-      const exists = newRule.value.items.find((i) => i.name === p.name);
-
-      if (exists) {
-         newRule.value.items = newRule.value.items.filter((i) => i.name !== p.name);
-      } else {
-         newRule.value.items.push({ name: p.name, poster: p.poster });
-      }
+      newRule.value.items = newRule.value.items.some((i) => i.name === p.name)
+         ? newRule.value.items.filter((i) => i.name !== p.name)
+         : [...newRule.value.items, { name: p.name, poster: p.poster }];
    }
 </script>
 
