@@ -1,5 +1,4 @@
 <template>
-<<<<<<< HEAD
   <div class="container-fluid categories-page mt-3">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -30,13 +29,15 @@
             </form>
           </div>
         </div>
-=======
+        </div>
+        </div>
+        </div>
+
    <div class="container-fluid categories-page mt-3">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-3">
          <h3 class="fw-bold text-success">📂 Quản lý Danh Mục</h3>
          <!-- <button class="btn btn-success" @click="getCategories">⟳ Tải lại</button> -->
->>>>>>> 0aa20f4f4956eb841939d8049bb19407af296c72
       </div>
 
       <div class="row g-3">
