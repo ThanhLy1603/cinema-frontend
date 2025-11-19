@@ -1,231 +1,314 @@
 <template>
    <div class="promo-wrapper">
+      <!-- Stepper -->
       <el-steps :active="step" finish-status="success" class="promo-steps">
-         <el-step title="Tạo chương trình"></el-step>
-         <el-step title="Chọn sản phẩm"></el-step>
-         <el-step title="Luật áp dụng"></el-step>
+         <el-step title="Tạo chương trình" />
+         <el-step title="Chọn sản phẩm" />
+         <el-step title="Luật áp dụng" />
+         <el-step title="Tóm tắt" />
       </el-steps>
 
-      <!-- CARD KHUNG -->
-      <div class="promo-card">
+      <el-card class="promo-card">
+         <!-- STEP 1: Tạo promotion -->
+         <el-form v-show="step === 0" :model="promotion" label-width="120px" size="small">
+            <el-form-item label="Tên chương trình *">
+               <el-input v-model="promotion.name" placeholder="Nhập tên chương trình" />
+            </el-form-item>
 
-         <!-- STEP 1 -->
-         <div v-show="step === 0" class="step-container fade-in">
+            <el-form-item label="Mô tả *">
+               <el-input type="textarea" v-model="promotion.description" rows="3" />
+            </el-form-item>
 
-            <div class="form-group">
-               <label class="form-label">Tên chương trình *</label>
-               <input v-model="promotion.name" class="form-control ui-input" />
-            </div>
+            <el-form-item label="Bắt đầu">
+               <el-date-picker
+                  v-model="promotion.startDate"
+                  type="datetime"
+                  placeholder="Chọn ngày bắt đầu"
+               />
+            </el-form-item>
 
-            <div class="form-group">
-               <label class="form-label">Mô tả *</label>
-               <textarea
-                  v-model="promotion.description"
-                  class="form-control ui-textarea"
-                  rows="3"
-               ></textarea>
-            </div>
+            <el-form-item label="Kết thúc">
+               <el-date-picker
+                  v-model="promotion.endDate"
+                  type="datetime"
+                  placeholder="Chọn ngày kết thúc"
+               />
+            </el-form-item>
 
-            <div class="row">
-               <div class="col-md-6 form-group">
-                  <label class="form-label">Bắt đầu</label>
-                  <input type="datetime-local" v-model="promotion.startDate" class="form-control ui-input" />
+            <el-form-item label="Loại khuyến mại">
+               <el-select v-model="promotion.type" placeholder="Chọn loại khuyến mại">
+                  <el-option
+                     v-for="rt in ruleTypes"
+                     :key="rt.value"
+                     :label="rt.label"
+                     :value="rt.value"
+                  />
+               </el-select>
+            </el-form-item>
+
+            <el-form-item v-if="promotion.type === 'PERCENT'" label="Giảm theo %">
+               <el-input-number v-model="promotion.discountPercent" :min="0" :max="100" />
+            </el-form-item>
+
+            <el-form-item v-if="promotion.type === 'AMOUNT'" label="Giảm giá cố định">
+               <el-input-number v-model="promotion.discountAmount" :min="0" />
+            </el-form-item>
+
+            <el-form-item label="Poster">
+               <el-upload
+                  :show-file-list="false"
+                  :before-upload="handleFile"
+                  :on-change="previewPoster"
+               >
+                  <el-button size="small" type="primary">Chọn file</el-button>
+               </el-upload>
+               <div v-if="posterPreview" class="mt-2">
+                  <el-image
+                     :src="posterPreview"
+                     style="width: 120px; height: 120px; border-radius: 10px"
+                  />
                </div>
-
-               <div class="col-md-6 form-group">
-                  <label class="form-label">Kết thúc</label>
-                  <input type="datetime-local" v-model="promotion.endDate" class="form-control ui-input" />
+               <div v-else-if="promotion.poster && !posterPreview" class="mt-2">
+                  <el-image
+                     :src="IMG + promotion.poster"
+                     style="width: 120px; height: 120px; border-radius: 10px"
+                  />
                </div>
-            </div>
+            </el-form-item>
 
-            <div class="form-group">
-               <label class="form-label">Loại khuyến mại</label>
-               <select v-model="promotion.type" class="form-select ui-input">
-                  <option v-for="rt in ruleTypes" :key="rt.value" :value="rt.value">
-                     {{ rt.label }}
-                  </option>
-               </select>
+            <div class="btn-group-footer">
+               <el-button @click="$emit('close')">Hủy</el-button>
+               <el-button type="primary" @click="savePromotion">Lưu & Tiếp</el-button>
             </div>
+         </el-form>
 
-            <div v-if="promotion.type === 'PERCENT'" class="form-group">
-               <label class="form-label">Giảm theo %</label>
-               <input type="number" v-model.number="promotion.discountPercent" class="form-control ui-input" />
-            </div>
+         <!-- STEP 2: Chọn sản phẩm -->
+         <div v-show="step === 1">
+            <el-input v-model="searchQuery" placeholder="Tìm sản phẩm..." clearable class="mb-3" />
 
-            <div v-if="promotion.type === 'AMOUNT'" class="form-group">
-               <label class="form-label">Giảm giá cố định</label>
-               <input type="number" v-model.number="promotion.discountAmount" class="form-control ui-input" />
-            </div>
+            <el-table
+               :data="paginatedProducts"
+               stripe
+               size="small"
+               border
+               row-key="id"
+               @selection-change="handleSelectionChange"
+            >
+               <el-table-column
+                  type="selection"
+                  width="55"
+                  :selectable="() => true"
+                  :reserve-selection="true"
+               />
+               <el-table-column prop="poster" label="Ảnh" width="80">
+                  <template #default="scope">
+                     <el-image
+                        :src="IMG + scope.row.poster"
+                        style="width: 50px; height: 50px; border-radius: 6px"
+                     />
+                  </template>
+               </el-table-column>
+               <el-table-column prop="name" label="Tên" />
+               <el-table-column prop="description" label="Mô tả" />
+               <el-table-column label="Note">
+                  <template #default="scope">
+                     <el-input v-model="productNotes[scope.row.id]" size="small" />
+                  </template>
+               </el-table-column>
+            </el-table>
 
-            <div class="form-group">
-               <label class="form-label">Poster</label>
-               <input type="file" @change="onFileChange" class="form-control ui-input small-file" />
+            <div class="mt-2" style="text-align: right">
+               <el-pagination
+                  background
+                  :page-size="itemsPerPage"
+                  :current-page.sync="currentPage"
+                  :total="filteredProducts.length"
+                  layout="prev, pager, next"
+               />
             </div>
 
             <div class="btn-group-footer">
-               <button class="btn ui-btn-secondary" @click="goBack">Quay lại</button>
-               <button class="btn ui-btn-primary flex-grow-1" @click="savePromotion">
-                  Lưu & Tiếp
-               </button>
+               <el-button @click="step--">Quay lại</el-button>
+               <el-button type="primary" @click="applyProducts">Lưu & Tiếp</el-button>
             </div>
          </div>
 
-         <!-- STEP 2 -->
-         <div v-show="step === 1" class="step-container fade-in">
-            <h5 class="section-title">Chọn sản phẩm áp dụng</h5>
+         <!-- STEP 3: Luật áp dụng -->
+         <div v-show="step === 2">
+            <h5>Luật áp dụng</h5>
+            <el-form label-width="120px" size="small">
+               <el-form-item label="Loại luật">
+                  <el-select v-model="newRule.ruleType" placeholder="Chọn loại luật">
+                     <el-option
+                        v-for="rt in ruleTypes"
+                        :key="rt.value"
+                        :label="rt.label"
+                        :value="rt.value"
+                     />
+                  </el-select>
+               </el-form-item>
 
-            <input
-               v-model="searchQuery"
-               placeholder="Tìm sản phẩm..."
-               class="form-control ui-input mb-3"
-            />
+               <el-form-item
+                  v-if="['PERCENT', 'TOTAL_PERCENT'].includes(newRule.ruleType)"
+                  label="% giảm"
+               >
+                  <el-input-number v-model="newRule.percent" :min="0" :max="100" />
+               </el-form-item>
 
-            <table class="table table-hover table-custom">
-               <thead>
-                  <tr>
-                     <th></th>
-                     <th>Ảnh</th>
-                     <th>Tên</th>
-                     <th>Mô tả</th>
-                     <th>Note</th>
-                  </tr>
-               </thead>
+               <el-form-item v-if="newRule.ruleType === 'BUY_X_GET_Y'" label="Mua X / Tặng Y">
+                  <el-input-number v-model="newRule.buy" :min="0" placeholder="Mua X" />
+                  <el-input-number v-model="newRule.get" :min="0" placeholder="Tặng Y" />
+               </el-form-item>
 
-               <tbody>
-                  <tr v-for="p in paginatedProducts" :key="p.id">
-                     <td>
-                        <input type="checkbox" v-model="selectedProducts" :value="p.id" />
-                     </td>
-                     <td>
-                        <img :src="IMG + p.poster" class="product-img" />
-                     </td>
-                     <td>{{ p.name }}</td>
-                     <td>{{ p.description }}</td>
-                     <td>
-                        <input v-model="productNotes[p.id]" class="form-control ui-input" />
-                     </td>
-                  </tr>
-               </tbody>
-            </table>
+               <el-form-item v-if="newRule.ruleType === 'FIXED_COMBO'" label="Combo sản phẩm">
+                  <el-checkbox-group v-model="newRule.items">
+                     <el-checkbox
+                        v-for="p in products"
+                        :key="p.id"
+                        :label="{ name: p.name, poster: p.poster }"
+                     >
+                        <el-card
+                           :body-style="{ padding: '5px', textAlign: 'center' }"
+                           shadow="hover"
+                        >
+                           <el-image
+                              :src="IMG + p.poster"
+                              style="
+                                 width: 70px;
+                                 height: 70px;
+                                 object-fit: cover;
+                                 border-radius: 6px;
+                              "
+                           />
+                           <div style="font-size: 12px; margin-top: 4px">{{ p.name }}</div>
+                        </el-card>
+                     </el-checkbox>
+                  </el-checkbox-group>
+                  <el-input-number v-model="newRule.price" :min="0" placeholder="Giá combo" />
+               </el-form-item>
 
-            <div class="btn-group-footer">
-               <button class="btn ui-btn-secondary" @click="step--">Quay lại</button>
-               <button class="btn ui-btn-primary flex-grow-1" @click="applyProducts">
-                  Lưu & Tiếp
-               </button>
-            </div>
-         </div>
+               <el-form-item>
+                  <el-button type="primary" @click="addNewRule">Thêm luật</el-button>
+               </el-form-item>
+            </el-form>
 
-         <!-- STEP 3 -->
-         <div v-show="step === 2" class="step-container fade-in">
-            <h5 class="section-title">Luật áp dụng</h5>
-
-            <div class="rule-box">
-               <div class="row g-2">
-                  <div class="col-md-4">
-                     <label class="form-label">Loại luật</label>
-                     <select v-model="newRule.ruleType" class="form-select ui-input">
-                        <option v-for="rt in ruleTypes" :value="rt.value">{{ rt.label }}</option>
-                     </select>
-                  </div>
-
-                  <div class="col-md-8">
-
-                     <div v-if="['PERCENT','TOTAL_PERCENT'].includes(newRule.ruleType)">
-                        <label class="form-label">% giảm</label>
-                        <input type="number" v-model.number="newRule.percent" class="form-control ui-input" />
-                     </div>
-
-                     <div v-if="newRule.ruleType === 'BUY_X_GET_Y'" class="d-flex gap-2">
-                        <div>
-                           <label class="form-label">Mua X</label>
-                           <input type="number" v-model.number="newRule.buy" class="form-control ui-input" />
-                        </div>
-                        <div>
-                           <label class="form-label">Tặng Y</label>
-                           <input type="number" v-model.number="newRule.get" class="form-control ui-input" />
-                        </div>
-                     </div>
-
-                     <div v-if="newRule.ruleType === 'FIXED_COMBO'">
-                        <label class="form-label">Sản phẩm combo</label>
-                        <div class="combo-container">
+            <el-table :data="rules" stripe size="small" border style="margin-top: 20px">
+               <el-table-column prop="label" label="Loại luật" />
+               <el-table-column label="Điều kiện">
+                  <template #default="scope">
+                     <div v-if="scope.row.label === 'FIXED_COMBO'">
+                        <strong>Giá: {{ scope.row.condition.price }} ₫</strong>
+                        <div class="combo-preview">
                            <div
-                              v-for="p in products"
-                              :key="p.id"
-                              class="combo-item"
-                              :class="{ active: newRule.items.some(i => i.name === p.name) }"
-                              @click="toggleComboItem(p)"
+                              v-for="item in scope.row.condition.items"
+                              :key="item.name"
+                              class="combo-preview-item"
                            >
-                              <img :src="IMG + p.poster" class="combo-img" />
-                              <div class="combo-name">{{ p.name }}</div>
+                              <el-image
+                                 :src="IMG + item.poster"
+                                 style="width: 50px; height: 50px; border-radius: 6px"
+                              />
+                              <div>{{ item.name }}</div>
                            </div>
                         </div>
-
-                        <label class="form-label">Giá combo</label>
-                        <input type="number" v-model.number="newRule.price" class="form-control ui-input" />
                      </div>
-                  </div>
+                     <div v-else-if="['PERCENT', 'TOTAL_PERCENT'].includes(scope.row.label)">
+                        Giảm: <strong>{{ scope.row.condition.percent }}%</strong>
+                     </div>
+                     <div v-else-if="scope.row.label === 'BUY_X_GET_Y'">
+                        Mua <strong>{{ scope.row.condition.buy }}</strong> – Tặng
+                        <strong>{{ scope.row.condition.get }}</strong>
+                     </div>
+                  </template>
+               </el-table-column>
+               <el-table-column label="Hành động">
+                  <template #default="scope">
+                     <el-button type="success" size="small" @click="applyRule(scope.row.id)"
+                        >Áp dụng</el-button
+                     >
+                     <el-button type="danger" size="small" @click="removeRule(scope.row)"
+                        >Xóa</el-button
+                     >
+                  </template>
+               </el-table-column>
+            </el-table>
 
-                  <div class="col-md-2 d-flex align-items-end">
-                     <button class="btn ui-btn-primary w-100" @click="addNewRule">Thêm luật</button>
-                  </div>
-               </div>
-            </div>
-
-            <table class="table table-custom text-center mt-3">
-               <thead>
-                  <tr>
-                     <th>Loại luật</th>
-                     <th>Điều kiện</th>
-                     <th>Hành động</th>
-                  </tr>
-               </thead>
-
-               <tbody>
-                  <tr v-for="r in rules" :key="r.id">
-                     <td>{{ r.label }}</td>
-
-                     <td>
-                        <div v-if="r.label === 'FIXED_COMBO'">
-                           <strong>Giá: {{ r.condition.price }} ₫</strong>
-
-                           <div class="combo-preview">
-                              <div v-for="item in r.condition.items" :key="item.name" class="combo-preview-item">
-                                 <img :src="IMG + item.poster" />
-                                 <div>{{ item.name }}</div>
-                              </div>
-                           </div>
-                        </div>
-
-                        <div v-else-if="['PERCENT','TOTAL_PERCENT'].includes(r.label)">
-                           Giảm: <strong>{{ r.condition.percent }} %</strong>
-                        </div>
-
-                        <div v-else-if="r.label === 'BUY_X_GET_Y'">
-                           Mua <strong>{{ r.condition.buy }}</strong> – tặng <strong>{{ r.condition.get }}</strong>
-                        </div>
-                     </td>
-
-                     <td>
-                        <button class="btn btn-success btn-sm" @click="applyRule(r.id)">Áp dụng</button>
-                        <button class="btn btn-danger btn-sm" @click="removeRule(r)">Xóa</button>
-                     </td>
-                  </tr>
-               </tbody>
-            </table>
-
-            <div class="btn-group-footer">
-               <button class="btn ui-btn-secondary" @click="step--">Quay lại</button>
-               <button class="btn ui-btn-primary flex-grow-1" @click="finishPromotion">
-                  Hoàn tất
-               </button>
+            <div class="btn-group-footer" style="margin-top: 20px">
+               <el-button @click="step--">Quay lại</el-button>
+               <el-button type="primary" @click="step = 3">Tiếp &gt;&gt;</el-button>
             </div>
          </div>
-      </div>
+
+         <!-- STEP 4: Tóm tắt & Hoàn tất -->
+         <div v-show="step === 3" class="mt-4">
+            <h3 class="mb-3">Tóm tắt chương trình khuyến mại</h3>
+
+            <div class="mb-3 text-center">
+               <el-image
+                  v-if="posterPreview"
+                  :src="posterPreview"
+                  style="width: 150px; height: 150px; border-radius: 10px"
+               />
+               <el-image
+                  v-else-if="promotion.poster"
+                  :src="IMG + promotion.poster"
+                  style="width: 150px; height: 150px; border-radius: 10px"
+               />
+               <div v-else class="bg-gray-200 w-36 h-36 inline-block rounded-xl"></div>
+            </div>
+
+            <el-descriptions title="Thông tin chương trình" column="1" border>
+               <el-descriptions-item label="Tên">{{ promotion.name }}</el-descriptions-item>
+               <el-descriptions-item label="Mô tả">{{
+                  promotion.description
+               }}</el-descriptions-item>
+               <el-descriptions-item label="Bắt đầu">{{
+                  formatDate(promotion.startDate)
+               }}</el-descriptions-item>
+               <el-descriptions-item label="Kết thúc">{{
+                  formatDate(promotion.endDate)
+               }}</el-descriptions-item>
+               <el-descriptions-item label="Loại">{{ promotion.type }}</el-descriptions-item>
+               <el-descriptions-item label="Giảm %">{{
+                  promotion.discountPercent
+               }}</el-descriptions-item>
+               <el-descriptions-item label="Giảm cố định">{{
+                  promotion.discountAmount
+               }}</el-descriptions-item>
+            </el-descriptions>
+
+            <div class="mt-3">
+               <h4>Sản phẩm áp dụng:</h4>
+               <el-tag v-for="p in selectedProducts" :key="p.id" type="success" class="mr-2 mb-2">{{
+                  p.name
+               }}</el-tag>
+               <div v-if="!selectedProducts.length" class="text-gray-500">Chưa chọn sản phẩm</div>
+            </div>
+
+            <div class="mt-3">
+               <h4>Luật áp dụng:</h4>
+               <el-tag v-for="r in rules" :key="r.id" type="warning" class="mr-2 mb-2">
+                  {{ r.label }}
+                  <span v-if="r.condition.percent">({{ r.condition.percent }}%)</span>
+                  <span v-else-if="r.condition.buy"
+                     >Mua {{ r.condition.buy }} tặng {{ r.condition.get }}</span
+                  >
+                  <span v-else-if="r.condition.items"
+                     >Combo: {{ r.condition.items.map((i) => i.name).join(',') }} - Giá:
+                     {{ r.condition.price }}</span
+                  >
+               </el-tag>
+               <div v-if="!rules.length" class="text-gray-500">Chưa có luật</div>
+            </div>
+
+            <div class="mt-4 btn-group-footer">
+               <el-button @click="step--">Quay lại</el-button>
+               <el-button type="primary" @click="finishPromotion">Hoàn tất</el-button>
+            </div>
+         </div>
+      </el-card>
    </div>
 </template>
-
 
 <script setup>
    import { ref, computed, watch, onMounted } from 'vue';
@@ -238,7 +321,7 @@
 
    const step = ref(0);
    const API_PROMO = import.meta.env.VITE_API_BASE_URL + '/admin/promotions';
-   const API_PRODUCT = import.meta.env.VITE_API_BASE_URL + '/admin/products';
+   const API_PRODUCT = import.meta.env.VITE_API_BASE_URL + '/products';
    const IMG = import.meta.env.VITE_IMAGE_URL;
 
    const promotion = ref({
@@ -250,8 +333,10 @@
       type: 'PERCENT',
       discountPercent: 0,
       discountAmount: 0,
+      poster: '',
       posterFile: null,
    });
+   const posterPreview = ref(null);
 
    const products = ref([]);
    const selectedProducts = ref([]);
@@ -284,14 +369,15 @@
    // Debounce search
    watch(
       searchQuery,
-      debounce(() => {
-         currentPage.value = 1;
-      }, 300)
+      debounce(() => (currentPage.value = 1), 300)
    );
 
    // Load products
    onMounted(() => {
-      axios.get(API_PRODUCT).then((res) => (products.value = res.data));
+      axios.get(API_PRODUCT).then((res) => {
+         products.value = res.data;
+         if (props.promotionData) initSelectedProducts();
+      });
    });
 
    // Watch edit mode
@@ -302,21 +388,16 @@
             rules.value = [];
             selectedProducts.value = [];
             productNotes.value = {};
+            posterPreview.value = null;
             return;
          }
-
          Object.assign(promotion.value, {
             ...data,
             startDate: data.startDate + 'T00:00',
             endDate: data.endDate + 'T23:59',
          });
-
-         selectedProducts.value = data.items?.map((i) => i.productId) || [];
-         productNotes.value = {};
-         data.items?.forEach((i) => {
-            productNotes.value[i.productId] = i.note || '';
-         });
-
+         posterPreview.value = null;
+         initSelectedProducts();
          rules.value = (data.rules || []).map((r) => {
             let ruleVal = r.ruleValue;
             if (typeof ruleVal === 'string') {
@@ -334,19 +415,35 @@
             }
             return { id: r.id, label: r.ruleType, condition: ruleVal, isNew: false };
          });
-
          step.value = 0;
       },
       { immediate: true }
    );
 
-   // Functions
-   function goBack() {
-      emit('close');
-      emit('reload');
+   function initSelectedProducts() {
+      selectedProducts.value = (props.promotionData.items || [])
+         .map((i) => products.value.find((p) => p.id === i.productId))
+         .filter(Boolean);
+      productNotes.value = {};
+      props.promotionData.items?.forEach((i) => {
+         productNotes.value[i.productId] = i.note || '';
+      });
    }
-   function onFileChange(e) {
-      promotion.value.posterFile = e.target.files[0];
+
+   // Functions
+   function handleFile(file) {
+      promotion.value.posterFile = file;
+      return false;
+   }
+   function previewPoster(file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file.raw);
+      reader.onload = () => (posterPreview.value = reader.result);
+   }
+   function formatDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
    }
 
    function savePromotion() {
@@ -355,17 +452,15 @@
       const fd = new FormData();
       fd.append('name', promotion.value.name);
       fd.append('description', promotion.value.description);
-      fd.append('startDate', promotion.value.startDate.split('T')[0]);
-      fd.append('endDate', promotion.value.endDate.split('T')[0]);
+      fd.append('startDate', formatDate(promotion.value.startDate));
+      fd.append('endDate', formatDate(promotion.value.endDate));
       fd.append('type', promotion.value.type);
       fd.append('discountPercent', promotion.value.discountPercent || 0);
       fd.append('discountAmount', promotion.value.discountAmount || 0);
-      if (promotion.value.posterFile) {
-         fd.append('posterFile', promotion.value.posterFile);
-      }
+      if (promotion.value.posterFile) fd.append('posterFile', promotion.value.posterFile);
 
       const req = promotion.value.id
-         ? axios.put(API_PROMO + '/' + promotion.value.id, fd)
+         ? axios.put(`${API_PROMO}/${promotion.value.id}`, fd)
          : axios.post(API_PROMO, fd).then((res) => (promotion.value.id = res.data.id));
 
       req.then(() => {
@@ -374,20 +469,20 @@
       }).catch(() => toast('Lỗi lưu promotion', 'error'));
    }
 
+   function handleSelectionChange(val) {
+      selectedProducts.value = val;
+   }
+
    function applyProducts() {
       if (!promotion.value.id) return toast('Promotion chưa được tạo', 'error');
-
-      // Lọc chỉ những product mới
-      const existingIds = props.promotionData?.items?.map((i) => i.productId) || [];
-      const newItems = selectedProducts.value
-         .filter((id) => !existingIds.includes(id))
-         .map((id) => ({ productId: id, note: productNotes.value[id] || '' }));
-
+      const newItems = selectedProducts.value.map((p) => ({
+         productId: p.id,
+         note: productNotes.value[p.id] || '',
+      }));
       if (!newItems.length) {
-         step.value = 2; // không có gì mới, chuyển luôn
+         step.value = 2;
          return toast('Không có sản phẩm mới để thêm', 'info');
       }
-
       axios
          .post(`${API_PROMO}/${promotion.value.id}/items`, newItems)
          .then(() => {
@@ -405,7 +500,6 @@
          condition = { buy: newRule.value.buy, get: newRule.value.get };
       else if (newRule.value.ruleType === 'FIXED_COMBO')
          condition = { items: [...newRule.value.items], price: newRule.value.price };
-
       rules.value.push({ id: Date.now(), label: newRule.value.ruleType, condition, isNew: true });
       newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
    }
@@ -430,7 +524,6 @@
          rules.value = rules.value.filter((r) => r.id !== rule.id);
          return;
       }
-
       Swal.fire({
          title: 'Xác nhận',
          text: 'Bạn có chắc chắn muốn xóa luật này?',
@@ -461,157 +554,35 @@
    function toast(msg, type) {
       Swal.fire({ icon: type, text: msg, timer: 1800, showConfirmButton: false });
    }
-
-   function toggleComboItem(p) {
-      newRule.value.items = newRule.value.items.some((i) => i.name === p.name)
-         ? newRule.value.items.filter((i) => i.name !== p.name)
-         : [...newRule.value.items, { name: p.name, poster: p.poster }];
-   }
 </script>
 
 <style scoped>
-.promo-wrapper {
-   padding: 20px;
-}
-
-.promo-card {
-   background: #fff;
-   padding: 20px;
-   border-radius: 20px;
-   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-}
-
-.promo-steps {
-   margin-bottom: 25px;
-}
-
-/* Form */
-.form-group {
-   margin-bottom: 16px;
-}
-
-.form-label {
-   font-weight: 600;
-   margin-bottom: 6px;
-   display: block;
-}
-
-.ui-input {
-   border-radius: 12px !important;
-   padding: 10px 14px !important;
-}
-
-.ui-textarea {
-   border-radius: 12px;
-   padding: 12px 14px;
-}
-
-/* Buttons */
-.btn-group-footer {
-   margin-top: 20px;
-   display: flex;
-   gap: 14px;
-   justify-content: space-between;
-}
-
-.ui-btn-primary {
-   background: #2ecc71 !important;
-   border: none !important;
-   color: #fff !important;
-   padding: 10px 18px;
-   border-radius: 30px;
-   font-weight: 600;
-}
-
-.ui-btn-primary:hover {
-   background: #27ae60 !important;
-}
-
-.ui-btn-secondary {
-   background: #ecf0f1 !important;
-   border: none;
-   padding: 10px 18px;
-   border-radius: 30px;
-   font-weight: 600;
-}
-
-/* Table */
-.table-custom thead {
-   background: #e9f7ef;
-   font-weight: 600;
-}
-
-.product-img {
-   width: 60px;
-   height: 60px;
-   object-fit: cover;
-   border-radius: 10px;
-}
-
-/* Combo */
-.combo-container {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 10px;
-}
-
-.combo-item {
-   width: 90px;
-   padding: 6px;
-   border: 2px solid transparent;
-   border-radius: 12px;
-   text-align: center;
-   cursor: pointer;
-   transition: 0.2s;
-}
-
-.combo-item.active {
-   border-color: #2ecc71;
-   background: #eafaf1;
-}
-
-.combo-img {
-   width: 70px;
-   height: 70px;
-   border-radius: 10px;
-   object-fit: cover;
-}
-
-.combo-name {
-   font-size: 12px;
-   margin-top: 4px;
-}
-
-.combo-preview {
-   display: flex;
-   justify-content: center;
-   flex-wrap: wrap;
-   gap: 8px;
-}
-
-.combo-preview-item img {
-   width: 50px;
-   height: 50px;
-   border-radius: 10px;
-   object-fit: cover;
-}
-
-.small-file {
-  padding: 4px 8px !important;
-  font-size: 13px !important;
-  height: 36px !important;
-  line-height: 26px !important;
-}
-
-
-/* Animation */
-.fade-in {
-   animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-   from { opacity: 0; transform: translateY(10px); }
-   to   { opacity: 1; transform: translateY(0); }
-}
+   .promo-wrapper {
+      padding: 20px;
+   }
+   .promo-card {
+      padding: 20px;
+      border-radius: 20px;
+   }
+   .promo-steps {
+      margin-bottom: 25px;
+   }
+   .combo-preview {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+   }
+   .combo-preview-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+   }
+   .btn-group-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 20px;
+   }
 </style>
-
