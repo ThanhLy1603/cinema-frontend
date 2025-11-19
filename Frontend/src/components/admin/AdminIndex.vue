@@ -28,6 +28,7 @@
    { name: "Ghế ngồi", component: "SeatsManager" },
    { name: "Danh mục", component: "CategoryManager" },
    { name: "Đồ ăn", component: "ProductManager" },
+   { nam: "Giá sản pjham", component: "ProductPricePage"}
    ];
 
    function openComponent(componentName) {
