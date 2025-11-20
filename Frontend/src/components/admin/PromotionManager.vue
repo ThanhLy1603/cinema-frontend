@@ -1,21 +1,23 @@
 <template>
-   <div class="container mt-3">
-      <h3 class="fw-bold text-success mb-3">Quản lý Khuyến mại</h3>
+   <div class="container-fluid">
+      <div class="container mt-3">
+         <h3 class="fw-bold text-success mb-3">Quản lý Khuyến mại</h3>
 
-      <!-- Danh sách hoặc Form -->
-      <div v-if="!showForm">
-         <button class="btn btn-success mb-3" @click="openForm(null)">Tạo mới</button>
-         <PromotionList :promotions="promotions" @edit="openForm" @delete="deletePromotion" />
-      </div>
+         <!-- Danh sách hoặc Form -->
+         <div v-if="!showForm">
+            <button class="btn btn-success mb-3" @click="openForm(null)">Tạo mới</button>
+            <PromotionList :promotions="promotions" @edit="openForm" @delete="deletePromotion" />
+         </div>
 
-      <div v-else>
-         <PromotionForm
-            v-if="showForm"
-            :promotionData="selectedPromotion"
-            @close="showForm = false"
-            @saved="showForm = false"
-            @reload="fetchPromotions"
-         />
+         <div v-else>
+            <PromotionForm
+               v-if="showForm"
+               :promotionData="selectedPromotion"
+               @close="showForm = false"
+               @saved="showForm = false"
+               @reload="fetchPromotions"
+            />
+         </div>
       </div>
    </div>
 </template>
@@ -70,7 +72,7 @@
          showCancelButton: true,
          confirmButtonText: 'Xóa',
          cancelButtonText: 'Hủy',
-      });
+      });   
       if (confirm.isConfirmed) {
          try {
             await axios.delete(`${API_PROMO}/${id}`);
