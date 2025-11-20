@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid">
-    <router-view />
-     <!-- <SeatDemo></SeatDemo> -->
+    <!-- <router-view /> -->
+     <SeatDemo></SeatDemo>
       <!-- <Script></Script> -->
   </div>
 </template>

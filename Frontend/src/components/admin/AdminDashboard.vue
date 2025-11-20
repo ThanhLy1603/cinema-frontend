@@ -39,6 +39,7 @@
    import ProductManager from './ProductsManager.vue';
    import SeatsManager from '../admin/SeatsManager.vue';
    import ScheduleManager from './ScheduleManager.vue';
+   import PromotionManager from './PromotionManager.vue';
 
    // Router
    const route = useRoute();
@@ -57,6 +58,7 @@
       ProductManager,
       SeatsManager,
       ScheduleManager,
+      PromotionManager
    };
 
    // Component hiện tại hiển thị
@@ -74,6 +76,7 @@
          ProductManager: 'Đồ ăn',
          SeatsManager: 'Ghế ngồi',
          ScheduleManager: 'Lịch chiếu',
+         PromotionManager:'Khuyến mại'
       };
       return map[activeComponent.value] || '';
    });

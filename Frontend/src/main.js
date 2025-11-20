@@ -1,32 +1,49 @@
-import { createApp } from 'vue';
-import './style.css';
-import App from './App.vue';
-// Import Bootstrap CSS và JS
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+// src/main.js (hoặc main.ts)
+import { createApp } from 'vue'
+import './style.css'
+import App from './App.vue'
 
-// Import Vue3 Select
+// Bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
+// Vue3-Select (nếu dùng)
 import 'vue3-select/dist/vue3-select.css'
 
-// Import SweetAlert2
-import VueSweetalert2 from 'vue-sweetalert2'; 
-import 'sweetalert2/dist/sweetalert2.min.css';
-import router from './router';
+// SweetAlert2
+import VueSweetalert2 from 'vue-sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
-// 1. Khởi tạo ứng dụng
-const app = createApp(App);
+// Element Plus (bắt buộc phải có)
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'                     // Style toàn bộ
+import 'element-plus/theme-chalk/dark/css-vars.css'      // Tùy chọn: hỗ trợ dark mode
 
-// 2. Định nghĩa cấu hình mặc định cho SweetAlert2 (Tùy chọn)
+// Icons Element Plus (để dùng <el-icon><Search /></el-icon>)
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
+// Vue Router
+import router from './router'
+
+// ------------------------------------------------------------------
+// 1. Tạo app
+const app = createApp(App)
+
+// 2. Cấu hình SweetAlert2 (tùy chọn)
 const swalOptions = {
-    confirmButtonColor: '#94e900', // Màu xanh của Vue
-    cancelButtonColor: '#ff7674',
-};
+  confirmButtonColor: '#94e900',
+  cancelButtonColor: '#ff7674',
+}
 
-// 3. ĐĂNG KÝ CÁC PLUGIN BẰNG app.use()
-// Đăng ký SweetAlert2. Điều này tạo ra biến toàn cục $swal
-app.use(VueSweetalert2, swalOptions); 
-// Đăng ký Vue Router
-app.use(router);
+// 3. Đăng ký toàn bộ plugin
+app.use(router)
+app.use(VueSweetalert2, swalOptions)
+app.use(ElementPlus)   // QUAN TRỌNG NHẤT – không có dòng này là lỗi import
 
-// 4. Mount ứng dụng
-app.mount('#app');
+// 4. Đăng ký toàn bộ icon của Element Plus làm global component (rất tiện)
+for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(name, component)
+}
+
+// 5. Mount
+app.mount('#app')

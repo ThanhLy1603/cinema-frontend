@@ -1,943 +1,705 @@
 <template>
    <div class="container-fluid">
-      <!-- Nút chuyển -->
-      <div class="btn-box">
-         <button class="switch-btn" :class="{ active: !showForm }" @click="switchToList">
-            Danh sách lịch chiếu
-         </button>
-         <button class="switch-btn" :class="{ active: showForm }" @click="switchToForm">
-            Thêm lịch chiếu
-         </button>
-      </div>
+      <div class="promotion-wizard">
+         <!-- Steps -->
+         <el-steps :active="step" finish-status="success" class="mb-6">
+            <el-step title="Thông tin chương trình" />
+            <el-step title="Chọn sản phẩm" />
+            <el-step title="Luật khuyến mãi" />
+            <el-step title="Hoàn tất" />
+         </el-steps>
 
-      <!-- ===================== DANH SÁCH LỊCH CHIẾU ===================== -->
-      <div v-if="!showForm" class="container-fluid mt-3">
-         <!-- Bộ lọc -->
-         <div class="row d-flex g-3 mb-3 align-items-end">
-            <div class="col-md-3">
-               <label class="form-label fw-semibold">Phim</label>
-               <v-select
-                  v-model="selectedFilmId"
-                  :options="[{ id: '', name: 'Tất cả phim' }, ...films]"
-                  label="name"
-                  :reduce="(film) => film.id"
-                  placeholder="Chọn phim"
-                  class="border-primary"
-               />
-            </div>
-            <div class="col-md-3">
-               <label class="form-label fw-semibold">Phòng</label>
-               <v-select
-                  v-model="selectedRoomId"
-                  :options="[{ id: '', name: 'Tất cả phòng' }, ...rooms]"
-                  label="name"
-                  :reduce="(room) => room.id"
-                  placeholder="Chọn phòng"
-                  class="border-primary"
-               />
-            </div>
-            <div class="col-md-3">
-               <label class="form-label fw-semibold">Giờ chiếu</label>
-               <v-select
-                  v-model="selectedShowTimeId"
-                  :options="[{ id: '', startTime: 'Tất cả giờ chiếu' }, ...showTimes]"
-                  label="startTime"
-                  :reduce="(time) => time.id"
-                  placeholder="Chọn giờ chiếu"
-                  class="border-primary"
-               />
-            </div>
-            <div class="col-md-3">
-               <label class="form-label fw-semibold">Ngày chiếu</label>
-               <input type="date" v-model="selectedDate" class="form-control border-primary" />
-            </div>
-         </div>
+         <div class="wizard-card">
+            <!-- STEP 1: Thông tin -->
+            <div v-show="step === 0" class="space-y-6 animate-fade">
+               <h2 class="text-2xl font-bold text-gray-800">Thông tin chương trình</h2>
 
-         <!-- Bảng danh sách -->
-         <div class="table-responsive" style="max-height: 500px; overflow-y: auto">
-            <table class="table table-bordered table-hover w-100">
-               <thead class="text-center table-success">
-                  <tr>
-                     <th>STT</th>
-                     <th>Phim</th>
-                     <th>Phòng</th>
-                     <th>Giờ chiếu</th>
-                     <th>Ngày chiếu</th>
-                     <th>Thao tác</th>
-                  </tr>
-               </thead>
-               <tbody class="text-center align-middle">
-                  <tr v-for="(schedule, index) in paginatedSchedules" :key="schedule.id">
-                     <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
-                     <td>{{ schedule.film?.name || '-' }}</td>
-                     <td>{{ schedule.room?.name || '-' }}</td>
-                     <td>{{ schedule.showTime?.startTime || '-' }}</td>
-                     <td>{{ schedule.scheduleDate }}</td>
-                     <td>
-                        <button class="btn btn-primary btn-sm mx-1" @click="handleEdit(schedule)">
-                           <i class="bi bi-pencil-square me-1"></i> Sửa
-                        </button>
-                        <button
-                           class="btn btn-danger btn-sm mx-1"
-                           @click="handleDelete(schedule.id)"
-                        >
-                           <i class="bi bi-trash3 me-1"></i> Xóa
-                        </button>
-                     </td>
-                  </tr>
-                  <tr v-if="filteredSchedules.length === 0">
-                     <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
-                  </tr>
-               </tbody>
-            </table>
-         </div>
-
-         <!-- Phân trang -->
-         <nav class="d-flex justify-content-center mt-3">
-            <ul class="pagination">
-               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                  <button class="page-link" @click="prevPage">Trước</button>
-               </li>
-               <li
-                  v-for="page in totalPages"
-                  :key="page"
-                  :class="{ active: currentPage === page }"
-                  class="page-item"
-               >
-                  <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-               </li>
-               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                  <button class="page-link" @click="nextPage">Sau</button>
-               </li>
-            </ul>
-         </nav>
-      </div>
-
-      <!-- ===================== FORM THÊM / SỬA ===================== -->
-      <div v-else class="col-md-10 mx-auto mt-3">
-         <!-- Form sửa đơn -->
-         <div v-if="isEditing" class="col-md-8 mx-auto">
-            <h4 class="text-center mb-3">Cập nhật lịch chiếu</h4>
-            <form @submit.prevent="handleUpdate">
-               <div class="mb-3">
-                  <label class="form-label fw-semibold">Phim</label>
-                  <v-select
-                     v-model="form.filmId"
-                     :options="films"
-                     label="name"
-                     :reduce="(film) => film.id"
-                     placeholder="-- Chọn phim --"
-                     class="border-primary"
-                     required
-                  />
-               </div>
-               <div class="mb-3">
-                  <label class="form-label fw-semibold">Phòng</label>
-                  <v-select
-                     v-model="form.roomId"
-                     :options="rooms"
-                     label="name"
-                     :reduce="(room) => room.id"
-                     placeholder="-- Chọn phòng --"
-                     class="border-primary"
-                     required
-                  />
-               </div>
-               <div class="mb-3">
-                  <label class="form-label fw-semibold">Giờ chiếu</label>
-                  <v-select
-                     v-model="form.showTimeId"
-                     :options="showTimes"
-                     label="startTime"
-                     :reduce="(time) => time.id"
-                     placeholder="-- Chọn giờ chiếu --"
-                     class="border-primary"
-                     required
-                  />
-               </div>
-               <div class="mb-3">
-                  <label class="form-label fw-semibold">Ngày chiếu</label>
-                  <input
-                     type="date"
-                     v-model="form.scheduleDate"
-                     class="form-control border-primary"
-                     required
-                  />
-               </div>
-               <div class="d-flex justify-content-center gap-3">
-                  <button type="submit" class="btn btn-success mx-2">
-                     <i class="bi bi-check-circle me-1"></i> Cập nhật
-                  </button>
-                  <button type="button" class="btn btn-secondary mx-2" @click="resetForm">
-                     <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
-                  </button>
-                  <button type="button" class="btn btn-outline-dark mx-2" @click="switchToList">
-                     <i class="bi bi-arrow-left-circle me-1"></i> Quay lại
-                  </button>
-               </div>
-            </form>
-         </div>
-
-         <!-- Form thêm nhiều (grid) -->
-         <div v-else class="col-12">
-            <h4 class="text-center mb-3">Thêm lịch chiếu</h4>
-            <div class="table-responsive">
-               <table class="table table-bordered table-hover align-middle">
-                  <thead class="table-warning text-center">
-                     <tr>
-                        <th style="width: 5%">STT</th>
-                        <th style="width: 24%">Phim</th>
-                        <th style="width: 16%">Phòng</th>
-                        <th style="width: 16%">Giờ chiếu</th>
-                        <th style="width: 16%">Ngày chiếu</th>
-                        <th style="width: 10%">Trạng thái</th>
-                        <th style="width: 10%">Xóa</th>
-                     </tr>
-                  </thead>
-                  <tbody class="text-center align-middle">
-                     <tr
-                        v-for="(row, idx) in scheduleRows"
-                        :key="idx"
-                        :class="{ 'row-error': row.note }"
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                     <label class="form-label"
+                        >Tên chương trình <span class="text-red-500">*</span></label
                      >
-                        <td>{{ idx + 1 }}</td>
-                        <td>
-                           <v-select
-                              v-model="row.filmId"
-                              :options="films"
-                              label="name"
-                              :reduce="(f) => f.id"
-                              placeholder="Chọn phim"
-                              append-to-body
-                              :popper-options="{ strategy: 'fixed' }"
-                              class="small-select"
-                              @update:modelValue="() => validateRow(idx)"
-                              required
-                           />
-                        </td>
-                        <td>
-                           <v-select
-                              v-model="row.roomId"
-                              :options="rooms"
-                              label="name"
-                              :reduce="(r) => r.id"
-                              placeholder="Chọn phòng"
-                              class="small-select"
-                              append-to-body
-                              :popper-options="{ strategy: 'fixed' }"
-                              @update:modelValue="() => validateRow(idx)"
-                              required
-                           />
-                        </td>
-                        <td>
-                           <v-select
-                              v-model="row.showTimeId"
-                              :options="showTimes"
-                              label="startTime"
-                              :reduce="(t) => t.id"
-                              placeholder="Chọn giờ"
-                              class="small-select"
-                              append-to-body
-                              :popper-options="{ strategy: 'fixed' }"
-                              @update:modelValue="() => validateRow(idx)"
-                              required
-                           />
-                        </td>
-                        <td>
-                           <input
-                              type="date"
-                              v-model="row.scheduleDate"
-                              class="form-control"
-                              @change="() => validateRow(idx)"
-                              required
-                           />
-                        </td>
-                        <td class="text-center note-cell py-3">
-                           <!-- Có lỗi → hiển thị icon cảnh báo + tooltip chi tiết -->
-                           <div
-                              style="cursor: pointer"
-                              v-if="row.note"
-                              class="text-danger fw-500 cursor-pointer d-inline-flex align-items-center gap-1"
-                              @click="showErrorAlert(row.note)"
-                              title="Nhấn để xem chi tiết lỗi"
-                           >
-                              <i class="bi bi-exclamation-triangle-fill fs-5 mx-2"></i>
-                              <span class="d-none d-md-inline">Trùng lịch</span>
-                           </div>
-
-                           <!-- Thành công → icon tích xanh đẹp -->
-                           <div
-                              v-else
-                              class="text-success fw-500 d-inline-flex align-items-center gap-1"
-                              title="Thành công"
-                           ></div>
-                        </td>
-                        <td class="text-center">
-                           <button
-                              type="button"
-                              class="btn btn-outline-danger btn-sm"
-                              @click="removeRow(idx)"
-                           >
-                              <i class="bi bi-trash3"></i>
-                           </button>
-                        </td>
-                     </tr>
-                  </tbody>
-               </table>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mt-2">
-               <div>
-                  <button class="btn btn-primary mx-2" @click="addRow">
-                     <i class="bi bi-plus-circle me-1"></i> Thêm dòng
-                  </button>
-                  <button class="btn btn-secondary ms-2" @click="clearAllRows">
-                     <i class="bi bi-arrow-clockwise me-1"></i> Làm mới bảng
-                  </button>
+                     <el-input v-model="promotion.name" placeholder="VD: Black Friday 60%" clearable />
+                  </div>
+                  <div>
+                     <label class="form-label">Poster (khuyến khích 600x400)</label>
+                  <div class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer" @click="$refs.file.click()">
+                     <input type="file" ref="file" @change="e=>promotion.posterFile=e.target.files[0]" class="hidden" accept="image/*">
+                     <el-icon size="50">
+                        <div class="flex justify-between mt-10 pt-6 border-t">
+  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
+  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
+    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
+  </el-button>
+</div>
+                     </el-icon>
+                     <p class="mt-2">Click để tải poster</p>
+                  </div>
+                  </div>
                </div>
 
                <div>
-                  <button class="btn btn-success mx-2" @click="handleCreate">
-                     <i class="bi bi-check2-all me-1"></i> Lưu tất cả
-                  </button>
-                  <button class="btn btn-outline-dark ms-2" @click="switchToList">
-                     <i class="bi bi-arrow-left-circle me-1"></i> Quay lại
-                  </button>
+                  <label class="form-label">Mô tả</label>
+                  <el-input
+                     v-model="promotion.description"
+                     type="textarea"
+                     :rows="3"
+                     placeholder="Mô tả ngắn gọn chương trình..."
+                  />
+               </div>
+
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                     <label class="form-label">Ngày bắt đầu</label>
+                     <el-date-picker
+                        v-model="promotion.startDate"
+                        type="datetime"
+                        placeholder="Chọn ngày giờ"
+                        class="w-full"
+                     />
+                  </div>
+                  <div>
+                     <label class="form-label">Ngày kết thúc</label>
+                     <el-date-picker
+                        v-model="promotion.endDate"
+                        type="datetime"
+                        placeholder="Chọn ngày giờ"
+                        class="w-full"
+                     />
+                  </div>
+               </div>
+
+<div class="flex justify-between mt-10 pt-6 border-t">
+  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
+  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
+    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
+  </el-button>
+</div>
+            </div>
+
+            <!-- STEP 2: Chọn sản phẩm -->
+            <div v-show="step === 1" class="animate-fade">
+               <h2 class="text-2xl font-bold text-gray-800 mb-5">Chọn sản phẩm áp dụng</h2>
+
+               <div class="flex items-center gap-4 mb-5">
+                  <el-input
+                     v-model="searchQuery"
+                     placeholder="Tìm kiếm sản phẩm..."
+                     prefix-icon="Search"
+                     clearable
+                     class="max-w-md"
+                  />
+                  <div class="text-sm text-gray-600">
+                     Đã chọn: <strong>{{ selectedProducts.length }}</strong> sản phẩm
+                  </div>
+               </div>
+
+               <div
+                  v-if="loadingProducts"
+                  class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+               >
+                  <el-skeleton v-for="n in 8" :key="n" class="product-skeleton" animated>
+                     <template #template>
+                        <el-skeleton-item variant="image" class="w-full h-48 rounded-xl" />
+                        <el-skeleton-item variant="text" class="mt-3 w-4/5" />
+                     </template>
+                  </el-skeleton>
+               </div>
+
+               <div v-else class="product-grid">
+                  <div
+                     v-for="p in paginatedProducts"
+                     :key="p.id"
+                     class="product-card"
+                     :class="{ selected: selectedProducts.includes(p.id) }"
+                     @click="toggleProduct(p.id)"
+                  >
+                     <div class="img-wrapper">
+                        <img :src="IMG + p.poster" alt="" />
+                        <div class="overlay">
+                           <el-icon v-if="selectedProducts.includes(p.id)" size="28"
+                              ><Check
+                           /></el-icon>
+                        </div>
+                     </div>
+                     <div class="p-3">
+                        <h4 class="font-medium text-sm line-clamp-2">{{ p.name }}</h4>
+                        <el-input
+                           v-if="selectedProducts.includes(p.id)"
+                           v-model="productNotes[p.id]"
+                           size="small"
+                           placeholder="Ghi chú..."
+                           class="mt-2"
+                        />
+                     </div>
+                  </div>
+               </div>
+
+               <el-pagination
+                  v-if="totalPages > 1"
+                  class="mt-6 justify-center"
+                  v-model:current-page="currentPage"
+                  :page-size="itemsPerPage"
+                  :total="filteredProducts.length"
+                  layout="prev, pager, next"
+                  background
+               />
+
+<div class="flex justify-between mt-10 pt-6 border-t">
+  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
+  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
+    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
+  </el-button>
+</div>
+            </div>
+
+            <!-- STEP 3: Luật khuyến mãi -->
+            <div v-show="step === 2" class="animate-fade space-y-6">
+               <h2 class="text-2xl font-bold text-gray-800">Luật khuyến mãi</h2>
+
+               <div class="rule-builder-card">
+                  <h3 class="text-lg font-semibold mb-4">Thêm luật mới</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                     <div class="md:col-span-3">
+                        <el-select
+                           v-model="newRule.ruleType"
+                           placeholder="Chọn loại luật"
+                           class="w-full"
+                        >
+                           <el-option
+                              v-for="rt in ruleTypes"
+                              :key="rt.value"
+                              :value="rt.value"
+                              :label="rt.label"
+                           />
+                        </el-select>
+                     </div>
+
+                     <div class="md:col-span-7">
+                        <!-- PERCENT / TOTAL_PERCENT -->
+                        <div v-if="/PERCENT/.test(newRule.ruleType)" class="flex items-end gap-3">
+                           <el-input-number
+                              v-model="newRule.percent"
+                              :min="1"
+                              :max="99"
+                              class="w-32"
+                           />
+                           <span class="text-lg">%</span>
+                           <span class="text-gray-600">giảm giá</span>
+                        </div>
+
+                        <!-- BUY_X_GET_Y -->
+                        <div v-if="newRule.ruleType === 'BUY_X_GET_Y'" class="flex items-center gap-4">
+                           <span>Mua</span>
+                           <el-input-number v-model="newRule.buy" :min="1" class="w-24" />
+                           <span>→ Tặng</span>
+                           <el-input-number v-model="newRule.get" :min="1" class="w-24" />
+                        </div>
+
+                        <!-- FIXED_COMBO -->
+                        <div v-if="newRule.ruleType === 'FIXED_COMBO'">
+                           <div class="combo-preview mb-3">
+                              <el-tag
+                                 v-for="item in newRule.items"
+                                 :key="item.name"
+                                 closable
+                                 @close="removeComboItem(item)"
+                                 class="mr-2"
+                              >
+                                 {{ item.name }}
+                              </el-tag>
+                              <el-tag v-if="newRule.items.length === 0" type="info"
+                                 >Chưa chọn sản phẩm</el-tag
+                              >
+                           </div>
+                           <el-input-number
+                              v-model="newRule.price"
+                              :min="1000"
+                              placeholder="Giá combo"
+                           />
+                        </div>
+                     </div>
+
+                     <div class="md:col-span-2">
+                        <el-button
+                           type="success"
+                           :disabled="!canAddRule"
+                           @click="addNewRule"
+                           class="w-full"
+                        >
+                           <el-icon><Plus /></el-icon> Thêm
+                        </el-button>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Danh sách rule đã thêm -->
+               <div v-if="rules.length" class="space-y-3">
+                  <div v-for="r in rules" :key="r.id" class="rule-item">
+                     <div class="flex-1">
+                        <strong>{{ r.label }}</strong>
+                        <span class="text-sm text-gray-600 ml-3">
+                           <template v-if="r.label.includes('giảm')"
+                              >{{ r.condition.percent }}%</template
+                           >
+                           <template v-else-if="r.label === 'Mua X tặng Y'"
+                              >Mua {{ r.condition.buy }} tặng {{ r.condition.get }}</template
+                           >
+                           <template v-else
+                              >Combo {{ r.condition.items?.length }} món →
+                              {{ formatPrice(r.condition.price) }}</template
+                           >
+                        </span>
+                     </div>
+                     <div>
+                        <el-button v-if="r.isNew" size="small" type="primary" @click="applyRule(r.id)"
+                           >Áp dụng</el-button
+                        >
+                        <el-button size="small" type="danger" @click="removeRule(r)">Xóa</el-button>
+                     </div>
+                  </div>
+               </div>
+
+            <div class="flex justify-between mt-10 pt-6 border-t">
+               <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
+               <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
+                  {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
+               </el-button>
+            </div>
+            </div>
+
+            <!-- STEP 4: Tóm tắt & Hoàn tất -->
+            <div v-show="step === 3" class="animate-fade">
+               <h2 class="text-2xl font-bold text-success mb-6 text-center">
+                  Xác nhận chương trình khuyến mãi
+               </h2>
+
+               <div class="summary-grid">
+                  <div class="summary-card">
+                     <img v-if="posterPreview" :src="posterPreview" class="summary-poster" />
+                     <div v-else class="bg-gray-200 border-2 border-dashed rounded-xl w-full h-48" />
+                     <div class="mt-4 text-center">
+                        <h3 class="text-xl font-bold">{{ promotion.name || 'Chưa đặt tên' }}</h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                           {{ promotion.description || 'Không có mô tả' }}
+                        </p>
+                     </div>
+                  </div>
+
+                  <div class="summary-info">
+                     <div class="info-item">
+                        <span>Thời gian</span>
+                        <strong
+                           >{{ formatDate(promotion.startDate) }} →
+                           {{ formatDate(promotion.endDate) }}</strong
+                        >
+                     </div>
+                     <div class="info-item">
+                        <span>Sản phẩm áp dụng</span>
+                        <el-tag type="success">{{ selectedProducts.length }} sản phẩm</el-tag>
+                     </div>
+                     <div class="info-item">
+                        <span>Luật khuyến mãi</span>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                           <el-tag v-for="r in rules" :key="r.id" type="warning">
+                              {{ r.label }} {{ r.condition.percent ? r.condition.percent + '%' : '' }}
+                           </el-tag>
+                           <el-tag v-if="!rules.length" type="info">Chưa có luật</el-tag>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <div class="text-center mt-8">
+                  <el-button
+                     type="primary"
+                     size="large"
+                     :loading="loading"
+                     @click="finishPromotion"
+                     class="px-12"
+                  >
+                     Hoàn tất tạo chương trình
+                  </el-button>
                </div>
             </div>
          </div>
       </div>
-
-      <!-- TOAST -->
-      <transition name="fade">
-         <div
-            v-if="toast.message"
-            class="toast-custom"
-            :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
-         >
-            {{ toast.message }}
-         </div>
-      </transition>
    </div>
 </template>
 
 <script setup>
-   import { ref, computed, onMounted, watch } from 'vue';
+   import { ref, computed, watch, onMounted } from 'vue';
    import axios from 'axios';
-   import vSelect from 'vue3-select';
-   import 'vue3-select/dist/vue3-select.css';
-   import Swal from 'sweetalert2';
+   import { ElMessage, ElMessageBox } from 'element-plus';
+   import { Check, Plus, Search } from '@element-plus/icons-vue';
 
-   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-   const token = localStorage.getItem('token') || '';
-   const CLEAN_TIME = 15;
+   const props = defineProps({ promotionData: Object });
+   const emit = defineEmits(['saved', 'close', 'reload']);
 
-   // ------------------- State -------------------
-   const schedules = ref([]);
-   const films = ref([]);
-   const rooms = ref([]);
-   const showTimes = ref([]);
+   const step = ref(0);
+   const loading = ref(false);
+   const loadingProducts = ref(true);
 
-   const showForm = ref(false);
-   const isEditing = ref(false);
-   const form = ref({ id: null, filmId: '', roomId: '', showTimeId: '', scheduleDate: '' });
-   const toast = ref({ message: '', type: '' });
+   const API_PROMO = `${import.meta.env.VITE_API_BASE_URL}/admin/promotions`;
+   const API_PRODUCT = `${import.meta.env.VITE_API_BASE_URL}/admin/products`;
+   const IMG = import.meta.env.VITE_IMAGE_URL;
 
-   // Filters
-   const selectedFilmId = ref('');
-   const selectedRoomId = ref('');
-   const selectedShowTimeId = ref('');
-   const selectedDate = ref('');
+   // Dữ liệu form
+   const promotion = ref({
+      id: null,
+      name: '',
+      description: '',
+      startDate: null,
+      endDate: null,
+      posterFile: null,
+   });
+   const posterPreview = ref('');
 
-   // Pagination
+   const products = ref([]);
+   const selectedProducts = ref([]);
+   const productNotes = ref({});
+   const searchQuery = ref('');
    const currentPage = ref(1);
-   const pageSize = 50;
+   const itemsPerPage = 12;
 
-   // Multi-add grid rows
-   const scheduleRows = ref([
-      { filmId: '', roomId: '', showTimeId: '', scheduleDate: '', note: '' },
-   ]);
+   const rules = ref([]);
+   const newRule = ref({ ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 });
 
-   // ------------------- Helpers -------------------
-   function showToast(msg, type = 'success') {
-      toast.value = { message: msg, type };
-      setTimeout(() => (toast.value.message = ''), 3000);
-   }
+   const ruleTypes = [
+      { value: 'PERCENT', label: 'Giảm % theo sản phẩm' },
+      { value: 'TOTAL_PERCENT', label: 'Giảm % tổng bill' },
+      { value: 'BUY_X_GET_Y', label: 'Mua X tặng Y' },
+      { value: 'FIXED_COMBO', label: 'Combo giá cố định' },
+   ];
 
-   function showErrorAlert(message) {
-      Swal.fire({
-         icon: 'error',
-         title: "<span style='font-size:20px'>Lỗi</span>",
-         html: `<div style="white-space:pre-line">${message || 'Đã xảy ra lỗi'}</div>`,
-         confirmButtonText: 'OK',
-      });
-   }
+   // ========== COMPUTED ==========
+   const filteredProducts = computed(() => {
+      const q = searchQuery.value.toLowerCase();
+      return q ? products.value.filter((p) => p.name.toLowerCase().includes(q)) : products.value;
+   });
+   const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      return filteredProducts.value.slice(start, start + itemsPerPage);
+   });
+   const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
 
-   async function showConfirm(message) {
-      const result = await Swal.fire({
-         title: message,
-         icon: 'warning',
-         showCancelButton: true,
-         confirmButtonText: 'Xác nhận',
-         cancelButtonText: 'Huỷ',
-         reverseButtons: true,
-      });
-      return result.isConfirmed;
-   }
-
-   // ------------------- Computed -------------------
-   const filteredSchedules = computed(() =>
-      schedules.value.filter((s) => {
-         if (selectedFilmId.value && s.film?.id !== selectedFilmId.value) return false;
-         if (selectedRoomId.value && s.room?.id !== selectedRoomId.value) return false;
-         if (selectedShowTimeId.value && s.showTime?.id !== selectedShowTimeId.value) return false;
-         if (selectedDate.value && s.scheduleDate !== selectedDate.value) return false;
-         return true;
-      })
-   );
-
-   const totalPages = computed(() =>
-      Math.max(1, Math.ceil(filteredSchedules.value.length / pageSize))
-   );
-
-   const paginatedSchedules = computed(() => {
-      const start = (currentPage.value - 1) * pageSize;
-      return filteredSchedules.value.slice(start, start + pageSize);
+   const canAddRule = computed(() => {
+      const r = newRule.value;
+      if (['PERCENT', 'TOTAL_PERCENT'].includes(r.ruleType)) return r.percent > 0;
+      if (r.ruleType === 'BUY_X_GET_Y') return r.buy > 0 && r.get > 0;
+      if (r.ruleType === 'FIXED_COMBO') return r.items.length >= 2 && r.price > 0;
+      return false;
    });
 
-   // Reset page when filter changes
+   // ========== HÀM RESET FORM (QUAN TRỌNG) ==========
+   function resetForm() {
+      promotion.value = {
+         id: null,
+         name: '',
+         description: '',
+         startDate: null,
+         endDate: null,
+         posterFile: null,
+      };
+      posterPreview.value = '';
+      selectedProducts.value = [];
+      productNotes.value = {};
+      rules.value = [];
+      newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
+      step.value = 0;
+   }
+
+   // ========== WATCH EDIT MODE ==========
    watch(
-      [selectedFilmId, selectedRoomId, selectedShowTimeId, selectedDate],
-      () => (currentPage.value = 1)
+      () => props.promotionData,
+      (data) => {
+         if (!data) {
+            resetForm();
+            return;
+         }
+
+         // Load dữ liệu khi edit
+         promotion.value = {
+            ...data,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            endDate: data.endDate ? new Date(data.endDate) : null,
+            posterFile: null,
+         };
+         if (data.poster) posterPreview.value = IMG + data.poster;
+
+         selectedProducts.value = data.items?.map((i) => i.productId) || [];
+         productNotes.value = {};
+         data.items?.forEach((i) => {
+            productNotes.value[i.productId] = i.note || '';
+         });
+
+         rules.value = (data.rules || []).map((r) => {
+            let condition = typeof r.ruleValue === 'string' ? JSON.parse(r.ruleValue) : r.ruleValue;
+            if (r.ruleType === 'FIXED_COMBO' && condition.items) {
+               condition.items = condition.items.map((name) => {
+                  const p = products.value.find((x) => x.name === name);
+                  return { name, poster: p?.poster || '' };
+               });
+            }
+            const label = ruleTypes.find((rt) => rt.value === r.ruleType)?.label || r.ruleType;
+            return { id: r.id, label, condition, isNew: false };
+         });
+
+         step.value = 0;
+      },
+      { immediate: true }
    );
 
-   // ------------------- Pagination -------------------
-   function goToPage(p) {
-      if (p >= 1 && p <= totalPages.value) currentPage.value = p;
-   }
-   function prevPage() {
-      if (currentPage.value > 1) currentPage.value--;
-   }
-   function nextPage() {
-      if (currentPage.value < totalPages.value) currentPage.value++;
+   // ========== LIFECYCLE ==========
+   onMounted(() => {
+      axios.get(API_PRODUCT).then((r) => {
+         products.value = r.data;
+         loadingProducts.value = false;
+      });
+   });
+
+   // ========== CÁC HÀM CHÍNH ==========
+   const toast = (msg, type = 'success') => ElMessage({ message: msg, type });
+
+   function savePromotion() {
+      if (!promotion.value.name) return ElMessage.error('Nhập tên chương trình');
+      loading.value = true;
+
+      const fd = new FormData();
+      fd.append('name', promotion.value.name);
+      fd.append('description', promotion.value.description || '');
+      fd.append('startDate', promotion.value.startDate?.toISOString().slice(0, 10) || '');
+      fd.append('endDate', promotion.value.endDate?.toISOString().slice(0, 10) || '');
+      if (promotion.value.posterFile) fd.append('posterFile', promotion.value.posterFile);
+
+      const req = promotion.value.id
+         ? axios.put(`${API_PROMO}/${promotion.value.id}`, fd)
+         : axios.post(API_PROMO, fd).then((r) => {
+              promotion.value.id = r.data.id;
+           });
+
+      req.then(() => {
+         toast('Lưu thành công');
+         step.value = 1;
+      })
+         .catch(() => toast('Lỗi hệ thống', 'error'))
+         .finally(() => (loading.value = false));
    }
 
-   // ------------------- API -------------------
-   async function loadAllData() {
-      try {
-         const headers = { Authorization: `Bearer ${token}` };
-         const [sc, f, r, t] = await Promise.all([
-            axios.get(`${API_BASE_URL}/admin/schedules`, { headers }),
-            axios.get(`${API_BASE_URL}/admin/films`, { headers }),
-            axios.get(`${API_BASE_URL}/admin/rooms`, { headers }),
-            axios.get(`${API_BASE_URL}/admin/show-times`, { headers }),
-         ]);
+   function applyProducts() {
+      loading.value = true;
+      const payload = selectedProducts.value.map((id) => ({
+         productId: id,
+         note: productNotes.value[id] || '',
+      }));
 
-         schedules.value = sc.data || [];
-         films.value = f.data || [];
-         rooms.value = r.data || [];
-         showTimes.value = t.data || [];
-      } catch (err) {
-         console.error('Lỗi loadAllData:', err);
-         showErrorAlert('Không thể load dữ liệu. Vui lòng thử lại.');
-      }
+      axios
+         .put(`${API_PROMO}/${promotion.value.id}/items`, payload)
+         .then(() => {
+            toast('Cập nhật sản phẩm thành công');
+            step.value = 2;
+         })
+         .catch(() => toast('Lỗi cập nhật sản phẩm', 'error'))
+         .finally(() => (loading.value = false));
    }
 
-   // ------------------- CRUD -------------------
-   function handleEdit(schedule) {
-      showForm.value = true;
-      isEditing.value = true;
-      form.value = {
-         id: schedule.id,
-         filmId: schedule.film?.id || '',
-         roomId: schedule.room?.id || '',
-         showTimeId: schedule.showTime?.id || '',
-         scheduleDate: schedule.scheduleDate || '',
-      };
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+   function addNewRule() {
+      if (!canAddRule.value) return;
+
+      let condition = {};
+      const type = newRule.value.ruleType;
+      if (['PERCENT', 'TOTAL_PERCENT'].includes(type))
+         condition = { percent: newRule.value.percent };
+      else if (type === 'BUY_X_GET_Y')
+         condition = { buy: newRule.value.buy, get: newRule.value.get };
+      else if (type === 'FIXED_COMBO')
+         condition = { items: newRule.value.items.map((i) => i.name), price: newRule.value.price };
+
+      rules.value.push({
+         id: Date.now(),
+         label: ruleTypes.find((rt) => rt.value === type).label,
+         condition,
+         isNew: true,
+      });
+
+      newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
+      toast('Đã thêm luật');
    }
 
-   async function handleDelete(id) {
-      const ok = await showConfirm('Bạn có muốn xoá lịch chiếu này không?');
-      if (!ok) {
-         showToast('Đã huỷ xoá lịch chiếu', 'error');
+   function applyRule(id) {
+      const rule = rules.value.find((r) => r.id === id);
+      if (!rule) return;
+
+      const payload = [
+         {
+            ruleType: ruleTypes.find((rt) => rt.label === rule.label)?.value,
+            ruleValue: rule.condition,
+         },
+      ];
+
+      axios
+         .post(`${API_PROMO}/${promotion.value.id}/rules`, payload)
+         .then(() => {
+            rule.isNew = false;
+            toast('Áp dụng luật thành công');
+         })
+         .catch(() => toast('Lỗi', 'error'));
+   }
+
+   function removeRule(rule) {
+      if (rule.isNew) {
+         rules.value = rules.value.filter((r) => r.id !== rule.id);
          return;
       }
-      try {
-         const headers = { Authorization: `Bearer ${token}` };
-         const res = await axios.delete(`${API_BASE_URL}/admin/schedules/delete/${id}`, {
-            headers,
+      ElMessageBox.confirm('Xóa luật này?', 'Xác nhận', { type: 'warning' }).then(() => {
+         axios.delete(`${API_PROMO}/rules/${rule.id}`).then(() => {
+            rules.value = rules.value.filter((r) => r.id !== rule.id);
+            toast('Đã xóa');
          });
-         await loadAllData();
-         showToast(res.data?.message || 'Xóa thành công', 'success');
-      } catch (err) {
-         console.error('Lỗi delete:', err);
-         showErrorAlert('Xóa không thành công.');
-      }
-   }
-
-   async function handleUpdate() {
-      try {
-         const headers = { Authorization: `Bearer ${token}` };
-         const payload = {
-            filmId: form.value.filmId,
-            roomId: form.value.roomId,
-            showTimeId: form.value.showTimeId,
-            scheduleDate: form.value.scheduleDate,
-         };
-         const res = await axios.put(
-            `${API_BASE_URL}/admin/schedules/update/${form.value.id}`,
-            payload,
-            { headers }
-         );
-         if (res.data?.status === 'success') {
-            showToast(res.data.message || 'Cập nhật thành công', 'success');
-            await loadAllData();
-            switchToList();
-         } else {
-            showErrorAlert(res.data?.message || 'Cập nhật thất bại');
-         }
-      } catch (err) {
-         console.error('Lỗi cập nhật:', err);
-         showErrorAlert(err.response?.data?.message || 'Có lỗi khi cập nhật');
-      }
-   }
-
-   // ------------------- Multi-add (Grid) -------------------
-   function addRow() {
-      scheduleRows.value.push({
-         filmId: '',
-         roomId: '',
-         showTimeId: '',
-         scheduleDate: '',
-         note: '',
       });
    }
 
-   function removeRow(index) {
-      if (scheduleRows.value.length > 1) scheduleRows.value.splice(index, 1);
-      else
-         scheduleRows.value[0] = {
-            filmId: '',
-            roomId: '',
-            showTimeId: '',
-            scheduleDate: '',
-            note: '',
-         };
+   function toggleProduct(id) {
+      selectedProducts.value.includes(id)
+         ? (selectedProducts.value = selectedProducts.value.filter((x) => x !== id))
+         : selectedProducts.value.push(id);
    }
 
-   function clearAllRows() {
-      scheduleRows.value = [{ filmId: '', roomId: '', showTimeId: '', scheduleDate: '', note: '' }];
+   function removeComboItem(item) {
+      newRule.value.items = newRule.value.items.filter((i) => i.name !== item.name);
    }
 
-   function toMinutes(timeStr) {
-      if (!timeStr) return 0;
-      const [hour, minute] = timeStr.split(':').map(Number);
-      return hour * 60 + minute;
-   }
-
-   function calculateEndTimeStr(startTimeStr, filmDurationMinutes = 0) {
-      if (!startTimeStr) return '??:??';
-      const [h, m] = startTimeStr.split(':').map(Number);
-
-      // tổng phút: giờ bắt đầu + duration phim + CLEAN_TIME
-      const total = h * 60 + m + (filmDurationMinutes || 0) + CLEAN_TIME;
-
-      const hh = String(Math.floor(total / 60) % 24).padStart(2, '0'); // nếu qua ngày thì mod 24
-      const mm = String(total % 60).padStart(2, '0');
-
-      return `${hh}:${mm}`;
-   }
-
-   function validateRow(idx) {
-      const row = scheduleRows.value[idx];
-      row.note = '';
-
-      // Nếu chưa điền đủ thông tin, bỏ qua
-      if (!row.roomId || !row.showTimeId || !row.scheduleDate) return;
-
-      const notes = [];
-
-      // Lấy thời gian bắt đầu và kết thúc của row mới
-      const showTimeNew = showTimes.value.find((t) => t.id === row.showTimeId);
-      if (!showTimeNew) return;
-      const startNew = toMinutes(showTimeNew.startTime);
-      const filmNew = films.value.find((f) => f.id === row.filmId);
-      const durationNew = filmNew ? filmNew.duration : 0;
-      const endNew = startNew + durationNew + CLEAN_TIME;
-
-      // 1️⃣ Kiểm tra xung đột với existing schedules
-      schedules.value.forEach((s) => {
-         if (s.room?.id === row.roomId && s.scheduleDate === row.scheduleDate) {
-            const startExist = toMinutes(s.showTime.startTime);
-            const endExist = startExist + (s.film?.duration || 0) + CLEAN_TIME;
-
-            if (startNew < endExist && endNew > startExist) {
-               const endExistStr = calculateEndTimeStr(
-                  s.showTime?.startTime,
-                  s.film?.duration || 0
-               );
-               notes.push(
-                  `Xung đột với lịch có sẵn: Phim "${s.film?.name}", 
-                  Phòng "${s.room?.name}", 
-                  Giờ ${s.showTime?.startTime} - ${endExistStr}, 
-                  Ngày ${s.scheduleDate}`
-               );
-            }
-         }
+   function finishPromotion() {
+      ElMessageBox.alert('Chương trình khuyến mãi đã được tạo thành công!', 'Hoàn tất', {
+         type: 'success',
+      }).then(() => {
+         emit('saved');
+         emit('reload');
+         emit('close');
       });
-
-      // 2️⃣ Kiểm tra xung đột trong chính scheduleRows (ngoại trừ row này)
-      scheduleRows.value.forEach((r, i) => {
-         if (i === idx) return;
-         if (r.roomId === row.roomId && r.scheduleDate === row.scheduleDate && r.showTimeId) {
-            const showTimeOther = showTimes.value.find((t) => t.id === r.showTimeId);
-            const startOther = showTimeOther ? toMinutes(showTimeOther.startTime) : 0;
-            const filmOther = films.value.find((f) => f.id === r.filmId);
-            const durationOther = filmOther ? filmOther.duration : 0;
-            const endOther = startOther + durationOther + CLEAN_TIME;
-
-            if (startNew < endOther && endNew > startOther) {
-               const filmName = filmOther?.name || '???';
-               const roomName = rooms.value.find((rm) => rm.id === r.roomId)?.name || '???';
-               const startTime = showTimeOther?.startTime || '??:??';
-               const date = r.scheduleDate || '??';
-               const endTimeStr = calculateEndTimeStr(showTimeOther?.startTime, durationOther);
-               notes.push(
-                  `Xung đột với dòng ${i + 1} trong bảng: Phim "${filmName}", Phòng "${roomName}", Giờ ${startTime} - ${endTimeStr}, Ngày ${date}`
-               );
-            }
-         }
-      });
-
-      if (notes.length > 0) row.note = notes.join('\n');
    }
 
-   function validateAllRows() {
-      let hasError = false;
-      const errorMessages = [];
-
-      scheduleRows.value.forEach((row, idx) => {
-         validateRow(idx);
-
-         const missingFields = [];
-
-         if (!row.filmId) missingFields.push('Phim');
-         if (!row.roomId) missingFields.push('Phòng chiếu');
-         if (!row.showTimeId) missingFields.push('Suất chiếu');
-         if (!row.scheduleDate) missingFields.push('Ngày chiếu');
-
-         if (row.note || missingFields.length > 0) {
-            hasError = true;
-
-            const lineMsg = `Dòng ${idx + 1}: `;
-
-            if (row.note) {
-               errorMessages.push(`${lineMsg}. Lỗi: ${row.note}`);
-            }
-
-            if (missingFields.length > 0) {
-               errorMessages.push(`${lineMsg}Thiếu: ${missingFields.join(', ')}`);
-            }
-         }
-      });
-
-      if (hasError) {
-         const fullMessage = 
-            "Không thể lưu vì còn lỗi sau:\n\n" +
-            errorMessages.map(msg => `• ${msg}`).join('\n') +
-            "\n\nVui lòng sửa hết các dòng trên trước khi lưu!";
-
-         showErrorAlert(fullMessage);
-         return false;
-      }
-
-      return true;
+   // Format helper
+   function formatDate(date) {
+      return date ? new Date(date).toLocaleString('vi-VN') : '—';
    }
-
-   async function handleCreate() {
-      if (!validateAllRows()) return;
-
-      try {
-         const headers = { Authorization: `Bearer ${token}` };
-         const payload = scheduleRows.value.map((r) => ({
-            filmId: r.filmId,
-            roomId: r.roomId,
-            showTimeId: r.showTimeId,
-            scheduleDate: r.scheduleDate,
-         }));
-
-         console.log('payload: ', payload);
-
-         const res = await axios.post(`${API_BASE_URL}/admin/schedules/bulk`, payload, {
-            headers,
-         });
-         if (res.data?.status === 'success') {
-            showToast(res.data.message || 'Thêm thành công', 'success');
-            await loadAllData();
-            clearAllRows();
-            switchToList();
-         } else {
-            showErrorAlert(res.data?.message || 'Thêm thất bại');
-         }
-      } catch (err) {
-         console.error('Lỗi submitGrid:', err);
-         showErrorAlert(err.response?.data?.message || 'Có lỗi khi thêm nhiều lịch chiếu');
-      }
+   function formatPrice(price) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
    }
-
-   // ------------------- Switch Form/List -------------------
-   function switchToForm() {
-      showForm.value = true;
-      isEditing.value = false;
-      clearAllRows();
-   }
-   function switchToList() {
-      showForm.value = false;
-      isEditing.value = false;
-      resetForm();
-   }
-
-   // Reset form
-   function resetForm() {
-      form.value = { id: null, filmId: '', roomId: '', showTimeId: '', scheduleDate: '' };
-   }
-
-   // ------------------- Mounted -------------------
-   onMounted(() => {
-      loadAllData();
-   });
 </script>
 
 <style scoped>
-   .container-fluid {
-      padding: 10px 15px;
-      position: relative;
-      z-index: 1;
+   /* Đẹp như app bán hàng */
+   .promotion-wizard {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
    }
-   /* Switch Buttons */
-   .btn-box {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
+   .wizard-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
    }
 
-   .switch-btn {
-      background: #b8deb8;
-      border: 2px solid #2b2b2b;
-      padding: 8px 16px;
-      font-size: 16px;
-      border-radius: 15px;
+   .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1f2937;
+   }
+
+   /* Grid sản phẩm */
+   .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+   }
+   .product-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      overflow: hidden;
       cursor: pointer;
-      font-weight: bold;
-      transition: 0.25s;
+      transition: all 0.3s;
    }
-
-   .switch-btn:hover {
-      transform: translateY(-2px);
+   .product-card:hover {
+      border-color: #2ecc71;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.15);
    }
-
-   .switch-btn.active {
-      background: #7ee07e;
-      box-shadow: 0 0 10px rgba(0, 200, 0, 0.3);
+   .product-card.selected {
+      border-color: #2ecc71;
+      background: #f0fdf4;
    }
-   .small-select {
-      min-width: 100px;
+   .img-wrapper {
+      position: relative;
+      height: 160px;
    }
-   .row-error {
-      background-color: #ffe5e5;
+   .img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
    }
-   .note-cell {
-      min-width: 150px;
-   }
-   .toast-custom {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      color: #fff;
-      padding: 8px 15px;
-      border-radius: 5px;
-      z-index: 9999;
-   }
-   .fade-enter-active,
-   .fade-leave-active {
-      transition: opacity 0.3s;
-   }
-   .fade-enter-from,
-   .fade-leave-to {
+   .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(46, 204, 113, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       opacity: 0;
+      transition: 0.3s;
+   }
+   .product-card.selected .overlay {
+      opacity: 1;
    }
 
-   .vs__dropdown-menu {
-      z-index: 1050 !important;
+   /* Summary */
+   .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      align-items: start;
+   }
+   .summary-poster {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 16px;
+   }
+   .summary-info {
+      background: #f9fafb;
+      padding: 24px;
+      border-radius: 16px;
+   }
+   .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
    }
 
-   .vs__dropdown-option,
-   .vs__dropdown-toggle,
-   .vs__search {
-      z-index: inherit;
+   /* Footer */
+   .footer-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
    }
 
-   .table-responsive {
-      max-height: 500px;
-      overflow-y: auto;
-      transform: translateZ(0);
-      -webkit-overflow-scrolling: touch;
+   /* Animation */
+   .animate-fade {
+      animation: fadeIn 0.4s ease;
    }
-
-   .table thead th {
-      position: sticky;
-      top: 0;
-      background-color: #d1e7dd;
-      z-index: 20 !important;
-      box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-   }
-
-   body.modal-open .vs__dropdown-menu,
-   body .vs__dropdown-menu {
-      z-index: 1050 !important;
-   }
-
-   .vs__dropdown-toggle {
-      white-space: nowrap;
-   }
-
-   .v-select.drop-up .vs__dropdown-menu {
-      bottom: 100%;
-      top: auto !important;
+   @keyframes fadeIn {
+      from {
+         opacity: 0;
+         transform: translateY(10px);
+      }
+      to {
+         opacity: 1;
+         transform: none;
+      }
    }
 </style>
-
-<!-- <script setup>
-   import { ref, reactive, onMounted } from 'vue';
-   import axios from 'axios';
-
-   const API_BASE_URL = 'http://localhost:8080/api/auth/films';
-   const API_CAT_URL = 'http://localhost:8080/api/auth/films/categories';
-
-   // UI State
-   const showForm = ref(false);
-   const films = ref([]);
-   const categories = ref([]);
-   const loading = ref(false);
-   const editingId = ref(null);
-
-   // Form data
-   const filmForm = reactive({
-      title: '',
-      country: '',
-      director: '',
-      releaseDate: '',
-      actors: '',
-      description: '',
-      duration: '',
-      status: 'coming',
-      categories: [],
-      poster: null,
-      trailer: null,
-   });
-
-   // --- ✅ Validation ---
-   const validateForm = () => {
-      if (!filmForm.title) return 'Tên phim không được để trống';
-      if (!filmForm.country) return 'Quốc gia không được để trống';
-      if (!filmForm.director) return 'Đạo diễn không được để trống';
-      if (!filmForm.releaseDate) return 'Ngày phát hành không được để trống';
-      if (!filmForm.duration || filmForm.duration <= 0) return 'Thời lượng không hợp lệ';
-      if (filmForm.categories.length === 0) return 'Hãy chọn ít nhất 1 thể loại';
-      return null;
-   };
-
-   function getCategoryNames(film) {
-   return film?.categories?.length
-      ? film.categories.map(c => c?.name ?? 'Không tên').join(', ')
-      : 'Đang cập nhật...';
-   }
-
-
-   // --- ✅ Load films ---
-   const loadFilms = async () => {
-      loading.value = true;
-      const res = await axios.get(API_BASE_URL);
-      films.value = res.data;
-      loading.value = false;
-   };
-
-   // --- ✅ Load categories ---
-   const loadCategories = async () => {
-      const res = await axios.get(API_CAT_URL);
-      categories.value = res.data;
-   };
-
-   // --- ✅ Handle file upload ---
-   const handlePoster = (e) => (filmForm.poster = e.target.files[0]);
-   const handleTrailer = (e) => (filmForm.trailer = e.target.files[0]);
-
-   // --- ✅ Create / Update film ---
-   const saveFilm = async () => {
-      const error = validateForm();
-      if (error) return alert(error);
-
-      const formData = new FormData();
-      for (const key in filmForm) {
-         if (key !== 'categories') formData.append(key, filmForm[key]);
-      }
-      filmForm.categories.forEach((c) => formData.append('categories', c));
-
-      try {
-         if (editingId.value) {
-            await axios.put(`${API_BASE_URL}/${editingId.value}`, formData);
-            alert('✅ Cập nhật phim thành công');
-         } else {
-            await axios.post(API_BASE_URL, formData);
-            alert('✅ Thêm phim thành công');
-         }
-
-         resetForm();
-         loadFilms();
-         showForm.value = false;
-      } catch (e) {
-         alert('❌ Lỗi khi lưu phim');
-      }
-   };
-
-   // --- ✅ Edit film ---
-   const editFilm = (film) => {
-      showForm.value = true;
-      editingId.value = film.id;
-      Object.assign(filmForm, film, { poster: null, trailer: null });
-   };
-
-   // --- ✅ Delete film ---
-   const deleteFilm = async (id) => {
-      if (!confirm('Bạn có chắc muốn xoá phim này?')) return;
-      await axios.delete(`${API_BASE_URL}/${id}`);
-      alert('🗑️ Xoá phim thành công');
-      loadFilms();
-   };
-
-   // --- ✅ Reset form ---
-   const resetForm = () => {
-      Object.assign(filmForm, {
-         title: '',
-         country: '',
-         director: '',
-         releaseDate: '',
-         actors: '',
-         description: '',
-         duration: '',
-         status: 'coming',
-         categories: [],
-         poster: null,
-         trailer: null,
-      });
-      editingId.value = null;
-   };
-
-   // --- ✅ Init ---
-   onMounted(() => {
-      loadFilms();
-      loadCategories();
-   });
-</script> -->

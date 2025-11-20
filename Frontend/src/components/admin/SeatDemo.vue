@@ -1,484 +1,499 @@
-<script setup>
-import { ref, computed, onMounted } from 'vue';
-
-// --- DỮ LIỆU ---
-const selectedSeats = ref([]);
-const reservedSeats = ref([
-  'A5', 'A6', 'G1', 'G2', 'O_couple3_left', 'O_couple3_right'
-]);
-
-const seatPrices = {
-  normal: 100000,
-  vip: 150000,
-  couple: 250000
-};
-
-const seats = ref([]);
-
-// --- TẠO DANH SÁCH GHẾ ---
-const generateSeats = () => {
-  const seatList = [];
-  const rowLabels = 'ABCDEFGHIJKLMNOP'.split('');
-  const numCols = 16;
-
-  for (let row of rowLabels) {
-    if (row === 'N' || row === 'O') {
-      // Ghế couple
-      for (let j = 1; j <= numCols / 2; j++) {
-        const base = `${row}_couple${j}`;
-
-        seatList.push({
-          id: `${base}_left`,
-          row,
-          number: j,
-          type: 'couple',
-          isReserved: reservedSeats.value.includes(`${base}_left`),
-          isLeft: true
-        });
-
-        seatList.push({
-          id: `${base}_right`,
-          row,
-          number: j,
-          type: 'couple',
-          isReserved: reservedSeats.value.includes(`${base}_right`),
-          isLeft: false
-        });
-      }
-    } else {
-      // Ghế thường/VIP
-      for (let j = 1; j <= numCols; j++) {
-        const id = `${row}${j}`;
-        const type = row >= 'G' && row <= 'M' ? 'vip' : 'normal';
-
-        seatList.push({
-          id,
-          row,
-          number: j,
-          type,
-          isReserved: reservedSeats.value.includes(id)
-        });
-      }
-    }
-  }
-
-  seats.value = seatList;
-};
-
-// --- HÀM CHECK ---
-const isReserved = (seatId) => reservedSeats.value.includes(seatId);
-const isSelected = (seatId) => selectedSeats.value.includes(seatId);
-
-const getSeatType = (seatId) => {
-  const found = seats.value.find(s => s.id === seatId);
-  return found ? found.type : null;
-};
-
-// --- XỬ LÝ CLICK GHẾ ---
-const toggleSeat = (seat) => {
-  if (seat.isReserved) return;
-
-  // --- GHẾ COUPLE ---
-  if (seat.type === 'couple') {
-    const partnerId = seat.isLeft
-      ? seat.id.replace('_left', '_right')
-      : seat.id.replace('_right', '_left');
-
-    if (isReserved(partnerId)) {
-      alert('Không thể chọn cặp ghế này vì một nửa đã được đặt trước!');
-      return;
-    }
-
-    const base = seat.id.replace('_left', '').replace('_right', '');
-
-    const isAlready =
-      selectedSeats.value.includes(seat.id) ||
-      selectedSeats.value.includes(partnerId);
-
-    if (isAlready) {
-      selectedSeats.value = selectedSeats.value.filter(s => !s.startsWith(base));
-    } else {
-      selectedSeats.value.push(seat.id, partnerId);
-    }
-
-    return;
-  }
-
-  // --- GHẾ THƯỜNG/VIP ---
-  const index = selectedSeats.value.indexOf(seat.id);
-
-  if (index > -1) {
-    selectedSeats.value.splice(index, 1);
-  } else {
-    selectedSeats.value.push(seat.id);
-  }
-};
-
-// --- TÍNH TỔNG TIỀN ---
-const totalCalculation = computed(() => {
-  let total = 0;
-  const countedCouples = new Set();
-
-  for (let seatId of selectedSeats.value) {
-    const type = getSeatType(seatId);
-
-    if (type === 'couple') {
-      const base = seatId.split('_couple')[0] + '_couple' + seatId.split('_couple')[1].split('_')[0];
-      if (!countedCouples.has(base)) {
-        countedCouples.add(base);
-        total += seatPrices.couple;
-      }
-    } else {
-      total += seatPrices[type];
-    }
-  }
-
-  return total;
-});
-
-// --- FORMAT HIỂN THỊ GHẾ ---
-const formattedSelectedSeats = computed(() => {
-  return selectedSeats.value
-    .filter(s => !s.includes('_right'))
-    .map(s => s.replace('_left', ''))
-    .join(', ') || 'Chưa chọn ghế nào';
-});
-
-// --- KHỞI TẠO ---
-onMounted(() => generateSeats());
-</script>
-
 <template>
-  <div class="container my-5 cinema-layout">
-    <div class="screen-area mb-5">
-      <h2 class="text-center screen-text">Màn hình</h2>
-    </div>
+   <div class="cinema-seating">
+      <h2 class="screen">MÀN HÌNH</h2>
 
-    <!-- SƠ ĐỒ GHẾ -->
-    <div class="seat-map d-flex flex-column align-items-center">
+      <div class="seats-container">
+         <!-- Hàng A -->
+         <div class="row" data-row="A">
+            <span class="row-label">A</span>
+            <div class="seats">
+               <Seat
+                  v-for="n in 15"
+                  :key="n"
+                  :position="'A' + n"
+                  :seat="getSeat('A' + n)"
+                  @select="toggleSeat"
+               />
+            </div>
+         </div>
 
-      <div
-        v-for="rowLabel in 'ABCDEFGHIJKLMNO'.split('')"
-        :key="rowLabel"
-        class="seat-row d-flex justify-content-center mb-1 align-items-center"
-      >
-        <span class="row-label me-2">{{ rowLabel }}</span>
+         <!-- Hàng B -->
+         <div class="row" data-row="B">
+            <span class="row-label">B</span>
+            <div class="seats">
+               <div class="seat-gap"></div>
+               <Seat
+                  v-for="n in [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]"
+                  :key="n"
+                  :position="'B' + n"
+                  :seat="getSeat('B' + n)"
+                  @select="toggleSeat"
+               />
+            </div>
+         </div>
 
-        <!-- GHẾ COUPLE -->
-        <template v-if="rowLabel === 'N' || rowLabel === 'O'">
-          <div
-            v-for="pair in 8"
-            :key="rowLabel + pair"
-            class="d-flex couple-pair-wrapper mx-1"
-          >
-            <template v-for="seat in seats.filter(s => s.row === rowLabel && s.number === pair && s.isLeft)">
-              <button
-                @click="toggleSeat(seat)"
-                :class="[
-                  'btn', 'btn-sm', 'seat-button', 'couple-seat',
-                  {
-                    'bg-couple-reserved': isReserved(seat.id) || isReserved(seat.id.replace('_left', '_right')),
-                    'bg-couple-selected': isSelected(seat.id),
-                    'bg-couple-available': !isSelected(seat.id)
-                      && !isReserved(seat.id)
-                      && !isReserved(seat.id.replace('_left', '_right'))
-                  }
-                ]"
-                :disabled="isReserved(seat.id) || isReserved(seat.id.replace('_left', '_right'))"
-              ></button>
-            </template>
-          </div>
-        </template>
+         <!-- Hàng C -->
+         <div class="row" data-row="C">
+            <span class="row-label">C</span>
+            <div class="seats">
+               <Seat
+                  v-for="n in 31"
+                  :key="n + 30"
+                  :position="'C' + (n + 30)"
+                  :seat="getSeat('C' + (n + 30))"
+                  @select="toggleSeat"
+               />
+            </div>
+         </div>
 
-        <!-- GHẾ THƯỜNG / VIP -->
-        <template v-else>
-          <div
-            v-for="seat in seats.filter(s => s.row === rowLabel)"
-            :key="seat.id"
-            class="seat-container mx-1"
-          >
-            <button
-              @click="toggleSeat(seat)"
-              :class="[
-                'btn', 'btn-sm', 'seat-button',
-                {
-                  'bg-vip-reserved': seat.type === 'vip' && isReserved(seat.id),
-                  'bg-vip-selected': seat.type === 'vip' && isSelected(seat.id),
-                  'bg-vip-available': seat.type === 'vip' && !isSelected(seat.id) && !isReserved(seat.id),
+         <!-- Hàng D (có VIP giữa) -->
+         <div class="row" data-row="D">
+            <span class="row-label">D</span>
+            <div class="seats">
+               <Seat
+                  v-for="n in [46, 47, 48, 49]"
+                  :key="n"
+                  :position="'D' + n"
+                  :seat="getSeat('D' + n)"
+                  @select="toggleSeat"
+               />
+               <Seat
+                  v-for="n in 50"
+                  :key="'vip' + n"
+                  :position="'D' + (n + 49)"
+                  :seat="getSeat('D' + (n + 49))"
+                  @select="toggleSeat"
+                  class="vip"
+               />
+               <Seat
+                  v-for="n in [58, 59, 60]"
+                  :key="n"
+                  :position="'D' + n"
+                  :seat="getSeat('D' + n)"
+                  @select="toggleSeat"
+               />
+            </div>
+         </div>
 
-                  'bg-normal-reserved': seat.type === 'normal' && isReserved(seat.id),
-                  'bg-normal-selected': seat.type === 'normal' && isSelected(seat.id),
-                  'bg-normal-available': seat.type === 'normal' && !isSelected(seat.id) && !isReserved(seat.id)
-                }
-              ]"
-              :disabled="isReserved(seat.id)"
-            >
-              {{ seat.number }}
-            </button>
-          </div>
-        </template>
+         <!-- Hàng E, F, G (tương tự) -->
+         <div class="row" v-for="row in ['E', 'F', 'G']" :key="row" :data-row="row">
+            <span class="row-label">{{ row }}</span>
+            <div class="seats">
+               <template v-if="row === 'E'">
+                  <Seat position="E61" :seat="getSeat('E61')" @select="toggleSeat" />
+                  <Seat position="E62" :seat="getSeat('E62')" @select="toggleSeat" />
+                  <Seat position="E63" :seat="getSeat('E63')" @select="toggleSeat" />
+                  <Seat
+                     v-for="n in 64"
+                     :key="n"
+                     :position="'E' + (n + 63)"
+                     :seat="getSeat('E' + (n + 63))"
+                     @select="toggleSeat"
+                     class="vip"
+                  />
+                  <Seat position="E73" :seat="getSeat('E73')" @select="toggleSeat" />
+                  <Seat position="E74" :seat="getSeat('E74')" @select="toggleSeat" />
+                  <Seat position="E75" :seat="getSeat('E75')" @select="toggleSeat" />
+               </template>
+
+               <template v-if="row === 'F'">
+                  <Seat
+                     v-for="n in [76, 77, 78]"
+                     :key="n"
+                     :position="'F' + n"
+                     :seat="getSeat('F' + n)"
+                     @select="toggleSeat"
+                  />
+                  <Seat
+                     v-for="n in [79, 82, 83, 84, 85, 86, 87]"
+                     :key="n"
+                     :position="'F' + n"
+                     :seat="getSeat('F' + n)"
+                     @select="toggleSeat"
+                     class="vip"
+                  />
+                  <Seat
+                     v-for="n in [88, 89, 90]"
+                     :key="n"
+                     :position="'F' + n"
+                     :seat="getSeat('F' + n)"
+                     @select="toggleSeat"
+                  />
+               </template>
+
+               <template v-if="row === 'G'">
+                  <Seat
+                     v-for="n in [91, 92, 93]"
+                     :key="n"
+                     :position="'G' + n"
+                     :seat="getSeat('G' + n)"
+                     @select="toggleSeat"
+                  />
+                  <Seat
+                     v-for="n in 94"
+                     :key="'g' + n"
+                     :position="'G' + (n + 93)"
+                     :seat="getSeat('G' + (n + 93))"
+                     @select="toggleSeat"
+                     class="vip"
+                  />
+                  <Seat
+                     v-for="n in [103, 104, 105]"
+                     :key="n"
+                     :position="'G' + n"
+                     :seat="getSeat('G' + n)"
+                     @select="toggleSeat"
+                  />
+               </template>
+            </div>
+         </div>
+
+         <!-- Khu Couple H -->
+         <div class="row couple-row">
+            <span class="row-label">H</span>
+            <div class="couple-seats">
+               <CoupleSeat
+                  v-for="pair in couplePairs"
+                  :key="pair"
+                  :position="pair"
+                  :seats="[getSeat(pair.split('-')[0]), getSeat(pair.split('-')[1])]"
+                  @select="toggleCouple"
+               />
+            </div>
+         </div>
+
+         <!-- Hàng I, J -->
+         <div class="row" v-for="row in ['I', 'J']" :key="row">
+            <span class="row-label">{{ row }}</span>
+            <div class="seats">
+               <Seat
+                  v-for="n in row === 'I'
+                     ? [121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135]
+                     : [136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150]"
+                  :key="n"
+                  :position="row + n"
+                  :seat="getSeat(row + n)"
+                  @select="toggleSeat"
+               />
+            </div>
+         </div>
+
+         <!-- Hàng K (chỉ có couple) -->
+         <div class="row couple-row">
+            <span class="row-label">K</span>
+            <div class="couple-seats k-row">
+               <CoupleSeat
+                  position="K151-152"
+                  :seats="[getSeat('K151'), getSeat('K152')]"
+                  @select="toggleCouple"
+               />
+               <CoupleSeat
+                  position="K153-154"
+                  :seats="[getSeat('K153'), getSeat('K154')]"
+                  @select="toggleCouple"
+               />
+               <CoupleSeat
+                  position="K155-156"
+                  :seats="[getSeat('K155'), getSeat('K156')]"
+                  @select="toggleCouple"
+               />
+            </div>
+         </div>
       </div>
 
-      <!-- SỐ CỘT -->
-      <div class="seat-numbers d-flex justify-content-center mt-2">
-        <span v-for="n in 16" :key="'col-'+n" class="col-number mx-2">{{ n }}</span>
-      </div>
-    </div>
-
-    <hr class="my-4" />
-
-    <!-- TÓM TẮT -->
-    <div class="summary-section mt-4 p-3 border rounded">
-      <h4>🎫 Chú thích</h4>
-
-      <div class="legend d-flex flex-wrap mb-3">
-        <div class="legend-item me-3 mb-2">
-          <span class="legend-color bg-normal-available me-1"></span> Ghế Thường
-        </div>
-        <div class="legend-item me-3 mb-2">
-          <span class="legend-color bg-vip-available me-1"></span> Ghế VIP
-        </div>
-        <div class="legend-item me-3 mb-2">
-          <span class="legend-color bg-couple-available me-1"></span> Ghế Couple
-        </div>
-        <div class="legend-item me-3 mb-2">
-          <span class="legend-color bg-couple-reserved me-1"></span> Đã Đặt
-        </div>
+      <!-- Ghế đã chọn -->
+      <div class="selected-seats">
+         <h3>Ghế đã chọn ({{ selectedSeats.length }})</h3>
+         <div class="tags">
+            <span v-for="seat in selectedSeats" :key="seat.position" class="tag">
+               {{ seat.position }}
+               <small v-if="seat.type === 'VIP'">(VIP)</small>
+               <small v-if="seat.type === 'Couple'">(Couple)</small>
+            </span>
+         </div>
+         <button @click="confirmBooking" :disabled="selectedSeats.length === 0" class="btn-confirm">
+            Xác nhận đặt ghế ({{ selectedSeats.length }} ghế)
+         </button>
       </div>
 
-      <p><strong>Ghế đã chọn:</strong> {{ formattedSelectedSeats }}</p>
-      <p><strong>Tổng cộng:</strong> {{ totalCalculation.toLocaleString('vi-VN') }} VNĐ</p>
-
-      <button class="btn btn-primary mt-2" :disabled="selectedSeats.length === 0">
-        Xác Nhận Đặt Ghế
-      </button>
-    </div>
-  </div>
+      <!-- Chú thích -->
+      <div class="legend">
+         <span
+            ><div class="legend-box normal"></div>
+            Ghế thường</span
+         >
+         <span
+            ><div class="legend-box vip"></div>
+            Ghế VIP</span
+         >
+         <span
+            ><div class="legend-box couple"></div>
+            Ghế đôi</span
+         >
+         <span
+            ><div class="legend-box selected"></div>
+            Đang chọn</span
+         >
+         <span
+            ><div class="legend-box sold"></div>
+            Đã bán</span
+         >
+      </div>
+   </div>
 </template>
 
+<script setup>
+   import axios from 'axios';
+   import { ref, computed, onMounted } from 'vue';
+
+   // Dữ liệu ghế từ API (bạn đã cung cấp)
+   const rawSeats = ref([
+      /* Paste toàn bộ mảng JSON bạn gửi ở trên vào đây */
+   ]);
+
+   async function getRawSeats() {
+      try {
+         const response = await axios.get('http://localhost:8080/api/admin/seats/room/d9589a74-9d91-460c-89ed-256148a385c2');
+         rawSeats.value = response.data;
+      } catch (error) {
+
+      }
+   }
+
+   // Tạo map để tra cứu nhanh
+   const seatMap = computed(() => {
+      const map = {};
+      rawSeats.value.forEach((s) => {
+         map[s.position] = {
+            ...s,
+            type: s.seatType.name.includes('VIP')
+               ? 'VIP'
+               : s.seatType.name.includes('Couple')
+                 ? 'Couple'
+                 : 'Normal',
+         };
+      });
+      return map;
+   });
+
+   const getSeat = (position) => seatMap.value[position] || null;
+
+   const selectedSeats = ref([]);
+
+   const toggleSeat = (position) => {
+      const seat = getSeat(position);
+      if (!seat || !seat.active) return;
+
+      const index = selectedSeats.value.findIndex((s) => s.position === position);
+      if (index > -1) {
+         selectedSeats.value.splice(index, 1);
+      } else {
+         selectedSeats.value.push({ position, type: seat.type });
+      }
+   };
+
+   const couplePairs = [
+      'H1-2',
+      'H3-4',
+      'H7-8',
+      'H9-10',
+      'H11-12',
+      'H13-14',
+      'H15-16',
+      'H107-108',
+      'H109-110',
+      'H111-112',
+      'H113-114',
+      'H115-116',
+      'H117-118',
+      'H119-120',
+   ];
+
+   const toggleCouple = (pair) => {
+      const [s1, s2] = pair.split('-').map((p) => (p.replace(/[^\d]/g, '') ? p : p));
+      const seat1 = getSeat(s1);
+      const seat2 = getSeat(s2);
+
+      if (!seat1 || !seat2 || !seat1.active || !seat2.active) return;
+
+      const hasOne = selectedSeats.value.some((s) => s.position === s1 || s.position === s2);
+      if (hasOne) {
+         selectedSeats.value = selectedSeats.value.filter(
+            (s) => s.position !== s1 && s.position !== s2
+         );
+      } else {
+         selectedSeats.value.push({ position: s1, type: 'Couple' });
+         selectedSeats.value.push({ position: s2, type: 'Couple' });
+      }
+   };
+
+   const confirmBooking = () => {
+      alert(`Đã chọn: ${selectedSeats.value.map((s) => s.position).join(', ')}`);
+      // Gọi API đặt ghế ở đây
+   };
+
+   onMounted(() => {
+      getRawSeats();
+   });
+</script>
+
 <style scoped>
-.cinema-layout {
-  background-color: #f0f0f0;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
+   .cinema-seating {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: white;
+      border-radius: 12px;
+   }
 
-.screen-area {
-  background-color: #343a40;
-  color: white;
-  padding: 15px 0;
-  border-radius: 5px;
-  border-bottom: 5px solid #28a745;
-  margin-bottom: 40px; /* Thêm khoảng cách với ghế */
-}
+   .screen {
+      background: linear-gradient(90deg, #333, #fff, #333);
+      height: 60px;
+      line-height: 60px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 30px;
+      margin-bottom: 40px;
+      font-size: 1.4rem;
+   }
 
-.screen-text {
-  margin: 0;
-  font-size: 1.5rem;
-  letter-spacing: 2px;
-}
+   .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+   }
 
-.seat-map {
-  max-width: 900px;
-  margin: auto;
-  perspective: 1000px; /* Tạo hiệu ứng 3D cho toàn bộ ghế */
-}
+   .row-label {
+      width: 30px;
+      font-weight: bold;
+      font-size: 1.2rem;
+   }
 
-.seat-row {
-  width: 100%;
-  position: relative;
-  margin-bottom: 6px; /* Giảm khoảng cách giữa các hàng */
-}
+   .seats {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      justify-content: center;
+   }
 
-.row-label {
-  font-weight: bold;
-  font-size: 0.8rem; /* Nhỏ hơn một chút */
-  width: 25px; /* Tăng chiều rộng để căn chỉnh */
-  text-align: right;
-  line-height: 38px; /* Căn chỉnh với ghế */
-  color: #555;
-}
+   .seat {
+      width: 36px;
+      height: 36px;
+      background: #444;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+   }
 
-.seat-container {
-    width: 38px;
-    height: 38px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* Loại bỏ mx-1 từ template nếu bạn muốn khoảng cách do margin-left/right của ghế tự tạo */
-}
+   .seat.normal:not(.sold):hover {
+      background: #0f0;
+      transform: scale(1.1);
+   }
+   .seat.vip:not(.sold) {
+      background: #0066ff;
+   }
+   .seat.vip:not(.sold):hover {
+      background: #00ccff;
+   }
+   .seat.couple {
+      background: #ff1493;
+   }
+   .seat.selected {
+      background: #ffd700 !important;
+      color: black;
+   }
+   .seat.sold {
+      background: #222 !important;
+      cursor: not-allowed;
+      opacity: 0.5;
+   }
 
-.seat-button {
-  width: 30px; /* Chiều rộng ghế */
-  height: 35px; /* Chiều cao ghế */
-  padding: 0;
-  font-size: 0.65rem; /* Kích thước số ghế nhỏ hơn */
-  font-weight: bold;
-  border-radius: 4px 4px 10px 10px; /* Bo tròn góc trên nhiều hơn góc dưới */
-  border: none; /* Bỏ viền Bootstrap */
-  cursor: pointer;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2), inset 0 -3px 3px rgba(0,0,0,0.2); /* Tạo hiệu ứng đổ bóng 3D */
-  color: #fff;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Tạo bóng chữ */
-  
-  /* Tạo phần lưng ghế và tay vịn giả */
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    background-color: inherit; /* Kế thừa màu ghế */
-  }
+   .couple-row .couple-seats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+   }
 
-  /* Lưng ghế */
-  &::before {
-    top: -8px;
-    left: 2px;
-    right: 2px;
-    height: 10px;
-    border-radius: 3px 3px 0 0;
-    transform: translateZ(-5px); /* Đẩy ra phía sau một chút */
-    opacity: 0.8;
-  }
+   .couple-seat {
+      display: flex;
+      gap: 4px;
+   }
 
-  /* Tay vịn (chỉ là ảo ảnh CSS) */
-  &::after {
-    bottom: -3px;
-    left: -2px;
-    right: -2px;
-    height: 5px;
-    border-radius: 0 0 3px 3px;
-    background-color: rgba(0,0,0,0.1); /* Màu tối hơn một chút */
-    transform: translateZ(-3px);
-  }
+   .selected-seats {
+      margin-top: 30px;
+      padding: 20px;
+      background: #16213e;
+      border-radius: 10px;
+   }
 
-  &:not(:disabled):hover {
-    transform: translateY(-3px) rotateX(5deg); /* Nhấn vào sẽ nhấc lên */
-    box-shadow: 0 6px 10px rgba(0,0,0,0.3), inset 0 -3px 3px rgba(0,0,0,0.2);
-  }
+   .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+   }
 
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-    filter: grayscale(30%); /* Làm mờ ghế đã đặt */
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); /* Đổ bóng lõm vào */
-    transform: translateZ(-2px);
-  }
-}
+   .tag {
+      background: #0f3460;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+   }
 
+   .btn-confirm {
+      margin-top: 15px;
+      padding: 12px 30px;
+      background: #e94560;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+   }
 
-/* Màu sắc cho các loại ghế (sử dụng màu như hình ảnh bạn cung cấp) */
-.bg-normal-available { background-color: #4a90e2; } /* Xanh dương */
-.bg-normal-selected { background-color: #2ecc71; } /* Xanh lá khi chọn */
-.bg-normal-reserved { background-color: #7f8c8d; } /* Xám khi đã đặt */
+   .btn-confirm:disabled {
+      background: #555;
+      cursor: not-allowed;
+   }
 
-.bg-vip-available { background-color: #e74c3c; } /* Đỏ */
-.bg-vip-selected { background-color: #2ecc71; } /* Xanh lá khi chọn */
-.bg-vip-reserved { background-color: #7f8c8d; } /* Xám khi đã đặt */
+   .legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+   }
 
-/* Ghế couple */
-.couple-pair-wrapper {
-  display: flex;
-  margin: 0 4px; /* Khoảng cách giữa các cặp */
-}
+   .legend-box {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+      margin-right: 6px;
+      border-radius: 4px;
+   }
 
-.couple-seat {
-  width: 65px; /* Chiều rộng cho cả cặp ghế */
-  height: 35px; /* Chiều cao */
-  padding: 0;
-  font-size: 0.65rem;
-  font-weight: bold;
-  border-radius: 4px 4px 10px 10px;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2), inset 0 -3px 3px rgba(0,0,0,0.2);
-  color: #fff;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    background-color: inherit;
-  }
-
-  /* Lưng ghế couple */
-  &::before {
-    top: -8px;
-    left: 2px;
-    right: 2px;
-    height: 10px;
-    border-radius: 3px 3px 0 0;
-    transform: translateZ(-5px);
-    opacity: 0.8;
-  }
-
-  /* Tay vịn (giả) cho ghế couple */
-  &::after {
-    bottom: -3px;
-    left: -2px;
-    right: -2px;
-    height: 5px;
-    border-radius: 0 0 3px 3px;
-    background-color: rgba(0,0,0,0.1);
-    transform: translateZ(-3px);
-  }
-
-  &:not(:disabled):hover {
-    transform: translateY(-3px) rotateX(5deg);
-    box-shadow: 0 6px 10px rgba(0,0,0,0.3), inset 0 -3px 3px rgba(0,0,0,0.2);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-    filter: grayscale(30%);
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-    transform: translateZ(-2px);
-  }
-}
-
-.bg-couple-available { background-color: #ff69b4; } /* Hồng */
-.bg-couple-selected { background-color: #2ecc71; } /* Xanh lá khi chọn */
-.bg-couple-reserved { background-color: #7f8c8d; } /* Xám khi đã đặt */
-
-
-/* Số cột ở dưới */
-.seat-numbers {
-    padding-left: 25px; /* Căn chỉnh với nhãn hàng */
-}
-.col-number {
-    font-size: 0.7rem; /* Nhỏ hơn một chút */
-    font-weight: bold;
-    width: 38px;
-    text-align: center;
-    color: #555;
-}
-
-/* Chú thích */
-.legend-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-}
-.legend-color {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px 4px 10px 10px; /* Bo tròn góc để giống ghế */
-    border: none;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-    margin-right: 5px;
-}
-
-.legend-color.bg-normal-available { background-color: #4a90e2; }
-.legend-color.bg-vip-available { background-color: #e74c3c; }
-.legend-color.bg-couple-available { background-color: #ff69b4; }
-.legend-color.bg-couple-reserved { background-color: #7f8c8d; }
+   .legend-box.normal {
+      background: #444;
+   }
+   .legend-box.vip {
+      background: #0066ff;
+   }
+   .legend-box.couple {
+      background: #ff1493;
+   }
+   .legend-box.selected {
+      background: #ffd700;
+   }
+   .legend-box.sold {
+      background: #222;
+   }
 </style>
-
-
