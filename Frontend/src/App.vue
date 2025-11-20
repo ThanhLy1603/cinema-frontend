@@ -1,8 +1,9 @@
 <template>
   <div class="container-fluid">
-    <!-- <router-view /> -->
-   <RoomSeatsPage></RoomSeatsPage>
+    <router-view />
+   <!-- <RoomSeatsPage></RoomSeatsPage> -->
       <!-- <Script></Script> -->
+
   </div>
 </template>
 
