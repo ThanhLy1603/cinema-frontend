@@ -253,7 +253,7 @@
          reverseButtons: true
       });
 
-      return result.isConfirmed; // Trả về true nếu người dùng bấm "Xác nhận"
+      return result.isConfirmed;
    }
 
 
@@ -333,6 +333,16 @@
       }
 
       if (!showBtnUpdate.value) {
+         if (!form.value.poster) {
+            showToast('Bạn chưa tải poster phim', 'error');
+            return;
+         }
+
+         if (!form.value.trailer) {
+            showToast('Bạn chưa tải trailer phim', 'error');
+            return;
+         }
+
          try {
             const url = `${API_BASE_URL}/admin/films/create`;
             const response = await axios.post(
