@@ -76,7 +76,7 @@
          ProductManager: 'Đồ ăn',
          SeatsManager: 'Ghế ngồi',
          ScheduleManager: 'Lịch chiếu',
-         ProductPricePage: 'Giá sản phẩm'
+         ProductPricePage: 'Giá sản phẩm',
       };
       return map[activeComponent.value] || '';
    });

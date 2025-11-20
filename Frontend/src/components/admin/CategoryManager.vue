@@ -1,37 +1,4 @@
 <template>
-  <div class="container-fluid categories-page mt-3">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="fw-bold text-success">📂 Quản lý Danh Mục</h3>
-    </div>
-
-    <div class="row g-3">
-      <!-- Form tạo danh mục -->
-      <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title text-success text-center mb-3">+ Thêm danh mục mới</h5>
-
-            <form @submit.prevent="createCategory">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Tên danh mục *</label>
-                <input
-                  v-model="category.name"
-                  type="text"
-                  class="form-control"
-                  placeholder="Nhập tên danh mục..."
-                  required
-                />
-              </div>
-              <button type="submit" class="btn btn-success w-100">
-                + Thêm danh mục
-              </button>
-            </form>
-          </div>
-        </div>
-        </div>
-        </div>
-        </div>
 
    <div class="container-fluid categories-page mt-3">
       <!-- Header -->
