@@ -29,6 +29,7 @@
    { name: "Danh mục", component: "CategoryManager" },
    { name: "Đồ ăn", component: "ProductManager" },
    { name: "Khuyến mại", component: "PromotionManager" },
+   { name: "Giá vé", component:"PriceTicketManage"}
    ];
 
    function openComponent(componentName) {
