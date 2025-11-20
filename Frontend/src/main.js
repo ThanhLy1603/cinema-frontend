@@ -1,32 +1,45 @@
 import { createApp } from 'vue';
 import './style.css';
 import App from './App.vue';
-// Import Bootstrap CSS và JS
+
+// Bootstrap CSS & JS
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-// Import Vue3 Select
-import 'vue3-select/dist/vue3-select.css'
+// Vue3 Select
+import 'vue3-select/dist/vue3-select.css';
 
-// Import SweetAlert2
-import VueSweetalert2 from 'vue-sweetalert2'; 
+// SweetAlert2
+import VueSweetalert2 from 'vue-sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+
+// Element Plus
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import 'element-plus/theme-chalk/dark/css-vars.css';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+
+// Router
 import router from './router';
 
-// 1. Khởi tạo ứng dụng
+// Tạo app
 const app = createApp(App);
 
-// 2. Định nghĩa cấu hình mặc định cho SweetAlert2 (Tùy chọn)
+// Cấu hình SweetAlert2
 const swalOptions = {
-    confirmButtonColor: '#94e900', // Màu xanh của Vue
-    cancelButtonColor: '#ff7674',
+  confirmButtonColor: '#94e900',
+  cancelButtonColor: '#ff7674',
 };
 
-// 3. ĐĂNG KÝ CÁC PLUGIN BẰNG app.use()
-// Đăng ký SweetAlert2. Điều này tạo ra biến toàn cục $swal
-app.use(VueSweetalert2, swalOptions); 
-// Đăng ký Vue Router
+// Đăng ký plugin
 app.use(router);
+app.use(VueSweetalert2, swalOptions);
+app.use(ElementPlus);
 
-// 4. Mount ứng dụng
+// Đăng ký toàn bộ icon Element Plus
+for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(name, component);
+}
+
+// Mount
 app.mount('#app');

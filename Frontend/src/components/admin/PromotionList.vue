@@ -89,9 +89,15 @@
 
    const IMG_URL = import.meta.env.VITE_IMAGE_URL;
 
-   const props = defineProps({
-      promotions: { type: Array, default: () => [] },
-   });
+   // const props = defineProps({
+   //    promotions: { type: Array, default: () => [] },
+   // });
+
+   const props = defineProps({ promotions: Array })
+   const emit = defineEmits(['edit','delete'])
+
+   function edit(item) { emit('edit', item) }
+   function del(id) { emit('delete', id) }
 
    const itemsPerPage = 5;
    const currentPage = ref(1);
