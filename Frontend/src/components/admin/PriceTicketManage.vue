@@ -303,7 +303,15 @@ const filteredPriceTickets = computed(() => priceTickets.value.filter((pt) => {
   return true;
 }));
 
-// pagination computed (giống lịch chiếu)
+function goToPage(p) {
+      if (p >= 1 && p <= totalPages.value) currentPage.value = p;
+   }
+   function prevPage() {
+      if (currentPage.value > 1) currentPage.value--;
+   }
+   function nextPage() {
+      if (currentPage.value < totalPages.value) currentPage.value++;
+   }
 
 async function loadAllData() {
   try {
@@ -455,7 +463,204 @@ function handleEdit(pt) {
   };
 }
 
-// các hàm addRow, removeRow, clearAllRows, switchToForm, switchToList, resetForm giống hệt lịch chiếu
+function addRow() {
+      scheduleRows.value.push({
+         filmId: '',
+         roomId: '',
+         showTimeId: '',
+         scheduleDate: '',
+         note: '',
+      });
+   }
+
+   function removeRow(index) {
+      if (scheduleRows.value.length > 1) scheduleRows.value.splice(index, 1);
+      else
+         scheduleRows.value[0] = {
+            filmId: '',
+            roomId: '',
+            showTimeId: '',
+            scheduleDate: '',
+            note: '',
+         };
+   }
+
+   function clearAllRows() {
+      scheduleRows.value = [{ filmId: '', roomId: '', showTimeId: '', scheduleDate: '', note: '' }];
+   }
+
+   function toMinutes(timeStr) {
+      if (!timeStr) return 0;
+      const [hour, minute] = timeStr.split(':').map(Number);
+      return hour * 60 + minute;
+   }
+
+   function calculateEndTimeStr(startTimeStr, filmDurationMinutes = 0) {
+      if (!startTimeStr) return '??:??';
+      const [h, m] = startTimeStr.split(':').map(Number);
+
+      // tổng phút: giờ bắt đầu + duration phim + CLEAN_TIME
+      const total = h * 60 + m + (filmDurationMinutes || 0) + CLEAN_TIME;
+
+      const hh = String(Math.floor(total / 60) % 24).padStart(2, '0'); // nếu qua ngày thì mod 24
+      const mm = String(total % 60).padStart(2, '0');
+
+      return `${hh}:${mm}`;
+   }
+
+   function validateRow(idx) {
+      const row = scheduleRows.value[idx];
+      row.note = '';
+
+      // Nếu chưa điền đủ thông tin, bỏ qua
+      if (!row.roomId || !row.showTimeId || !row.scheduleDate) return;
+
+      const notes = [];
+
+      // Lấy thời gian bắt đầu và kết thúc của row mới
+      const showTimeNew = showTimes.value.find((t) => t.id === row.showTimeId);
+      if (!showTimeNew) return;
+      const startNew = toMinutes(showTimeNew.startTime);
+      const filmNew = films.value.find((f) => f.id === row.filmId);
+      const durationNew = filmNew ? filmNew.duration : 0;
+      const endNew = startNew + durationNew + CLEAN_TIME;
+
+      // 1️⃣ Kiểm tra xung đột với existing schedules
+      schedules.value.forEach((s) => {
+         if (s.room?.id === row.roomId && s.scheduleDate === row.scheduleDate) {
+            const startExist = toMinutes(s.showTime.startTime);
+            const endExist = startExist + (s.film?.duration || 0) + CLEAN_TIME;
+
+            if (startNew < endExist && endNew > startExist) {
+               const endExistStr = calculateEndTimeStr(
+                  s.showTime?.startTime,
+                  s.film?.duration || 0
+               );
+               notes.push(
+                  `Xung đột với lịch có sẵn: Phim "${s.film?.name}", 
+                  Phòng "${s.room?.name}", 
+                  Giờ ${s.showTime?.startTime} - ${endExistStr}, 
+                  Ngày ${s.scheduleDate}`
+               );
+            }
+         }
+      });
+
+      // 2️⃣ Kiểm tra xung đột trong chính scheduleRows (ngoại trừ row này)
+      scheduleRows.value.forEach((r, i) => {
+         if (i === idx) return;
+         if (r.roomId === row.roomId && r.scheduleDate === row.scheduleDate && r.showTimeId) {
+            const showTimeOther = showTimes.value.find((t) => t.id === r.showTimeId);
+            const startOther = showTimeOther ? toMinutes(showTimeOther.startTime) : 0;
+            const filmOther = films.value.find((f) => f.id === r.filmId);
+            const durationOther = filmOther ? filmOther.duration : 0;
+            const endOther = startOther + durationOther + CLEAN_TIME;
+
+            if (startNew < endOther && endNew > startOther) {
+               const filmName = filmOther?.name || '???';
+               const roomName = rooms.value.find((rm) => rm.id === r.roomId)?.name || '???';
+               const startTime = showTimeOther?.startTime || '??:??';
+               const date = r.scheduleDate || '??';
+               const endTimeStr = calculateEndTimeStr(showTimeOther?.startTime, durationOther);
+               notes.push(
+                  `Xung đột với dòng ${i + 1} trong bảng: Phim "${filmName}", Phòng "${roomName}", Giờ ${startTime} - ${endTimeStr}, Ngày ${date}`
+               );
+            }
+         }
+      });
+
+      if (notes.length > 0) row.note = notes.join('\n');
+   }
+
+   function validateAllRows() {
+      let hasError = false;
+      const errorMessages = [];
+
+      scheduleRows.value.forEach((row, idx) => {
+         validateRow(idx);
+
+         const missingFields = [];
+
+         if (!row.filmId) missingFields.push('Phim');
+         if (!row.roomId) missingFields.push('Phòng chiếu');
+         if (!row.showTimeId) missingFields.push('Suất chiếu');
+         if (!row.scheduleDate) missingFields.push('Ngày chiếu');
+
+         if (row.note || missingFields.length > 0) {
+            hasError = true;
+
+            const lineMsg = `Dòng ${idx + 1}: `;
+
+            if (row.note) {
+               errorMessages.push(`${lineMsg}. Lỗi: ${row.note}`);
+            }
+
+            if (missingFields.length > 0) {
+               errorMessages.push(`${lineMsg}Thiếu: ${missingFields.join(', ')}`);
+            }
+         }
+      });
+
+      if (hasError) {
+         const fullMessage = 
+            "Không thể lưu vì còn lỗi sau:\n\n" +
+            errorMessages.map(msg => `• ${msg}`).join('\n') +
+            "\n\nVui lòng sửa hết các dòng trên trước khi lưu!";
+
+         showErrorAlert(fullMessage);
+         return false;
+      }
+
+      return true;
+   }
+
+   async function handleCreate() {
+      if (!validateAllRows()) return;
+
+      try {
+         const headers = { Authorization: `Bearer ${token}` };
+         const payload = scheduleRows.value.map((r) => ({
+            filmId: r.filmId,
+            roomId: r.roomId,
+            showTimeId: r.showTimeId,
+            scheduleDate: r.scheduleDate,
+         }));
+
+         console.log('payload: ', payload);
+
+         const res = await axios.post(`${API_BASE_URL}/admin/schedules/bulk`, payload, {
+            headers,
+         });
+         if (res.data?.status === 'success') {
+            showToast(res.data.message || 'Thêm thành công', 'success');
+            await loadAllData();
+            clearAllRows();
+            switchToList();
+         } else {
+            showErrorAlert(res.data?.message || 'Thêm thất bại');
+         }
+      } catch (err) {
+         console.error('Lỗi submitGrid:', err);
+         showErrorAlert(err.response?.data?.message || 'Có lỗi khi thêm nhiều lịch chiếu');
+      }
+   }
+
+   // ------------------- Switch Form/List -------------------
+   function switchToForm() {
+      showForm.value = true;
+      isEditing.value = false;
+      clearAllRows();
+   }
+   function switchToList() {
+      showForm.value = false;
+      isEditing.value = false;
+      resetForm();
+   }
+
+   // Reset form
+   function resetForm() {
+      form.value = { id: null, filmId: '', roomId: '', showTimeId: '', scheduleDate: '' };
+   }
 
 onMounted(() => {
   loadAllData();
