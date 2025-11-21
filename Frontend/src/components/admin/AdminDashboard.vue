@@ -40,6 +40,8 @@
    import SeatsManager from '../admin/SeatsManager.vue';
    import ScheduleManager from './ScheduleManager.vue';
    import PromotionManager from './PromotionManager.vue';
+   import ProductPricePage from './ProductPricePage.vue';
+   import PriceTicketManager from './PriceTicketManager.vue';
 
    // Router
    const route = useRoute();
@@ -58,7 +60,9 @@
       ProductManager,
       SeatsManager,
       ScheduleManager,
-      PromotionManager
+      PromotionManager,
+      ProductPricePage,
+      PriceTicketManager
    };
 
    // Component hiện tại hiển thị
@@ -76,7 +80,9 @@
          ProductManager: 'Đồ ăn',
          SeatsManager: 'Ghế ngồi',
          ScheduleManager: 'Lịch chiếu',
-         PromotionManager:'Khuyến mại'
+         PromotionManager:'Khuyến mại',
+         ProductPricePage: 'Giá sản phẩm',
+         PriceTicketManager: 'Giá vé'
       };
       return map[activeComponent.value] || '';
    });

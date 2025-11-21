@@ -1,4 +1,5 @@
 <template>
+
    <div class="container-fluid categories-page mt-3">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-3">
