@@ -1,115 +1,231 @@
 <template>
-   <div class="page-wrap">
-      <h2>Seat map — Phòng</h2>
-
-      <div class="meta">
-         <label>Room ID:</label>
-         <input v-model="roomId" placeholder="Nhập roomId" />
-         <button @click="fetchSeats">Tải ghế</button>
+   <div class="cinema-map">
+      <div class="screen w-75"></div>
+      <div class="legend">
+         <div><span class="seat-item standard"></span> Ghế thường</div>
+         <div><span class="seat-item vip"></span> Ghế VIP</div>
+         <div><span class="seat-item couple"></span> Ghế đôi</div>
+         <div><span class="seat-item selected"></span> Đang chọn</div>
+         <div><span class="seat-item disabled"></span> Đã bán</div>
       </div>
+      <table>
+         <tr v-for="row in seatRows" :key="row.label">
+            <td v-for="seat in row.seats" :key="seat">
+               <div class="seat-wapper">
+                  <div
+                     :class="[
+                        'seat-item',
+                        { standard: seat.seatType == 'Ghế Thường' },
+                        { vip: seat.seatType == 'Ghế VIP' },
+                        { couple: seat.seatType == 'Ghế Couple' },
+                        { selected: seat.status == 'holding' },
+                        { disabled: seat.status == 'booked' },
+                     ]"
 
-      <div v-if="loading" class="info">Đang tải...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else>
-         <SeatMap
-            :seats="seats"
-            :columns="columns"
-            :cellSizePx="cellSize"
-            @select="onSelect"
-            @deselect="onDeselect"
-            @confirm="onConfirm"
-            @click-seat="onClickSeat"
-         />
-      </div>
-
-      <div class="bottom">
-         <h4>Thông tin</h4>
-         <div>Room name: {{ roomName || '—' }}</div>
-         <div>Ghế tổng: {{ seats.length }}</div>
-         <div>Đã chọn: {{ confirmedPositions }}</div>
-      </div>
+                     @click="toggleSeat(seat)"
+                  ></div>
+               </div>
+            </td>
+         </tr>
+      </table>
    </div>
 </template>
 
 <script setup>
-   import { ref } from 'vue';
+   import { ref, computed, onMounted } from 'vue';
    import axios from 'axios';
-   import SeatMap from './SeatMap.vue';
 
-   const roomId = ref('d9589a74-9d91-460c-89ed-256148a385c2');
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
    const seats = ref([]);
-   const roomName = ref('');
-   const loading = ref(false);
-   const error = ref('');
-   const columns = 15;
-   const cellSize = 56;
-   const confirmedPositions = ref('—');
 
-   async function fetchSeats() {
-      if (!roomId.value) {
-         error.value = 'Vui lòng nhập roomId';
-         return;
-      }
-      loading.value = true;
-      error.value = '';
+   const seatRows = computed(() => {
+      const groups = {};
+      seats.value.forEach((seat) => {
+         const row = seat.position[0];
+         if (!groups[row]) groups[row] = [];
+         groups[row].push(seat);
+      });
+
+      return Object.keys(groups)
+         .sort()
+         .map((label) => ({ label, seats: groups[label] }));
+   });
+
+   async function getSeats() {
       try {
-         const res = await axios.get(`http://localhost:8080/api/admin/seats/room/${roomId.value}`);
-         const data = Array.isArray(res.data) ? res.data : res.data.data || res.data.items || [];
-         seats.value = data;
-         roomName.value = data?.[0]?.room?.name || '';
-      } catch (err) {
-         console.error(err);
-         error.value =
-            err.response?.data?.message || err.message || 'Lỗi khi gọi API. Kiểm tra server/CORS.';
-      } finally {
-         loading.value = false;
+         const response = await axios.get(
+            'http://localhost:8080/api/schedules/reserve-seat/fdd15327-0c6c-480b-a626-01648952fbce/seats'
+         );
+
+         seats.value = response.data;
+         console.log('seats: ', seats.value);
+
+         seats.value.sort((first, second) => {
+            const numFirst = parseInt(first.position.slice(1));
+            const numSecond = parseInt(second.position.slice(1));
+            return numFirst - numSecond;
+         });
+
+         console.log('seats đã sắp xếp theo số ghế tăng dần:', seats.value);
+      } catch (error) {
+         console.error('Lỗi khi lấy dánh sách');
       }
    }
 
-   function onSelect(seat) {
-      console.log('SELECT', seat);
-   }
-   function onDeselect(seat) {
-      console.log('DESELECT', seat);
-   }
-   function onClickSeat(seat) {
-      console.log('CLICK', seat);
+   async function toggleSeat(seat) {
+      console.log('seat: ', seat);
+
+      if (seat.status === 'available') {
+         try {
+            const response = await axios.put(
+               `${API_BASE_URL}/schedules/reserve-seat/fdd15327-0c6c-480b-a626-01648952fbce/seats/${seat.seatId}/hold`,
+               {
+                  holdId: null,
+                  holdMinutes: 10
+               }
+            );
+            
+            console.log(response.data.message);
+            getSeats();
+         } catch (error) {
+            console.error('Lỗi khi chọn ghế: ', error.message);
+         }
+      } else if (seat.status === 'holding') {
+         try {
+            const response = await axios.put(
+               `${API_BASE_URL}/schedules/reserve-seat/fdd15327-0c6c-480b-a626-01648952fbce/seats/${seat.seatId}/release`,
+               {
+                  holdId: null
+               }
+            );
+
+            console.log(response.data.message);
+            getSeats();
+         } catch (error) {
+            console.error('Lỗi khi bỏ chọn ghế: ', error.message);
+         }
+      }
    }
 
-   function onConfirm(selected) {
-      confirmedPositions.value = selected.map((s) => s.position).join(', ') || '—';
-      console.log('CONFIRMED:', selected);
-      // Ex: gọi API để reserve: axios.post('/reserve', { seatIds: selected.map(s=>s.id) })
-   }
-
-   fetchSeats();
+   onMounted(async () => {
+      await getSeats();
+      console.log('seatRows: ', seatRows.value);
+   });
 </script>
 
 <style scoped>
-   .page-wrap {
-      padding: 18px;
-      font-family: Arial, Helvetica, sans-serif;
+   .cinema-map {
+      user-select: none;
+      font-family: Arial, sans-serif;
    }
-   .meta {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
+
+   table {
+      margin: 0 auto;
+      border-collapse: separate;
+      border-spacing: 6px;
    }
-   .meta input {
-      padding: 6px;
+
+   .row-label {
+      font-weight: bold;
+      font-size: 18px;
+      color: #fff;
+      background: #333;
+      width: 30px;
+      text-align: center;
       border-radius: 4px;
-      border: 1px solid #ccc;
    }
-   .info {
-      color: #0c4a6e;
+
+   .seat-wrapper {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
    }
-   .error {
-      color: #b91c1c;
+
+   .seat-item {
+      display: block;
+      width: 36px;
+      height: 36px;
+      background: center/contain no-repeat;
+      cursor: pointer;
+      border-radius: 6px;
+      position: relative;
+      transition: all 0.25s ease;
    }
-   .bottom {
-      margin-top: 16px;
-      padding-top: 8px;
-      border-top: 1px dashed #ddd;
+
+   /* Ghế thường, VIP, Couple - trạng thái bình thường */
+   .seat-item.standard {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_thuong.png');
+   }
+
+   .seat-item.vip {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_vip.png');
+   }
+
+   .seat-item.couple {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_doi.png');
+   }
+
+   /* Khi ghế được CHỌN → dùng ảnh đã chọn (quan trọng nhất!) */
+   .seat-item.selected {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_chon.png') !important;
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+      z-index: 10;
+   }
+
+   /* Ghế đã bán / bị khóa */
+   .seat-item.disabled {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_ban.png') !important;
+      /* filter: grayscale(100%) brightness(0.7); */
+      cursor: not-allowed;
+      pointer-events: none; /* không click được */
+      transform: none !important;
+      box-shadow: none !important;
+   }
+
+   /* Đảm bảo ghế đã chọn vẫn hiện ảnh chọn dù là loại gì */
+   .seat-item.standard.selected,
+   .seat-item.vip.selected,
+   .seat-item.couple.selected {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_chon.png') !important;
+   }
+
+   /* Lối đi trống */
+   .empty-path {
+      width: 40px;
+      height: 40px;
+   }
+
+   .legend {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 40px 0;
+      flex-wrap: wrap;
+      font-size: 15px;
+   }
+
+   .legend > div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+   }
+
+   .legend .seat-item {
+      width: 32px;
+      height: 32px;
+      transform: none !important;
+      box-shadow: none !important;
+   }
+
+   .screen {
+      width: 80%;
+      max-width: 700px;
+      height: 80px;
+      margin: 0 auto 50px;
+      background: url('http://localhost:8080/uploads/images/Screen.png') center/contain no-repeat;
+      background-size: 100% 100%;
+      filter: drop-shadow(0 10px 30px rgba(0, 255, 255, 0.3));
    }
 </style>

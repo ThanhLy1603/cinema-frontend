@@ -1,277 +1,346 @@
 <template>
-   <div class="seat-map-wrap">
-      <div class="screen">Màn hình</div>
+   <div class="cinema-map">
+      <table>
+         <tr v-for="(row, rowIndex) in seatMap" :key="row.label">
+            <td class="row-label">{{ row.label }}</td>
 
-      <div class="map-and-legend">
-         <div class="seat-grid" :style="`grid-template-columns: repeat(${columns}, ${cellSize}px)`">
-            <!-- background grid cells to keep spacing -->
-            <div v-for="n in totalGridCells" :key="'bg-' + n" class="grid-bg"></div>
-
-            <!-- seats -->
-            <div
-               v-for="seat in positionedSeats"
-               :key="seat.id"
-               class="seat"
-               :class="[
-                  seatClass(seat),
-                  { occupied: !seat.active, selected: selectedIds.has(seat.id) },
-               ]"
-               :style="{ gridColumnStart: seat.gridCol, gridRowStart: seat.gridRow }"
-               @click="toggleSelect(seat)"
-               :title="`${seat.position} — ${seat.seatType_name} — ${seat.room_name}`"
+            <!-- Duyệt từng ô trong hàng -->
+            <td
+               v-for="(seat, seatIndex) in row.seats"
+               :key="seat ? seat.code : `empty-${rowIndex}-${seatIndex}`"
             >
-               <div class="seat-label">{{ seat.position }}</div>
-            </div>
-         </div>
+               <!-- Nếu là null → lối đi trống -->
+               <div v-if="!seat" class="empty-path"></div>
 
-         <div class="legend">
-            <div class="legend-item">
-               <div class="box regular"></div>
-               <div>Thường</div>
-            </div>
-            <div class="legend-item">
-               <div class="box vip"></div>
-               <div>VIP</div>
-            </div>
-            <div class="legend-item">
-               <div class="box couple"></div>
-               <div>Couple</div>
-            </div>
-         </div>
-      </div>
+               <!-- Nếu là ghế thật -->
+               <div v-else class="seat-wrapper">
+                  <a
+                     :title="seat.code"
+                     :class="[
+                        'seat-item',
+                        seat.type,
+                        { selected: seat.isSelected, disabled: seat.isSold },
+                     ]"
+                     @click.prevent="toggleSeat(seat)"
+                  ></a>
 
-      <div class="controls">
-         <div>Chọn: {{ selectedLabel }}</div>
-         <div class="control-buttons">
-            <button @click="clearSelection">Bỏ chọn</button>
-            <button @click="confirmSelection" :disabled="!selectedIds.size">Xác nhận</button>
+                  <!-- Ghế đôi: hiển thị thêm ghế bên cạnh -->
+                  <a
+                     v-if="seat.isCouplePair"
+                     :title="seat.pairCode"
+                     :class="[
+                        'seat-item',
+                        'couple',
+                        { selected: seat.isSelected, disabled: seat.isSold },
+                     ]"
+                     @click.prevent="toggleSeat(seat)"
+                  ></a>
+               </div>
+            </td>
+
+            <td class="row-label">{{ row.label }}</td>
+         </tr>
+      </table>
+   </div>
+
+   <div class="cinema-map">
+      <div v-for="row in seatRows" :key="row.label">
+         <div>{{ row.label }}</div>
+
+         <div v-for="seat in row.seats" :key="seat.seatId">
+            <div>
+               {{ seat.position }}
+            </div>
          </div>
       </div>
    </div>
 </template>
 
 <script setup>
-   import { ref, computed, watch } from 'vue';
+   import axios from 'axios';
+   import { computed, onMounted, ref } from 'vue';
 
-   const props = defineProps({
-      seats: { type: Array, default: () => [] },
-      columns: { type: Number, default: 15 },
-      cellSizePx: { type: Number, default: 56 },
-   });
-   const emit = defineEmits(['select', 'deselect', 'confirm', 'click-seat']);
+   // Dữ liệu ghế – hoàn chỉnh, chuẩn như rạp Việt Nam
+   const seatMap = ref([
+      {
+         label: 'A',
+         seats: Array(13)
+            .fill(null)
+            .map((_, i) => ({
+               code: `A${i + 1}`,
+               type: 'standard',
+               isSelected: false,
+               isSold: false,
+            })),
+      },
+      {
+         label: 'B',
+         seats: Array(13)
+            .fill(null)
+            .map((_, i) => ({
+               code: `B${i + 1}`,
+               type: 'standard',
+               isSelected: false,
+               isSold: false,
+            })),
+      },
+      {
+         label: 'C',
+         seats: Array(13)
+            .fill(null)
+            .map((_, i) => ({
+               code: `C${i + 1}`,
+               type: 'standard',
+               isSelected: false,
+               isSold: false,
+            })),
+      },
+      {
+         label: 'D',
+         seats: [
+            { code: 'D1', type: 'standard' },
+            { code: 'D2', type: 'standard' },
+            { code: 'D3', type: 'vip' },
+            { code: 'D4', type: 'vip' },
+            { code: 'D5', type: 'vip' },
+            { code: 'D6', type: 'vip' },
+            { code: 'D7', type: 'vip' },
+            { code: 'D8', type: 'vip' },
+            { code: 'D9', type: 'vip' },
+            { code: 'D10', type: 'vip' },
+            { code: 'D11', type: 'vip' },
+            { code: 'D12', type: 'standard' },
+            { code: 'D13', type: 'standard' },
+         ].map((s) => ({ ...s, isSelected: false, isSold: false })),
+      },
+      {
+         label: 'E',
+         seats: [
+            { code: 'E1', type: 'standard' },
+            { code: 'E2', type: 'standard' },
+            { code: 'E3', type: 'vip' },
+            { code: 'E4', type: 'vip' },
+            { code: 'E5', type: 'vip' },
+            { code: 'E6', type: 'vip' },
+            { code: 'E7', type: 'vip' },
+            { code: 'E8', type: 'vip' },
+            { code: 'E9', type: 'vip' },
+            { code: 'E10', type: 'vip' },
+            { code: 'E11', type: 'vip' },
+            { code: 'E12', type: 'standard' },
+            { code: 'E13', type: 'standard' },
+         ].map((s) => ({ ...s, isSelected: false, isSold: false })),
+      },
+      {
+         label: 'F',
+         seats: [
+            null,
+            null,
+            { code: 'F1', type: 'standard' },
+            { code: 'F2', type: 'vip' },
+            { code: 'F3', type: 'vip' },
+            { code: 'F4', type: 'vip' },
+            { code: 'F5', type: 'vip' },
+            { code: 'F6', type: 'vip' },
+            { code: 'F7', type: 'vip' },
+            { code: 'F8', type: 'vip' },
+            { code: 'F9', type: 'vip' },
+            { code: 'F10', type: 'vip' },
+            { code: 'F11', type: 'standard' },
+            null,
+         ].map((s) => (s ? { ...s, isSelected: false, isSold: false } : null)),
+      },
+      {
+         label: 'G',
+         seats: [
+            null,
+            null,
+            { code: 'G1', type: 'standard' },
+            { code: 'G2', type: 'vip' },
+            { code: 'G3', type: 'vip' },
+            { code: 'G4', type: 'vip' },
+            { code: 'G5', type: 'vip' },
+            { code: 'G6', type: 'vip' },
+            { code: 'G7', type: 'vip' },
+            { code: 'G8', type: 'vip' },
+            { code: 'G9', type: 'vip' },
+            { code: 'G10', type: 'vip' },
+            { code: 'G11', type: 'standard' },
+            null,
+         ].map((s) => (s ? { ...s, isSelected: false, isSold: false } : null)),
+      },
+      {
+         label: 'H',
+         seats: [
+            { code: 'H1', type: 'couple', isCouplePair: true, pairCode: 'H2' },
+            { code: 'H2', type: 'couple', isCouplePair: true, pairCode: 'H1' },
+            { code: 'H3', type: 'couple', isCouplePair: true, pairCode: 'H4' },
+            { code: 'H4', type: 'couple', isCouplePair: true, pairCode: 'H3' },
+            { code: 'H5', type: 'couple', isCouplePair: true, pairCode: 'H6' },
+            { code: 'H6', type: 'couple', isCouplePair: true, pairCode: 'H5' },
+            { code: 'H7', type: 'couple', isCouplePair: true, pairCode: 'H8' },
+            { code: 'H8', type: 'couple', isCouplePair: true, pairCode: 'H7' },
+            { code: 'H9', type: 'couple', isCouplePair: true, pairCode: 'H10' },
+            { code: 'H10', type: 'couple', isCouplePair: true, pairCode: 'H9' },
+            { code: 'H11', type: 'couple', isCouplePair: true, pairCode: 'H12' },
+            { code: 'H12', type: 'couple', isCouplePair: true, pairCode: 'H11' },
+            { code: 'H13', type: 'couple', isCouplePair: true, pairCode: 'H14' },
+            { code: 'H14', type: 'couple', isCouplePair: true, pairCode: 'H13' },
+         ].map((s) => ({ ...s, isSelected: false, isSold: false })),
+      },
+   ]);
 
-   const selectedIds = ref(new Set());
-   const columns = props.columns;
-   const cellSize = props.cellSizePx;
-   const sourceSeats = computed(() => props.seats || []);
+   // Hàm chọn ghế (chuẩn, không lỗi)
+   const toggleSeat = (seat) => {
+      if (!seat || seat.isSold) return;
 
-   const positionedSeats = computed(() => {
-      const letters = new Set();
-      const parsed = sourceSeats.value
-         .map((s) => {
-            const pos = String(s.position || '')
-               .trim()
-               .toUpperCase();
-            const m = pos.match(/^([A-Z]+)(\d+)$/);
-            if (!m) return null;
-            const rowLetters = m[1];
-            const num = parseInt(m[2], 10);
-            letters.add(rowLetters);
-            return {
-               id: s.id,
-               position: pos,
-               rowLetters,
-               number: num,
-               active: !!s.active,
-               room_id: s.room?.id,
-               room_name: s.room?.name,
-               seatType_id: s.seatType?.id,
-               seatType_name: s.seatType?.name,
-            };
-         })
-         .filter(Boolean);
+      if (seat.type === 'couple') {
+         const pairCode = seat.pairCode;
+         const row = seatMap.value.find((r) =>
+            r.seats.some((s) => s && (s.code === seat.code || s.code === pairCode))
+         );
+         const pairSeat = row.seats.find((s) => s && s.code === pairCode);
 
-      const letterList = Array.from(letters).sort((a, b) => (a < b ? -1 : 1));
-      const letterIndex = {};
-      letterList.forEach((l, idx) => (letterIndex[l] = idx + 1));
+         const shouldSelect = !seat.isSelected;
+         seat.isSelected = shouldSelect;
+         if (pairSeat) pairSeat.isSelected = shouldSelect;
+      } else {
+         seat.isSelected = !seat.isSelected;
+      }
+   };
 
-      parsed.forEach((p) => {
-         p.gridCol = ((p.number - 1) % columns) + 1;
-         p.gridRow = letterIndex[p.rowLetters] || 1;
+   // Lấy danh sách ghế đã chọn
+   const getSelectedSeats = () => {
+      const list = [];
+      seatMap.value.forEach((row) => {
+         row.seats.forEach((seat) => {
+            if (seat && seat.isSelected) list.push(seat.code);
+         });
+      });
+      return list;
+   };
+
+   const seats = ref([]);
+   const selectedSeats = ref([]);
+
+   const seatRows = computed(() => {
+      const groups = {};
+      seats.value.forEach((seat) => {
+         const row = seat.position[0];
+         if (!groups[row]) groups[row] = [];
+         groups[row].push(seat);
       });
 
-      return parsed;
+      return Object.keys(groups)
+         .sort()
+         .map((label) => ({ label, seats: groups[label] }));
    });
 
-   const rowsCount = computed(() =>
-      Math.max(
-         1,
-         positionedSeats.value.reduce((acc, s) => Math.max(acc, s.gridRow || 1), 0)
-      )
-   );
-   const totalGridCells = computed(() => rowsCount.value * columns);
+   async function getSeats() {
+      try {
+         const response = await axios.get(
+            'http://localhost:8080/api/schedules/reserve-seat/fdd15327-0c6c-480b-a626-01648952fbce/seats'
+         );
+         seats.value = response.data;
+         console.log('seats: ', seats.value);
+         seats.value.sort((first, second) => {
+            const numFirst = parseInt(first.position.slice(1));
+            const numSecond = parseInt(second.position.slice(1));
+            return numFirst - numSecond;
+         });
 
-   function seatClass(seat) {
-      const t = (seat.seatType_name || '').toLowerCase();
-      if (t.includes('vip')) return 'vip';
-      if (t.includes('couple')) return 'couple';
-      return 'regular';
-   }
-
-   function toggleSelect(seat) {
-      if (!seat.active) return;
-      if (selectedIds.value.has(seat.id)) {
-         selectedIds.value.delete(seat.id);
-         emit('deselect', seat);
-      } else {
-         selectedIds.value.add(seat.id);
-         emit('select', seat);
+         console.log('seats đã sắp xếp theo số ghế tăng dần:', seats.value);
+      } catch (error) {
+         console.error('Lỗi khi lấy dánh sách');
       }
-      emit('click-seat', seat);
    }
 
-   function clearSelection() {
-      selectedIds.value.clear();
-   }
-
-   function confirmSelection() {
-      const ids = Array.from(selectedIds.value);
-      const selected = positionedSeats.value.filter((s) => ids.includes(s.id));
-      emit('confirm', selected);
-   }
-
-   const selectedLabel = computed(() => {
-      if (!selectedIds.value.size) return '—';
-      const ids = Array.from(selectedIds.value);
-      const list = positionedSeats.value.filter((s) => ids.includes(s.id)).map((s) => s.position);
-      return list.join(', ');
-   });
-
-   watch(sourceSeats, () => {
-      const idsNow = new Set(sourceSeats.value.map((s) => s.id));
-      for (const id of Array.from(selectedIds.value))
-         if (!idsNow.has(id)) selectedIds.value.delete(id);
+   onMounted(async () => {
+      await getSeats();
+      console.log('seatRows: ', seatRows.value);
    });
 </script>
 
 <style scoped>
-   .seat-map-wrap {
-      font-family: Arial, Helvetica, sans-serif;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      padding: 12px;
-      max-width: 1100px;
-      margin: 0 auto;
-   }
-   .screen {
-      background: #f3f4f6;
-      padding: 6px 18px;
-      border-radius: 6px;
-      font-weight: 700;
-      box-shadow: inset 0 0 0 1px #ddd;
-   }
-   .map-and-legend {
-      display: flex;
-      gap: 24px;
-      align-items: flex-start;
-   }
-   .seat-grid {
-      display: grid;
-      gap: 6px;
-      padding: 10px;
-      border-radius: 6px;
-   }
-   .grid-bg {
-      border-radius: 4px;
-      background: transparent;
-      min-height: 48px;
-      min-width: 48px;
-   }
-   .seat {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-      min-width: 48px;
-      min-height: 48px;
-      box-sizing: border-box;
-      border: 2px solid #1f2937;
-      cursor: pointer;
+   .cinema-map {
       user-select: none;
-      font-weight: 700;
+      font-family: Arial, sans-serif;
    }
-   .seat.regular {
-      background: #fff;
-      color: #111827;
+
+   table {
+      margin: 0 auto;
+      border-collapse: separate;
+      border-spacing: 6px;
    }
-   .seat.vip {
-      background: #fff245;
-      color: #111827;
+
+   .row-label {
+      font-weight: bold;
+      font-size: 18px;
+      color: #fff;
+      background: #333;
+      width: 30px;
+      text-align: center;
+      border-radius: 4px;
    }
-   .seat.couple {
-      background: #28b6ff;
-      color: #03203c;
-   }
-   .seat.occupied {
-      opacity: 0.45;
-      cursor: not-allowed;
-   }
-   .seat.selected {
-      outline: 3px solid #2563eb;
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-   }
-   .seat-label {
-      font-size: 12px;
-      padding: 2px 4px;
-   }
-   .legend {
+
+   .seat-wrapper {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-width: 120px;
+      gap: 4px;
+      justify-content: center;
    }
-   .legend-item {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-   }
-   .legend .box {
+
+   .seat-item {
+      display: block;
       width: 36px;
       height: 36px;
-      border-radius: 4px;
-      border: 1px solid #111827;
-   }
-   .legend .box.regular {
-      background: #fff;
-   }
-   .legend .box.vip {
-      background: #fff245;
-   }
-   .legend .box.couple {
-      background: #28b6ff;
-   }
-   .controls {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      align-items: center;
-      margin-top: 8px;
-   }
-   .control-buttons {
-      display: flex;
-      gap: 8px;
-   }
-   button {
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      background: #fff;
+      background: center/contain no-repeat;
       cursor: pointer;
+      border-radius: 6px;
+      position: relative;
+      transition: all 0.25s ease;
    }
-   button:disabled {
-      opacity: 0.5;
+
+   /* Ghế thường, VIP, Couple - trạng thái bình thường */
+   .seat-item.standard {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_thuong.png');
+   }
+
+   .seat-item.vip {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_vip.png');
+   }
+
+   .seat-item.couple {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_doi.png');
+   }
+
+   /* Khi ghế được CHỌN → dùng ảnh đã chọn (quan trọng nhất!) */
+   .seat-item.selected {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_chon.png') !important;
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+      z-index: 10;
+   }
+
+   /* Ghế đã bán / bị khóa */
+   .seat-item.disabled {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_ban.png') !important;
+      filter: grayscale(100%) brightness(0.7);
       cursor: not-allowed;
+      pointer-events: none; /* không click được */
+      transform: none !important;
+      box-shadow: none !important;
+   }
+
+   /* Đảm bảo ghế đã chọn vẫn hiện ảnh chọn dù là loại gì */
+   .seat-item.standard.selected,
+   .seat-item.vip.selected,
+   .seat-item.couple.selected {
+      background-image: url('http://localhost:8080/uploads/images/Ghe_da_chon.png') !important;
+   }
+
+   /* Lối đi trống */
+   .empty-path {
+      width: 40px;
+      height: 40px;
    }
 </style>
