@@ -25,6 +25,8 @@ import router from './router';
 // Tạo app
 const app = createApp(App);
 
+window.global = window;
+
 // Cấu hình SweetAlert2
 const swalOptions = {
   confirmButtonColor: '#94e900',
