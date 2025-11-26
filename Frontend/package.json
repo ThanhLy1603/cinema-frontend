@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.2.1",
+    "@vueuse/core": "^14.0.0",
     "axios": "^1.13.2",
     "bootstrap-vue": "^2.23.1",
     "element-plus": "^2.11.8",

@@ -48,6 +48,7 @@
    // State
    // ======================
    const seats = ref([]);
+   const antiGapError = ref('');
 
    // ======================
    // Computed: sắp xếp theo hàng
@@ -76,6 +77,8 @@
 
          // sort theo số ghế
          seats.value.sort((a, b) => parseInt(a.position.slice(1)) - parseInt(b.position.slice(1)));
+
+         console.log('seats: ', seats.value);
       } catch (error) {
          console.error('Lỗi khi lấy danh sách ghế:', error);
       }
@@ -85,6 +88,10 @@
    // Toggle ghế: hold/release
    // ======================
    async function toggleSeat(seat) {
+      const rowLabel = seat.position[0];
+
+      console.log('rowLabel: ', rowLabel);
+
       if (seat.status === 'available') {
          try {
             await axios.put(
@@ -94,8 +101,14 @@
                   holdMinutes: 10,
                }
             );
+
+            if (checkAntiGap(rowLabel)) {
+               showAntiGapError();
+            } else {
+               antiGapError.value = "";
+            }
          } catch (error) {
-            console.error('Lỗi khi giữ ghế:', error);
+            console.error('Lỗi khi giữ ghế:', error.message);
          }
       } else if (seat.status === 'holding') {
          try {
@@ -105,10 +118,58 @@
                   holdId: null,
                }
             );
+
+            if (checkAntiGap(rowLabel)) {
+               showAntiGapError();
+            } else {
+               antiGapError.value = "";
+            }
          } catch (error) {
             console.error('Lỗi khi bỏ chọn ghế:', error);
          }
       }
+   }
+
+   function checkAntiGap(rowLabel) {
+      const row = seatRows.value.find(row => row.label === rowLabel);
+      console.log('row: ', row);
+      if (!row) return false;
+
+      const orderedSeats = [...row.seats].sort(
+         (first, second) => parseInt(first.position.slice(1) - parseInt(second.position.slice(1)))
+      );
+
+      console.log('orderedSeats: ', orderedSeats);
+
+      const holdingIndexes = orderedSeats
+         .map((seat, index) => (seat.status === 'holding' ? index : -1))
+         .filter(index => index !== -1);
+
+      console.log('holdingIndexes: ', holdingIndexes);
+
+      if (holdingIndexes.length < 2) return false;
+
+      for (let i = 0; i < holdingIndexes.length - 1; i++) {
+         const left = holdingIndexes[i];
+         const right = holdingIndexes[i + 1];
+
+         const middleSeats = orderedSeats.slice(left + 1, right);
+
+         console.log('left: ', left);
+         console.log('right: ', right);
+         console.log('miidleSeats: ', middleSeats);
+
+         if (middleSeats.some(seat => seat.status === 'available')) {
+            return true;
+         }
+
+         return false;
+      }
+   }
+
+   function showAntiGapError() {
+      antiGapError.value = "Bạn không được để trống ghé ở giữa khi chọn cùng hàng";
+      console.log('Anti Gap: ', antiGapError.value);
    }
 
    // ======================

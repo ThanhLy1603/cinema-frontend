@@ -1,7 +1,14 @@
 <template>
    <div class="film-detail-wrapper">
       <!-- HEADER -->
-      <Header />
+      <Header/>
+
+      <el-steps :active="step" finish-status="success" class="promo-steps w-">
+         <el-step title="Chọn suất chiếu" />
+         <el-step title="Chọn ghế ngồi" />
+         <el-step title="Chọn đồ ăn và đồ uống" />
+         <el-step title="Đặt vé" />
+      </el-steps>
 
       <!-- NỘI DUNG CHI TIẾT -->
       <div class="film-detail-page container py-5">
