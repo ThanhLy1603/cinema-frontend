@@ -1,14 +1,15 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 
 // ===== Import các component =====
-import Home from '../components/home/Home.vue'
-import Login from '../components/home/Login.vue'
-import Register from '../components/home/Register.vue'
-import ForgotPassword from '../components/home/ForgotPassword.vue'
-import FilmDetail from '../components/home/FilmDetail.vue'
-import AdminDashboard from '../components/admin/AdminDashboard.vue'
-import AccountProfile from '../components/auth/AccountProfile.vue'
-import ProductDetails from '../components/home/ProductDetails.vue'
+import Home from '../components/home/Home.vue';
+import Login from '../components/home/Login.vue';
+import Register from '../components/home/Register.vue';
+import ForgotPassword from '../components/home/ForgotPassword.vue';
+import FilmDetail from '../components/home/FilmDetail.vue';
+import AdminDashboard from '../components/admin/AdminDashboard.vue';
+import AccountProfile from '../components/auth/AccountProfile.vue';
+import ProductDetails from '../components/home/ProductDetails.vue';
+import BookTicket from '../components/home/BookTicket.vue';
 
 // ===== Khai báo routes =====
 const routes = [
@@ -18,6 +19,7 @@ const routes = [
    { path: '/login', name: 'Login', component: Login },
    { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
    { path: '/film/:id', name: 'FilmDetail', component: FilmDetail },
+   { path: '/booking/:filmId', name: 'BookTicket', component: BookTicket },
 
    // Authenticated user routes
    {
@@ -42,41 +44,49 @@ const routes = [
 
    // Fallback
    { path: '/:pathMatch(.*)*', redirect: '/' },
-]
+];
 
 // ===== Tạo router =====
 const router = createRouter({
    history: createWebHistory(),
    routes,
+   scrollBehavior(to, from, savedPosition) {
+      // Nếu có vị trí cuộn trước đó (back/forward)
+      if (savedPosition) {
+         return savedPosition;
+      }
+      // Luôn scroll về top khi chuyển trang mới
+      return { top: 0 };
+   },
 });
 
 // ===== Navigation Guard =====
 router.beforeEach((to, from, next) => {
-   const token = localStorage.getItem('token')
-   const userRole = localStorage.getItem('role') // e.g. ROLE_ADMIN, ROLE_USER
-   const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : ''
+   const token = localStorage.getItem('token');
+   const userRole = localStorage.getItem('role'); // e.g. ROLE_ADMIN, ROLE_USER
+   const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : '';
 
    // Nếu đã đăng nhập, chặn truy cập lại trang Login/Register
    if (token && (to.path === '/login' || to.path === '/register')) {
-      return next('/')
+      return next('/');
    }
 
    // Nếu truy cập tab profile nhưng không có token
-   if (to.query.tab === "AccountProfile" && !token) {
+   if (to.query.tab === 'AccountProfile' && !token) {
       return next({ path: '/', query: { tab: 'Films' } });
    }
 
    //  Nếu route yêu cầu đăng nhập mà chưa có token -> quay về login
    if (to.meta.requiresAuth && !token) {
-      return next('/login')
+      return next('/login');
    }
 
    //  Nếu route yêu cầu quyền admin nhưng user không phải admin
    if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
-      return next('/')
+      return next('/');
    }
 
    next();
 });
 
-export default router
+export default router;

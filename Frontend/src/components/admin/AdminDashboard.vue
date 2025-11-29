@@ -126,6 +126,7 @@
       flex: 1;
       background: #fff;
       padding: 20px;
+      margin-top: 20%;
    }
 
    .breadcrumb {
