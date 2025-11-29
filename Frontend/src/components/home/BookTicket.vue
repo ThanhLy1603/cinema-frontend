@@ -548,7 +548,7 @@
       if (!film.value.id) return;
 
       try {
-         const response = await axios.get(`${API_BASE_URL}/schedules/film/${film.value.id}`);
+         const response = await axios.get(`${API_BASE_URL}/customer/schedules/${film.value.id}`);
          if (Array.isArray(response.data)) {
             schedules.value = response.data.map((schedule) => ({
                id: schedule.id,
