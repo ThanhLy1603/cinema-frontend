@@ -1,7 +1,7 @@
 <template>
-  <div class="container-fluid">
-    <router-view />
-  </div>
+   <div class="container-fluid">
+      <router-view />
+   </div>
 </template>
 
 <script setup>
@@ -10,9 +10,12 @@
 
    const route = useRoute();
 
-   watch(() => route.fullPath, () => {
-   window.scrollTo(0, 0); // scroll về top
-   });
+   watch(
+      () => route.fullPath,
+      () => {
+         window.scrollTo(0, 0); // scroll về top
+      }
+   );
 </script>
 
 <style scoped>
@@ -24,5 +27,4 @@
    body.header-scrolled {
       padding-top: 90px !important;
    }
-</style> 
-
+</style>
