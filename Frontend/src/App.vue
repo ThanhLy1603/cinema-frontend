@@ -1,12 +1,14 @@
 <template>
    <div class="container-fluid">
       <router-view />
+       <!-- <BookProducts/> -->
    </div>
 </template>
 
 <script setup>
    import { watch } from 'vue';
    import { useRoute } from 'vue-router';
+import BookProducts from './components/home/BookProducts.vue';
 
    const route = useRoute();
 
