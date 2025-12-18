@@ -16,7 +16,7 @@
 
             <!-- Component động -->
             <div class="content-area">
-               <component :is="currentComponent" @open="handleOpen" />
+            <component :is="currentComponent" v-bind="listeners" />
             </div>
          </main>
 
@@ -31,18 +31,11 @@
 
    // Import component
    import Header from '../header/Header.vue';
-   import AdminIndex from '../admin/AdminIndex.vue';
-   import FilmsManager from '../admin/FilmsManager.vue';
-   import ShowTimes from '../admin/ShowTimes.vue';
-   import RoomsManager from '../admin/RoomsManager.vue';
-   import CategoryManager from '../admin/CategoryManager.vue';
-   import ProductManager from './ProductsManager.vue';
-   import SeatsManager from '../admin/SeatsManager.vue';
-   import ScheduleManager from './ScheduleManager.vue';
-   import PromotionManager from './PromotionManager.vue';
-   import ProductPricePage from './ProductPricePage.vue';
-   import PriceTicketManager from './PriceTicketManager.vue';
-   import InvoiceHistory from './InvoiceHistory.vue';
+   import StaffIndex from '../staff/StaffIndex.vue';
+   import SellTicket from '../staff/SellTicket.vue';
+   import CheckTicket from '../staff/CheckTicket.vue';
+import ShowQRCode from './ShowQRCode.vue';
+
 
    // Router
    const route = useRoute();
@@ -53,39 +46,29 @@
 
    // Danh sách component có thể gọi
    const components = {
-      AdminIndex,
-      FilmsManager,
-      ShowTimes,
-      RoomsManager,
-      CategoryManager,
-      ProductManager,
-      SeatsManager,
-      ScheduleManager,
-      PromotionManager,
-      ProductPricePage,
-      PriceTicketManager,
-      InvoiceHistory
+      StaffIndex,
+      SellTicket,
+      CheckTicket,
+      ShowQRCode
    };
+
+   const listeners = computed(() => {
+      return currentComponent.value === StaffIndex
+         ? { onOpen: handleOpen }
+         : {};
+   });   
 
    // Component hiện tại hiển thị
    const currentComponent = computed(() => {
-      return activeComponent.value ? components[activeComponent.value] : AdminIndex;
+      return activeComponent.value ? components[activeComponent.value] : StaffIndex;
    });
 
    // Map component sang tiêu đề breadcrumb
    const activeTitle = computed(() => {
       const map = {
-         FilmsManager: 'Phim',
-         ShowTimes: 'Giờ chiếu',
-         RoomsManager: 'Phòng chiếu',
-         CategoryManager: 'Danh mục',
-         ProductManager: 'Đồ ăn',
-         SeatsManager: 'Ghế ngồi',
-         ScheduleManager: 'Lịch chiếu',
-         PromotionManager:'Khuyến mại',
-         ProductPricePage: 'Giá sản phẩm',
-         PriceTicketManager: 'Giá vé',
-         InvoiceHistory: 'Lịch sử giao dịch'
+         SellTicket: 'Bán vé',
+         CheckTicket: 'Soát vé',
+         ShowQRCode: 'Show QR code'
       };
       return map[activeComponent.value] || '';
    });
@@ -102,8 +85,14 @@
 
    // Khi activeComponent thay đổi → cập nhật query `manage` trên URL
    watch(activeComponent, (newVal) => {
-      router.replace({ query: { manage: newVal || undefined } });
+      router.replace({
+         query: {
+            ...route.query,       // giữ các query hiện tại
+            manage: newVal || undefined
+         }
+      });
    });
+
 
    // Mở component con
    function handleOpen(componentName) {

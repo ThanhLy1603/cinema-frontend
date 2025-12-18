@@ -1,7 +1,7 @@
 <template src="../template/BookTicket.template.html"></template>
 
 <script setup>
-   import { ref, onMounted, computed, onBeforeMount } from 'vue';
+   import { ref, onMounted, computed, onBeforeMount, watch } from 'vue';
    import { useRoute, useRouter } from 'vue-router';
    import axios from 'axios';
    import { jwtDecode } from 'jwt-decode';
@@ -13,7 +13,6 @@
    // --- ENV ---
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
    const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
-   const VIDEO_URL = import.meta.env.VITE_VIDEO_URL;
    const WEBSOCKET_URL = import.meta.env.VITE_WS_URL;
 
    const token = localStorage.getItem('token') || null;
@@ -271,13 +270,18 @@
    });
 
    function getSeatsScheduleInRouter() {
-      scheduleId.value = route.query.scheduleId;
-      if (scheduleId.value) {
-         getScheduleSeats(scheduleId.value);
-      } else {
-         console.warn('Không có scheduleId trên URL');
+      if (route.query.scheduleId) {
+         scheduleId.value = route.query.scheduleId;
+         console.log('scheduleId: ', scheduleId.value);
+
+         if (scheduleId.value) {
+            getScheduleSeats(scheduleId.value);
+         } else {
+            console.warn('Không có scheduleId trên URL');
+         }
       }
    }
+
 
    async function toggleSeat(seat) {
       const rowLabel = seat.position[0];
@@ -429,12 +433,22 @@
    onMounted(async () => {
       await getFilm();
       getSeatsScheduleInRouter();
-      connectWebSocket();
    });
 
    onBeforeMount(() => {
       disconnectWebSocket();
    });
+
+   watch(
+      () => route.query.scheduleId,
+      (newVal) => {
+         if (newVal) {
+            console.log("ScheduleId đã sẵn sàng → Kết nối WebSocket");
+            scheduleId.value = newVal;
+            connectWebSocket();
+         }
+      }
+   );
 </script>
 
 <style src="../style/BookTicket.style.css" scoped></style>

@@ -10,6 +10,7 @@ import AdminDashboard from '../components/admin/AdminDashboard.vue';
 import AccountProfile from '../components/auth/AccountProfile.vue';
 import ProductDetails from '../components/home/ProductDetails.vue';
 import BookTicket from '../components/home/BookTicket.vue';
+import StaffDashboard from '../components/staff/StaffDashboard.vue';
 
 // ===== Khai báo routes =====
 const routes = [
@@ -40,6 +41,11 @@ const routes = [
       path: '/products/:id',
       name: 'ProductDetails',
       component: ProductDetails,
+   },
+   {
+      path: '/staff',
+      name: 'StaffDashboard',
+      component: StaffDashboard
    },
 
    // Fallback

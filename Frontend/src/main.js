@@ -4,7 +4,7 @@ import App from './App.vue';
 
 // Bootstrap CSS & JS
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';                 // Bootstrap 5 CSS
 
 // Vue3 Select
 import 'vue3-select/dist/vue3-select.css';
