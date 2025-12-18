@@ -167,6 +167,7 @@ const form = ref({
 })
 
 const token = localStorage.getItem('token')
+const userInfo = jwtDecode(token)
 
 // Lấy thông tin phim
 const getFilm = async () => {
@@ -196,7 +197,7 @@ const getSchedule = async () => {
 const getProfile = async () => {
     if (!token) return
     try {
-        const userInfo = jwtDecode(token)
+        
         const res = await axios.get(`${API_BASE_URL}/auth/${userInfo.subject}`)
         form.value = { ...form.value, ...res.data }
         console.log('Profile user:', form.value)
@@ -247,7 +248,7 @@ const confirmPayment = async () => {
 
     // 2. Tạo payload ĐÚNG 100% theo backend hiện tại của bạn
     invoiceForm.value.invoice = {
-      userName: form.value.username.trim(),
+      userName: userInfo.subject.trim(), 
       phone: form.value.phone.trim(),
       email: form.value.email?.trim() || null,
       totalAmount: bookingStore.totalAmount,

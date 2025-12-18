@@ -12,6 +12,7 @@ import ProductDetails from '../components/home/ProductDetails.vue';
 import BookTicket from '../components/home/BookTicket.vue';
 import BookProducts from '../components/home/BookProducts.vue';
 import Invoices from '../components/home/Invoices.vue';
+import CustomerHistory from '../components/load/CustomerHistory.vue';
 
 // ===== Khai báo routes =====
 const routes = [
@@ -24,6 +25,7 @@ const routes = [
    { path: '/booking/:filmId', name: 'BookTicket', component: BookTicket },
    { path: '/bookproducts', name: 'BookProducts', component: BookProducts ,meta: { requiresAuth: true }},
    { path: '/payment', name: 'Invoices', component: Invoices ,meta: { requiresAuth: true }},
+   { path: '/customer/history', name: 'CustomerHistory', component: CustomerHistory, meta: { requiresAuth: true }},
 
 
    // Authenticated user routes
