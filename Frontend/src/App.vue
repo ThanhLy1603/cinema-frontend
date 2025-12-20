@@ -1,12 +1,14 @@
 <template>
    <div class="container-fluid">
       <router-view />
+
    </div>
 </template>
 
 <script setup>
    import { watch } from 'vue';
    import { useRoute } from 'vue-router';
+   
 
    const route = useRoute();
 

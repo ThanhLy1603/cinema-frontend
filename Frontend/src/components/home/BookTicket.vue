@@ -7,7 +7,7 @@
    import { jwtDecode } from 'jwt-decode';
    import SockJS from 'sockjs-client';
    import { Client } from '@stomp/stompjs';
-
+   import { useBookingStore } from '../stores/BookingStore';
    import Header from '../../components/header/Header.vue';
 
    // --- ENV ---
@@ -26,7 +26,7 @@
    const film = ref({});
    const categories = ref([]);
    const step = ref(1);
-
+   const bookingStore = useBookingStore();
    // Các hàm để xử lý thông tin phim
    function formatYYYYMMDD(dateInput) {
       if (!dateInput) return 'N/A';
@@ -64,7 +64,7 @@
          film.value = response.data;
          await getCategories();
          await getSchedules();
-
+         bookingStore.clearBooking();
          console.log('film: ', film.value);
       } catch (error) {
          console.error('Lỗi khi lấy Film:', error.message);
@@ -270,18 +270,13 @@
    });
 
    function getSeatsScheduleInRouter() {
-      if (route.query.scheduleId) {
-         scheduleId.value = route.query.scheduleId;
-         console.log('scheduleId: ', scheduleId.value);
-
-         if (scheduleId.value) {
-            getScheduleSeats(scheduleId.value);
-         } else {
-            console.warn('Không có scheduleId trên URL');
-         }
+      scheduleId.value = route.query.scheduleId;
+      if (scheduleId.value) {
+         getScheduleSeats(scheduleId.value);
+      } else {
+         console.warn('Không có scheduleId trên URL');
       }
    }
-
 
    async function toggleSeat(seat) {
       const rowLabel = seat.position[0];
@@ -298,6 +293,14 @@
                   holdMinutes: 10,
                }
             );
+               seat.status = 'holding';
+               seat.holderId = currentUser;
+               seat.price = priceTickets.value.find(pt => pt.seatTypeName === seat.seatType)?.price;
+               seat.ticketPriceId = priceTickets.value.find(pt => pt.seatTypeName === seat.seatType)?.id;
+               bookingStore.bookingInfo.film = film.value.id;
+               bookingStore.bookingInfo.schedule = scheduleId.value;
+               bookingStore.addSeat(seat);
+               
 
             if (checkAntiGap(rowLabel)) {
                errorMessage.value = `Bạn không được để 1 ghế trống ngoài cùng bên trái hoặc phải và ở giữa
@@ -319,6 +322,10 @@
                }
             );
 
+               seat.status = 'available';
+               seat.holderId = null;
+               bookingStore.removeSeat(seat.seatId); 
+
             if (checkAntiGap(rowLabel)) {
                errorMessage.value = `Bạn không được để 1 ghế trống ngoài cùng bên trái hoặc phải và ở giữa
                                     trên cùng hàng ghế mà bạn chọn.`;
@@ -331,6 +338,8 @@
             console.error('Lỗi khi bỏ chọn ghế:', error);
          }
       }
+      console.log('selected schedile:', bookingStore.bookingInfo.schedule);
+      console.log('selected seats:', bookingStore.bookingInfo.selectedSeats);
    }
 
    function checkAntiGap(rowLabel) {
@@ -428,6 +437,17 @@
       if (index != -1) {
          seats.value[index] = { ...updatedSeat };
       }
+   }
+
+   async function goToProducts() {
+      if (bookingStore.bookingInfo.selectedSeats.length === 0) {
+         alert('Vui lòng chọn suất chiếu trước khi chọn đồ ăn.');
+         return;
+      }else {
+         bookingStore.bookingInfo.schedule = scheduleId.value;
+         router.push("/bookproducts");
+      }
+      
    }
 
    onMounted(async () => {

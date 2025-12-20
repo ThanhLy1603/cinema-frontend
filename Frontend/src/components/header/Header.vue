@@ -39,6 +39,7 @@
 
                      <div v-if="profileMenuOpen" class="dropdown-menu">
                         <button @click="emitChange('AccountProfile')">Trang cá nhân</button>
+                        <button @click="goHistory">Lịch sử mua vé</button>
                         <button @click="logout">Đăng xuất</button>
                         <button v-if="isAdmin" @click="goAdmin">Trang quản trị</button>
                      </div>
@@ -131,6 +132,11 @@
       setTimeout(() => window.location.reload(), 500);
    }
 
+
+   function goHistory() {
+      router.push('/customer/history');
+      profileMenuOpen.value = false;
+   }
    // Đi tới trang quản trị
    function goAdmin() {
       router.push('/admin');

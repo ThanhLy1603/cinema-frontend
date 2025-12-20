@@ -18,6 +18,8 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { createPinia } from 'pinia'
+
 
 // Router
 import router from './router';
@@ -27,6 +29,7 @@ const app = createApp(App);
 
 window.global = window;
 
+const pinia = createPinia()
 // Cấu hình SweetAlert2
 const swalOptions = {
   confirmButtonColor: '#94e900',
@@ -35,8 +38,10 @@ const swalOptions = {
 
 // Đăng ký plugin
 app.use(router);
+app.use(pinia);
 app.use(VueSweetalert2, swalOptions);
 app.use(ElementPlus);
+
 
 // Đăng ký toàn bộ icon Element Plus
 for (const [name, component] of Object.entries(ElementPlusIconsVue)) {

@@ -10,7 +10,6 @@ import AdminDashboard from '../components/admin/AdminDashboard.vue';
 import AccountProfile from '../components/auth/AccountProfile.vue';
 import ProductDetails from '../components/home/ProductDetails.vue';
 import BookTicket from '../components/home/BookTicket.vue';
-import StaffDashboard from '../components/staff/StaffDashboard.vue';
 
 // ===== Khai báo routes =====
 const routes = [
@@ -21,6 +20,10 @@ const routes = [
    { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
    { path: '/film/:id', name: 'FilmDetail', component: FilmDetail },
    { path: '/booking/:filmId', name: 'BookTicket', component: BookTicket },
+   { path: '/bookproducts', name: 'BookProducts', component: BookProducts ,meta: { requiresAuth: true }},
+   { path: '/payment', name: 'Invoices', component: Invoices ,meta: { requiresAuth: true }},
+   { path: '/customer/history', name: 'CustomerHistory', component: CustomerHistory, meta: { requiresAuth: true }},
+
 
    // Authenticated user routes
    {
