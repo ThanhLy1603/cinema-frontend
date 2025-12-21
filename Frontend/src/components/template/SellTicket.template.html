@@ -273,7 +273,7 @@
                   <!-- Nút hành động -->
                   <div class="action-buttons">
                      <button class="btn-pay" @click="sellTicket()" 
-                     :disabled="!priceTicketInfos?.normal && !priceTicketInfos?.vip && !priceTicketInfos?.couple">
+                     :disabled="isDisabledPayBtn">
                         <span>Thanh toán & In vé</span>
                      </button>
 

@@ -314,7 +314,7 @@
                         <button 
                            class="btn-food" 
                            @click="goToProducts()" 
-                           :disabled="!priceTicketInfos?.normal && !priceTicketInfos?.vip && !priceTicketInfos?.couple"
+                           :disabled="isDisableBookBtn"
                         >
                            Chọn đồ ăn <span class="step-counter">(2/4)</span>
                         </button>

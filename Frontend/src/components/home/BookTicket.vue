@@ -301,7 +301,7 @@
 
    // XỬ LÝ PHẦN GHẾ NGỒI
    const seats = ref([]);
-   const antiGapError = ref('');
+   const antiGapError = ref(null);
    const errorMessage = ref('');
 
    async function getScheduleSeats(scheduleId) {
@@ -402,7 +402,7 @@
                showAntiGapError();
             } else {
                errorMessage.value = '';
-               antiGapError.value = '';
+               antiGapError.value = null;
             }
 
             getPriceBySelectedSeats();
@@ -581,6 +581,15 @@
    function getTotalAmount() {
       return priceBySelectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
    }
+
+   // XỬ LÝ DISABLE ĐẶT VÉ
+   const isDisableBookBtn = computed(() => {
+      if (!priceTicketInfos.value) return true;
+
+      const info = priceTicketInfos.value;
+
+      return (!info.normal && !info.vip && !info.couple) || antiGapError.value;
+   });
 
    // XỬ LÝ WEBSOCKET STOMP
    let stompClient = null;

@@ -529,6 +529,15 @@
       return priceBySelectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
    }
 
+   // XỬ LÝ DISABLED NÚT THANH TOÁN
+   const isDisabledPayBtn = computed(() => {
+      if (!priceTicketInfos.value) return;
+
+      const info = priceTicketInfos.value;
+
+      return (!info.normal && !info.vip && !info.couple);
+   });
+
    //  XỬ LÝ THANH TOÁN 
    const formCustomer = ref({
       name: '',
