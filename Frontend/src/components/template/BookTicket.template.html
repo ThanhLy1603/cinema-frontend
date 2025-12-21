@@ -1,6 +1,5 @@
 <div class="container-fluid">
    <Header></Header>
-
    <main>
       <!-- THÔNG TIN PHIM -->
       <div class="container-fluid w-75">
@@ -277,12 +276,18 @@
 
                      <!-- Danh sách vé -->
                      <div class="ticket-items">
-                        <div class="ticket-row">
+                        <div
+                           class="ticket-row"
+                           v-for="(item, index) in priceTicketInfos"
+                           :key="index"
+                        >
                            <div class="ticket-info">
-                              <strong>2 x Adult-Stand-2D</strong>
-                              <p class="seats">Ghế: A1, A2</p>
+                              <strong>{{ item.quantity }} x {{ item.seatType }}</strong>
+                              <p class="seats">Ghế: {{ item.postions }}</p>
                            </div>
-                           <div class="ticket-price">206.000 VND</div>
+                           <div class="ticket-price">
+                              {{ item.subTotal.toLocaleString().replace('.', ',') }} VND
+                           </div>
                         </div>
                      </div>
 
@@ -291,7 +296,9 @@
                      <!-- Tổng tiền -->
                      <div class="total-section">
                         <div class="total-label">Tổng tiền</div>
-                        <div class="total-amount">206.000 VND</div>
+                        <div class="total-amount">
+                           {{ getTotalAmount().toLocaleString().replace('.', ',') }} VND
+                        </div>
                      </div>
 
                      <div
@@ -304,15 +311,19 @@
 
                      <!-- Nút hành động -->
                      <div class="action-buttons">
-                        <button class="btn-food" @click="goToProducts()">
+                        <button 
+                           class="btn-food" 
+                           @click="goToProducts()" 
+                           :disabled="!priceTicketInfos?.normal && !priceTicketInfos?.vip && !priceTicketInfos?.couple"
+                        >
                            Chọn đồ ăn <span class="step-counter">(2/4)</span>
                         </button>
 
-                        <a href="#/" class="btn-back"> ← Trở lại chọn ghế </a>
+                        <a href="#" class="btn-back"> ← Trở lại chọn ghế </a>
 
                         <!-- Đếm ngược -->
                         <div class="countdown-timer">
-                           Còn lại <span class="timer">6 phút, 34 giây</span>
+                           Còn lại <span class="timer">{{ timeLeft }}</span>
                         </div>
                      </div>
                   </div>
@@ -325,4 +336,14 @@
    <footer class="text-center py-4 bg-dark text-white">
       <p class="mb-0">© 2025 VietCine. All Rights Reserved.</p>
    </footer>
+
+   <transition name="fade">
+      <div
+         v-if="toast?.message"
+         class="toast-custom"
+         :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
+      >
+         {{ toast?.message }}
+      </div>
+   </transition>
 </div>

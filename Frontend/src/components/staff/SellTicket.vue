@@ -275,6 +275,7 @@
          timeLeftSeconds.value = 0;
 
          clearInterval(countdownInterval);
+
          router.push({
             path: '/staff',
             query: { manage: 'SellTicket' }
@@ -382,12 +383,14 @@
       }
 
       if (seat.status === 'available') {
+         const holdMinutes = Math.floor(timeLeftSeconds.value / 60);
+         
          try {
             await axios.put(
                `${API_BASE_URL}/schedules/reserve-seat/${scheduleId.value}/seats/${seat.seatId}/hold`,
                {
                   holderId: currentUser.value,
-                  holdMinutes: timeLeftSeconds.value,
+                  holdMinutes: holdMinutes,
                }
             );
 
@@ -399,6 +402,8 @@
                errorMessage.value = '';
                antiGapError.value = '';
             }
+
+            getPriceBySelectedSeats();
          } catch (error) {
             console.error('Lỗi khi giữ ghế:', error.message);
          }
@@ -419,15 +424,15 @@
                errorMessage.value = '';
                antiGapError.value = '';
             }
+
+            getPriceBySelectedSeats();
          } catch (error) {
             console.error('Lỗi khi bỏ chọn ghế:', error);
          }
       }
-
-      getPriceBySelectedSeats();
    }
 
-   // XỬ LÝ GIÁ VÉ
+   // XỬ LÝ GIÁ VÉ VÀ GIỎ VÉ
    const priceTickets = ref([]);
    const priceBySelectedSeats = ref([]);
    const priceTicketInfos = ref(null);
@@ -453,11 +458,12 @@
 
    function getPriceBySelectedSeats() {
       let result = [];
+
       const holdingSeats = seats.value.filter(
          (item) => item.status === 'holding' && item.holderId === currentUser.value
       );
 
-      console.log('holding seats" ', holdingSeats);
+      console.log('holding seats: ', holdingSeats);
 
       holdingSeats.forEach((item) => {
          const price = getPriceBySeatType(item.seatType);
@@ -510,7 +516,7 @@
             seatType: 'Ghế Couple',
             postions: coupleSeats.map((seat) => seat.position).join(', '),
             quantity: coupleSeats.length,
-            subTotal: vipSeats.reduce((sum, seat) => sum + seat.price, 0),
+            subTotal: coupleSeats.reduce((sum, seat) => sum + seat.price, 0),
          };
       }
 

@@ -10,6 +10,10 @@ import AdminDashboard from '../components/admin/AdminDashboard.vue';
 import AccountProfile from '../components/auth/AccountProfile.vue';
 import ProductDetails from '../components/home/ProductDetails.vue';
 import BookTicket from '../components/home/BookTicket.vue';
+import StaffDashboard from '../components/staff/StaffDashboard.vue';
+import BookProducts from '../components/home/BookProducts.vue';
+import Invoices from '../components/home/Invoices.vue';
+import CustomerHistory from '../components/load/CustomerHistory.vue';
 
 // ===== Khai báo routes =====
 const routes = [

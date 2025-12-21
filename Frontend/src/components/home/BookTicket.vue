@@ -9,6 +9,7 @@
    import { Client } from '@stomp/stompjs';
    import { useBookingStore } from '../stores/BookingStore';
    import Header from '../../components/header/Header.vue';
+   import { reduce, values } from 'lodash';
 
    // --- ENV ---
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -27,6 +28,15 @@
    const categories = ref([]);
    const step = ref(1);
    const bookingStore = useBookingStore();
+
+   // Xử lý hiện thị thông báo (Toast)
+   const toast = ref({ message: '', type: '' });
+
+   function showToast(msg, type = 'success') {
+      toast.value = { message: msg, type };
+      setTimeout(() => (toast.value.message = ''), 3000);
+   }
+
    // Các hàm để xử lý thông tin phim
    function formatYYYYMMDD(dateInput) {
       if (!dateInput) return 'N/A';
@@ -96,7 +106,11 @@
    });
    const schedules = ref([]);
    const scheduleId = ref('');
-
+   const timeLeft = ref('10:00');
+   const timeLeftSeconds = ref(600);
+   let countdownInterval = null;
+   const TOTAL_SECONDS = 10 * 60;
+   const countdownKey = `count_down_book_start_${scheduleId.value}`;
    const currentMonth = ref(new Date());
 
    function formatDateWithDay(date) {
@@ -202,7 +216,7 @@
       router.push({
          name: 'BookTicket',
          params: { filmId: film.id },
-         query: { scheduleId: schedule.id },
+         query: { scheduleId: scheduleId.value },
       });
 
       await getScheduleSeats(selectedSchedule.value.id);
@@ -211,6 +225,54 @@
          selectedSchedule.value.showTimeId,
          selectedSchedule.value.scheduleDate
       );
+
+      startCountdown();
+   }
+
+   function startCountdown() {
+      const now = Date.now();
+      localStorage.setItem(countdownKey, now);
+      runCountdown();
+   }
+
+   function runCountdown() {
+      if (countdownInterval) {
+         clearInterval(countdownInterval);
+      }
+
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+   }
+
+   function tick() {
+      const startTime = Number(localStorage.getItem(countdownKey));
+
+      if (!startTime) return;
+
+      const passed = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = TOTAL_SECONDS - passed;
+
+      if (remaining <= 0) {
+         timeLeft.value = '00:00';
+         timeLeftSeconds.value = 0;
+
+         clearInterval(countdownInterval);
+
+         router.push({
+            name: 'BookTicket',
+            params: { filmId: film.id },
+            query: { scheduleId: scheduleId.value },
+         });
+
+         return;
+      }
+
+      timeLeftSeconds.value = remaining;
+
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+
+      timeLeft.value = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
    }
 
    async function getSchedules() {
@@ -269,12 +331,30 @@
          .map((label) => ({ label, seats: groups[label] }));
    });
 
-   function getSeatsScheduleInRouter() {
-      scheduleId.value = route.query.scheduleId;
-      if (scheduleId.value) {
-         getScheduleSeats(scheduleId.value);
-      } else {
-         console.warn('Không có scheduleId trên URL');
+   async function restoreStateUrl() {
+      const scheduleIdFromQuery = route.query.scheduleId;
+
+      if (scheduleIdFromQuery) {
+         scheduleId.value = scheduleIdFromQuery;
+
+         const foundSchedule = schedules.value.find(
+            (schedule) => schedule.id === scheduleIdFromQuery
+         );
+
+         if (foundSchedule) {
+            selectedSchedule.value = { ...foundSchedule };
+         }
+
+         await getScheduleSeats(scheduleIdFromQuery);
+         await getPriceTickets(
+            film.value.id,
+            selectedSchedule.value?.showTimeId,
+            selectedSchedule.value?.scheduleDate
+         );
+
+         const continueTime = localStorage.getItem(countdownKey);
+         if (continueTime) runCountdown();
+         else timeLeft.value = '10:00';
       }
    }
 
@@ -284,23 +364,37 @@
       console.log('username: ', currentUser);
       console.log('rowLabel: ', rowLabel);
 
+      if (seat.status === 'holding' && seat.holderId !== currentUser) {
+         showToast('Ghế này đang giữ bởi người khác', 'error');
+         return;
+      }
+
+      if (seat.status === 'booked') {
+         showToast('Ghế này đã bán', 'error');
+         return;
+      }
+
       if (seat.status === 'available') {
+         const holdMinutes = Math.floor(timeLeftSeconds.value / 60);
+
+         console.log('holdMinutes: ', holdMinutes);
          try {
             await axios.put(
                `${API_BASE_URL}/schedules/reserve-seat/${scheduleId.value}/seats/${seat.seatId}/hold`,
                {
                   holderId: currentUser,
-                  holdMinutes: 10,
+                  holdMinutes: holdMinutes,
                }
             );
-               seat.status = 'holding';
-               seat.holderId = currentUser;
-               seat.price = priceTickets.value.find(pt => pt.seatTypeName === seat.seatType)?.price;
-               seat.ticketPriceId = priceTickets.value.find(pt => pt.seatTypeName === seat.seatType)?.id;
-               bookingStore.bookingInfo.film = film.value.id;
-               bookingStore.bookingInfo.schedule = scheduleId.value;
-               bookingStore.addSeat(seat);
-               
+            seat.status = 'holding';
+            seat.holderId = currentUser;
+            seat.price = priceTickets.value.find((pt) => pt.seatTypeName === seat.seatType)?.price;
+            seat.ticketPriceId = priceTickets.value.find(
+               (pt) => pt.seatTypeName === seat.seatType
+            )?.id;
+            bookingStore.bookingInfo.film = film.value.id;
+            bookingStore.bookingInfo.schedule = scheduleId.value;
+            bookingStore.addSeat(seat);
 
             if (checkAntiGap(rowLabel)) {
                errorMessage.value = `Bạn không được để 1 ghế trống ngoài cùng bên trái hoặc phải và ở giữa
@@ -310,6 +404,8 @@
                errorMessage.value = '';
                antiGapError.value = '';
             }
+
+            getPriceBySelectedSeats();
          } catch (error) {
             console.error('Lỗi khi giữ ghế:', error.message);
          }
@@ -322,9 +418,9 @@
                }
             );
 
-               seat.status = 'available';
-               seat.holderId = null;
-               bookingStore.removeSeat(seat.seatId); 
+            seat.status = 'available';
+            seat.holderId = null;
+            bookingStore.removeSeat(seat.seatId);
 
             if (checkAntiGap(rowLabel)) {
                errorMessage.value = `Bạn không được để 1 ghế trống ngoài cùng bên trái hoặc phải và ở giữa
@@ -334,10 +430,13 @@
                errorMessage.value = '';
                antiGapError.value = '';
             }
+
+            getPriceBySelectedSeats();
          } catch (error) {
             console.error('Lỗi khi bỏ chọn ghế:', error);
          }
       }
+
       console.log('selected schedile:', bookingStore.bookingInfo.schedule);
       console.log('selected seats:', bookingStore.bookingInfo.selectedSeats);
    }
@@ -384,8 +483,10 @@
       console.log('Anti Gap: ', antiGapError.value);
    }
 
-   // XỬ LÝ GIÁ VÉ
+   // XỬ LÝ GIÁ VÉ VÀ GIỎ VÉ
    const priceTickets = ref([]);
+   const priceBySelectedSeats = ref([]);
+   const priceTicketInfos = ref(null);
 
    async function getPriceTickets(filmId, showTimeId, date) {
       try {
@@ -399,6 +500,86 @@
          console.error('Lỗi khi lấy giá vé: ', error.message);
          priceTickets.value = [];
       }
+   }
+
+   function getPriceBySeatType(seatTypeName) {
+      const foundPrice = priceTickets.value.find((price) => price.seatTypeName === seatTypeName);
+      console.log('found price: ', foundPrice);
+      return foundPrice ? foundPrice.price : 0;
+   }
+
+   function getPriceBySelectedSeats() {
+      let result = [];
+
+      const holdingSeats = seats.value.filter(
+         (item) => item.status === 'holding' && item.holderId === currentUser
+      );
+
+      console.log('holding seats: ', holdingSeats);
+
+      holdingSeats.forEach((item) => {
+         const price = getPriceBySeatType(item.seatType);
+
+         console.log('getPriceBySeatType: ', price);
+
+         result.push({
+            seatId: item.seatId || '',
+            position: item.position || '',
+            seatType: item.seatType || '',
+            price: price || 0,
+         });
+      });
+
+      priceBySelectedSeats.value = result;
+      console.log('price selected seat: ', priceBySelectedSeats.value);
+      getPriceTicketInfos();
+   }
+
+   function getPriceTicketInfos() {
+      const normalSeats = priceBySelectedSeats.value.filter(
+         (seat) => seat.seatType === 'Ghế Thường'
+      );
+
+      const vipSeats = priceBySelectedSeats.value.filter((seat) => seat.seatType === 'Ghế VIP');
+      const coupleSeats = priceBySelectedSeats.value.filter(
+         (seat) => seat.seatType === 'Ghế Couple'
+      );
+
+      const result = {};
+
+      if (normalSeats.length > 0) {
+         result.normal = {
+            seatType: 'Ghế Thường',
+            postions: normalSeats.map((seat) => seat.position).join(', '),
+            quantity: normalSeats.length,
+            subTotal: normalSeats.reduce((sum, seat) => sum + seat.price, 0),
+         };
+      }
+
+      if (vipSeats.length > 0) {
+         result.vip = {
+            seatType: 'Ghế VIP',
+            postions: vipSeats.map((seat) => seat.position).join(', '),
+            quantity: vipSeats.length,
+            subTotal: vipSeats.reduce((sum, seat) => sum + seat.price, 0),
+         };
+      }
+
+      if (coupleSeats.length > 0) {
+         result.couple = {
+            seatType: 'Ghế Couple',
+            postions: coupleSeats.map((seat) => seat.position).join(', '),
+            quantity: coupleSeats.length,
+            subTotal: coupleSeats.reduce((sum, seat) => sum + seat.price, 0),
+         };
+      }
+
+      priceTicketInfos.value = result;
+      console.log('price ticket info: ', priceTicketInfos.value);
+   }
+
+   function getTotalAmount() {
+      return priceBySelectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
    }
 
    // XỬ LÝ WEBSOCKET STOMP
@@ -443,16 +624,15 @@
       if (bookingStore.bookingInfo.selectedSeats.length === 0) {
          alert('Vui lòng chọn suất chiếu trước khi chọn đồ ăn.');
          return;
-      }else {
+      } else {
          bookingStore.bookingInfo.schedule = scheduleId.value;
-         router.push("/bookproducts");
+         router.push('/bookproducts');
       }
-      
    }
 
    onMounted(async () => {
       await getFilm();
-      getSeatsScheduleInRouter();
+      restoreStateUrl();
    });
 
    onBeforeMount(() => {
@@ -463,7 +643,7 @@
       () => route.query.scheduleId,
       (newVal) => {
          if (newVal) {
-            console.log("ScheduleId đã sẵn sàng → Kết nối WebSocket");
+            console.log('ScheduleId đã sẵn sàng → Kết nối WebSocket');
             scheduleId.value = newVal;
             connectWebSocket();
          }

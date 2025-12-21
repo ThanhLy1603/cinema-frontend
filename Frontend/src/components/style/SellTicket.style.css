@@ -951,12 +951,12 @@ table {
 }
 
 /* STYLE CỦA TOAST */
-   .toast-custom {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      color: #fff;
-      padding: 8px 15px;
-      border-radius: 5px;
-      z-index: 9999;
-   }
+.toast-custom {
+   position: fixed;
+   top: 20px;
+   right: 20px;
+   color: #fff;
+   padding: 8px 15px;
+   border-radius: 5px;
+   z-index: 9999;
+}
