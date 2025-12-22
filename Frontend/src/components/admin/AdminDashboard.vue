@@ -42,6 +42,7 @@
    import PromotionManager from './PromotionManager.vue';
    import ProductPricePage from './ProductPricePage.vue';
    import PriceTicketManager from './PriceTicketManager.vue';
+   import StaffManager from '../admin/StaffManager.vue';
 
    // Router
    const route = useRoute();
@@ -62,7 +63,8 @@
       ScheduleManager,
       PromotionManager,
       ProductPricePage,
-      PriceTicketManager
+      PriceTicketManager,
+      StaffManager
    };
 
    // Component hiện tại hiển thị
@@ -82,7 +84,8 @@
          ScheduleManager: 'Lịch chiếu',
          PromotionManager:'Khuyến mại',
          ProductPricePage: 'Giá sản phẩm',
-         PriceTicketManager: 'Giá vé'
+         PriceTicketManager: 'Giá vé',
+         StaffManager: 'Nhân viên'
       };
       return map[activeComponent.value] || '';
    });
