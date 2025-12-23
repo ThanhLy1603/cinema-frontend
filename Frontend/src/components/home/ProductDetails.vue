@@ -54,15 +54,6 @@
                      Gift: Nhận trong ngày xem phim
                   </p>
                </div>
-
-               <div class="d-flex flex-column gap-3">
-                  <button
-                     @click="buyNow"
-                     class="btn btn-success w-100 fw-semibold rounded-pill py-3 shadow-sm"
-                  >
-                     Mua Ngay
-                  </button>
-               </div>
             </div>
          </div>
       </div>
@@ -151,11 +142,7 @@
    function handleImageError(e) {
       e.target.src = 'https://via.placeholder.com/600?text=Image+Not+Found';
    }
-
-   function buyNow() {
-      alert(`Đã chọn mua ngay: ${product.value.name}`);
-   }
-
+   
    function goToDetail(id) {
       if (id && id !== 'undefined') {
          router.push(`/products/${id}`);

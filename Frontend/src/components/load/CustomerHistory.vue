@@ -1,263 +1,307 @@
 <template>
-    <div class="min-vh-100 bg-light">
-        <div style="padding-bottom: 250px;">
-            <Header />
-        </div>
+   <div class="container-fluid">
+      <h1 class="text-center my-5">Lịch sử giao dịch</h1>
 
-        <div class="container py-5" style="padding-top: 160px; max-width: 1400px;">
-            <!-- Tiêu đề -->
-            <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-success mb-3">Lịch sử mua vé</h1>
-                <p class="text-muted fs-5">Xem lại tất cả hóa đơn bạn đã thanh toán</p>
+      <!-- BẢNG DANH SÁCH HOÁ ĐƠN -->
+      <div class="container-fluid">
+         <table class="table table-bordered table-hover">
+            <thead class="align-center text-center">
+               <tr class="table-warning">
+                  <th>STT</th>
+                  <th>Người tạo</th>
+                  <th>Tên khách hàng</th>
+                  <th>Số điện thoại</th>
+                  <th>Tổng tiền</th>
+                  <th>Ngày tạo</th>
+                  <th>Trạng thái</th>
+                  <th></th>
+               </tr>
+            </thead>
+
+            <tbody class="text-center align-cebt">
+               <tr v-for="(invoice, index) in invoices" :key="index">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ invoice.createdBy }}</td>
+                  <td>{{ invoice.customerName || '-' }}</td>
+                  <td>{{ invoice.customerPhone || '-' }}</td>
+                  <td>{{ invoice.finalAmount.toLocaleString('en-EN') }}</td>
+                  <td>{{ formatDateTime(invoice.createAt) }}</td>
+                  <td>
+                     <span class="badge" :class="getStatusClass(invoice.status)">
+                        {{ getStatusText(invoice.status) }}
+                     </span>
+                  </td>
+                  <td>
+                     <button class="btn btn-primary btn-sm" @click="openDetailModal(invoice.id)">
+                        Xem chi tiết
+                     </button>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+
+      <!-- MODAL CHI TIẾT HOÁ ĐƠN -->
+      <div ref="detailModalElement" class="modal fade" tabindex="-1">
+         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable w-50">
+            <div class="modal-content">
+               <div class="modal-header position-relative">
+                  <h5 class="modal-title w-100 text-center">
+                     Thông tin hoá đơn
+                     <span v-if="selectedInvoice?.invoiceId">
+                        #{{ selectedInvoice.invoiceId }}
+                     </span>
+                  </h5>
+                  <button class="btn-close" @click="modal.hide()"></button>
+               </div>
+
+               <div class="modal-body" v-if="selectedInvoice">
+                  <!-- THÔNG TIN CHUNG -->
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-fold">Trạng thái:</div>
+                     <div class="col-sm-8">
+                        <span class="badge" :class="getStatusClass(selectedInvoice.status)">
+                           {{ getStatusText(selectedInvoice.status) }}
+                        </span>
+                     </div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Người tạo:</div>
+                     <div class="col-sm-8">{{ selectedInvoice.createdBy }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Khách hàng:</div>
+                     <div class="col-sm-8">{{ selectedInvoice.customerName }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Số điện thoại:</div>
+                     <div class="col-sm-8">{{ selectedInvoice.customerPhone }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Ngày tạo:</div>
+                     <div class="col-sm-8">{{ formatDateTime(selectedInvoice.createdAt) }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Tổng tiền gốc:</div>
+                     <div class="col-sm-8">
+                        {{ selectedInvoice.totalAmount.toLocaleString('vi-VN') }} ₫
+                     </div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Giảm giá:</div>
+                     <div class="col-sm-8">
+                        {{ selectedInvoice.discountAmount.toLocaleString('vi-VN') }} ₫
+                     </div>
+                  </div>
+                  <div class="row mb-4 border-top pt-3">
+                     <div class="col-sm-4 fw-bold text-danger">Thành tiền:</div>
+                     <div class="col-sm-8 text-danger fw-bold">
+                        {{ selectedInvoice.finalAmount.toLocaleString('vi-VN') }} ₫
+                     </div>
+                  </div>
+
+                  <!-- DANH SÁCH ĐỒ ĂN VÀ ĐỒ UỐNG -->
+                  <div v-if="selectedInvoice.products?.length > 0">
+                     <h5 class="mt-4">Danh sách đồ ăn và đồ uống</h5>
+                     <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                           <thead class="table-light text-center">
+                              <tr>
+                                 <th>#</th>
+                                 <th>Tên sản phẩm</th>
+                                 <th>Số lượng</th>
+                                 <th>Giá</th>
+                                 <th>Thành tiền</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <tr
+                                 v-for="(product, index) in selectedInvoice.products"
+                                 :key="index"
+                              >
+                                 <td class="text-center">{{ index + 1 }}</td>
+                                 <td>{{ product.productName }}</td>
+                                 <td class="text-center">{{ product.quantity }}</td>
+                                 <td class="text-end">{{ product.price.toLocaleString() }} đ</td>
+                                 <td class="text-end">
+                                    {{ (product.price * product.quantity).toLocaleString() }} đ
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+
+                  <!-- THÔNG TIN GIÁ VÉ -->
+                  <div v-if="selectedInvoice.tickets?.length > 0">
+                     <h5 class="mt-4">Danh sách vé</h5>
+                     <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                           <thead class="table-light text-center">
+                              <tr>
+                                 <th>Phim</th>
+                                 <th>Giờ chiếu</th>
+                                 <th>Ngày chiếu</th>
+                                 <th>Phòng</th>
+                                 <th>Ghế</th>
+                                 <th>Giá vé</th>
+                              </tr>
+                           </thead>
+                           <tbody class="text-center align-center">
+                              <tr v-for="ticket in selectedInvoice.tickets" :key="ticket.seatPosition">
+                                 <td>{{ ticket.movieName }}</td>
+                                 <td class="text-center">{{ ticket.showTime }}</td>
+                                 <td class="text-center">{{ ticket.scheduleDate }}</td>
+                                 <td class="text-center">{{ ticket.roomName }}</td>
+                                 <td class="text-center fw-bold">{{ ticket.seatPosition }}</td>
+                                 <td class="text-center">
+                                    {{ ticket.price.toLocaleString('vi-VN') }} ₫
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+
+                  <div class="container d-flex justify-content-center">
+                     <img v-if="qrImage" :src="qrImage" width="220" alt="" />
+                  </div>
+               </div>
+
+               <div class="modal-footer">
+                  <button 
+                     type="button" 
+                     class="btn btn-secondary" 
+                     data-bs-dismiss="modal"
+                     @click="modal.hide()"
+                  >
+                     Đóng
+                  </button>
+               </div>
             </div>
-
-            <!-- Loading -->
-            <div v-if="loading" class="text-center py-5">
-                <div class="spinner-border text-success" style="width: 4rem; height: 4rem;" role="status">
-                    <span class="visually-hidden">Đang tải...</span>
-                </div>
-                <p class="mt-3 fs-4 text-muted">Đang tải lịch sử...</p>
-            </div>
-
-            <!-- Không có lịch sử -->
-            <div v-else-if="history.length === 0" class="text-center py-5">
-                <i class="bi bi-receipt display-1 text-muted opacity-50"></i>
-                <p class="mt-4 fs-3 text-muted">Bạn chưa có hóa đơn nào</p>
-                <router-link to="/films" class="btn btn-success btn-lg rounded-pill px-5 py-3 mt-3 shadow">
-                    Đặt vé ngay
-                </router-link>
-            </div>
-
-            <!-- Có lịch sử: Layout 2 cột -->
-            <div v-else class="row g-4">
-                <!-- Danh sách bên trái -->
-                <div class="col-lg-5">
-                    <div class="list-group shadow-sm rounded-4 overflow-hidden">
-                        <div v-for="item in history" :key="item.invoice?.id"
-                            class="list-group-item list-group-item-action border-0 px-4 py-3 cursor-pointer"
-                            :class="{ 'bg-light': selectedInvoice?.invoice?.id === item.invoice?.id }"
-                            @click="selectInvoice(item)">
-                            <div class="d-flex w-100 justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <h6 class="mb-1 fw-bold text-success">
-                                        #{{ (item.invoice?.id || '').substring(0, 8).toUpperCase() }}
-                                    </h6>
-                                    <p class="mb-1 small text-muted">
-                                        {{ formatDate(item.invoice?.createdAt) }}
-                                    </p>
-                                    <p class="mb-1"><strong>{{ item.filmName|| 'Không rõ' }}</strong></p>
-                                    <small class="text-muted">
-                                        {{ (item.tickets?.length || 0) }} vé • {{ (item.products?.length || 0) }} combo
-                                    </small>
-                                </div>
-                                <div class="text-end">
-                                    <h5 class="text-success fw-bold mb-0">{{ formatPrice(item.invoice?.finalAmount) }}đ
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chi tiết bên phải -->
-                <div class="col-lg-7" v-if="selectedInvoice">
-                    <div class="card shadow rounded-4 h-100 overflow-hidden">
-                        <div class="card-header bg-gradient-success text-white py-4">
-                            <h4 class="mb-0 fw-bold">
-                                Chi tiết hóa đơn #{{ (selectedInvoice.invoice?.id || '').substring(0, 8).toUpperCase()
-                                }}
-                            </h4>
-                            <small class="opacity-90">{{ formatDate(selectedInvoice.invoice?.createdAt) }}</small>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row mb-4 pb-4 border-bottom">
-                                <div class="col-md-8">
-                                    <p class="mb-2"><strong>Khách hàng:</strong> {{
-                                        selectedInvoice.invoice?.username?.username || 'Không rõ' }}</p>
-                                    <p class="mb-2"><strong>Email:</strong> {{ selectedInvoice.invoice?.username?.email
-                                        || 'Không có' }}</p>
-                                    <p class="mb-0"><strong>Phim:</strong> {{ selectedInvoice.filmName || 'Không rõ' }}
-                                    </p>
-                                </div>
-                                <div class="col-md-4 text-md-end">
-                                    <h2 class="text-success fw-bold mb-0">{{
-                                        formatPrice(selectedInvoice.invoice?.finalAmount) }}đ</h2>
-                                    <small class="text-muted">Tổng thanh toán</small>
-                                </div>
-                            </div>
-
-                            <!-- Vé -->
-                            <h5 class="fw-bold text-success mb-3 mt-4">Vé xem phim ({{ selectedInvoice.tickets?.length
-                                || 0 }} vé)</h5>
-                            <div class="table-responsive mb-5">
-                                <table class="table table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Ghế</th>
-                                            <th>Loại vé</th>
-                                            <th class="text-end">Giá</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="ticket in selectedInvoice.tickets || []" :key="ticket.id">
-                                            <td><strong class="text-success">{{ ticket.seat?.position || 'N/A'
-                                                    }}</strong></td>
-                                            <td>{{ ticket.ticketPrice?.name || 'Vé thường' }}</td>
-                                            <td class="text-end fw-bold">{{ formatPrice(ticket.price) }}đ</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Combo -->
-                            <div v-if="(selectedInvoice.products?.length || 0) > 0">
-                                <h5 class="fw-bold text-success mb-3">Combo đã mua</h5>
-                                <div class="row g-3">
-                                    <div v-for="product in selectedInvoice.products" :key="product.id"
-                                        class="col-12 col-md-6">
-                                        <div class="d-flex align-items-center bg-light rounded-4 p-3 shadow-sm">
-                                            <img :src="posterSrc(product.product?.poster)"
-                                                class="rounded me-3 flex-shrink-0"
-                                                style="width: 80px; height: 80px; object-fit: cover;" alt="Combo">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1 fw-bold">{{ product.product?.name || 'Combo' }}</h6>
-                                                <small class="text-muted">Số lượng: {{ product.quantity }}</small>
-                                            </div>
-                                            <strong class="text-success fs-5">{{ formatPrice(product.price *
-                                                product.quantity) }}đ</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-else class="text-center py-4 text-muted">
-                                <i class="bi bi-cup-straw fs-1"></i>
-                                <p class="mt-2">Không có combo</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chưa chọn hóa đơn (desktop) -->
-                <div v-else class="col-lg-7 d-flex align-items-center justify-content-center">
-                    <div class="text-center text-muted">
-                        <i class="bi bi-receipt display-1 opacity-50"></i>
-                        <p class="mt-3 fs-4">Chọn một hóa đơn để xem chi tiết</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+         </div>
+      </div>
+   </div>
 </template>
 
 <script setup>
-import { ref, onMounted} from 'vue' 
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-import Header from '../header/Header.vue'
-import { jwtDecode } from 'jwt-decode'
+   import axios from 'axios';
+   import { ref, onMounted, nextTick } from 'vue';
+   import QRCode from 'qrcode';
+   import { Modal } from 'bootstrap';
+   import { jwtDecode } from 'jwt-decode';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-const IMAGE_URL = import.meta.env.VITE_IMAGE_URL
+   const currentUser = ref();
 
-const router = useRouter()
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const history = ref([])
-const loading = ref(true)
-const selectedInvoice = ref(null)
+   const invoices = ref([]);
+   const selectedInvoice = ref(null);
+   const qrImage = ref(null);
+   const detailModalElement = ref(null);
+   let modal = null;
 
-const getHistory = async () => {
-  loading.value = true
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Vui lòng đăng nhập!')
-      router.push('/login')
-      return
-    }
+   function getCurrentUser() {
+      const token = localStorage.getItem('token') || null;
+      const decoded = jwtDecode(token);
+      currentUser.value = decoded.subject;
+      console.log('currentUser: ', currentUser.value);
+   }
 
-    let username = 'Guest'
-    try {
-      const decoded = jwtDecode(token)
-      username = decoded.subject || decoded.sub || decoded.username || 'Guest'
-      console.log('Username từ token:', username)
-    } catch (e) {
-      console.warn('Token decode lỗi')
-    }
+   function formatDateTime(dateString) {
+      if (!dateString) return '';
 
-    const res = await axios.post(
-      `${API_BASE_URL}/customer/history`,
-      { username },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+      const date = new Date(dateString);
+
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+   }
+
+   async function getInvoices() {
+      try {
+         const response = await axios.post(`${API_BASE_URL}/customer/history`,
+            {
+               username: currentUser.value
+            }
+         );
+         invoices.value = response.data;
+
+         console.log('invoices: ', invoices.value);
+      } catch (error) {
+         console.error('Lỗi khi lấy dữ liệu từ invoices: ', error.message);
       }
-    )
+   }
 
-    console.log('Raw data từ backend:', res.data)
-    console.log('Số lượng hóa đơn:', res.data?.length || 0)
+   async function openDetailModal(invoiceId) {
+      try {
+         const response = await axios.get(`${API_BASE_URL}/customer/history/${invoiceId}`);
+         selectedInvoice.value = response.data;
 
-    // SỬA CHÍNH TẠI ĐÂY: ASSIGN TRỰC TIẾP – VUE SẼ UPDATE NGAY!
-    history.value = res.data || []
+         const qrString = selectedInvoice.value.qrCodes?.[0]?.qrCode;
 
-    // Tự động chọn hóa đơn đầu tiên
-    if (history.value.length > 0) {
-      selectedInvoice.value = history.value[0]
-    }
+         if (!qrString) {
+            qrImage.value = null;
+            console.warn('Hóa đơn chưa có QR code');
+         } else {
+            qrImage.value = await QRCode.toDataURL(qrString, {
+               width: 300,
+               margin: 2,
+            });
+         }
 
-  } catch (err) {
-    console.error('Lỗi lấy lịch sử:', err.response || err)
-    history.value = []
-  } finally {
-    loading.value = false
-  }
-}
+         await nextTick();
 
-const selectInvoice = (item) => {
-    selectedInvoice.value = item
-}
+         if (!modal) {
+            modal = new Modal(detailModalElement.value, {
+               backdrop: 'static',
+               keyboard: false,
+            });
+         }
 
-const posterSrc = (poster) => poster ? `${IMAGE_URL}${poster}` : 'https://via.placeholder.com/80x80/eee/999?text=Combo'
+         modal.show();
 
-const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price || 0)
+         console.log('selected invoice: ', selectedInvoice.value);
+      } catch (error) {
+         console.error('Lỗi khi lấy chi tiết hoá đơn: ', error.message);
+         alert('Không thể tải chi tiết hoá đơn');
+      }
+   }
 
-const formatDate = (date) => {
-    if (!date) return 'Không rõ'
-    return new Date(date).toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
+   function getStatusText(status) {
+      const statusTexts = {
+         PENDING: 'Chờ soát vé',
+         PAID: 'Đã thanh toán',
+         CHECKED_IN: 'Đã sử dụng'
+      };
 
-const formatTime = (time) => time || 'Không rõ'
+      return statusTexts[status] || status;
+   }
 
-onMounted(() => {
-  getHistory()
-})
+   function getStatusClass(status) {
+      const classes = {
+         PENDING: 'bg-warning',
+         PAID: 'bg-success',
+         CHECKED_IN: 'bg-danger'
+      };
+
+      return classes[status] || 'bg-secondary';
+   }
+
+   onMounted(async () => {
+      getCurrentUser();
+      await getInvoices();
+   });
 </script>
 
 <style scoped>
-.bg-gradient-success {
-    background: linear-gradient(135deg, #28a745, #20c997) !important;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.list-group-item:hover {
-    background-color: #f8f9fa !important;
-}
-
-@media (max-width: 991px) {
-    .col-lg-7 {
-        margin-top: 2rem;
-    }
-}
+   .badge {
+      font-size: 0.9em;
+   }
 </style>

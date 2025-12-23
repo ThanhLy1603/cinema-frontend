@@ -432,6 +432,15 @@
       }
    }
 
+   // XỬ LÝ DISABLED NÚT THANH TOÁN
+   const isDisabledPayBtn = computed(() => {
+      if (!priceTicketInfos.value) return true;
+
+      const info = priceTicketInfos.value;
+
+      return (!info.normal && !info.vip && !info.couple);
+   });
+
    // XỬ LÝ GIÁ VÉ VÀ GIỎ VÉ
    const priceTickets = ref([]);
    const priceBySelectedSeats = ref([]);
@@ -529,15 +538,6 @@
       return priceBySelectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
    }
 
-   // XỬ LÝ DISABLED NÚT THANH TOÁN
-   const isDisabledPayBtn = computed(() => {
-      if (!priceTicketInfos.value) return;
-
-      const info = priceTicketInfos.value;
-
-      return (!info.normal && !info.vip && !info.couple);
-   });
-
    //  XỬ LÝ THANH TOÁN 
    const formCustomer = ref({
       name: '',
@@ -622,9 +622,9 @@
       try {
          const response = await axios.post(`${API_BASE_URL}/staff/sell-ticket`, invoiceInfo);
          if (response.data.status === 'success') {
-            console.log('Thanh toán thành công');
+            showToast('Thanh toán thành công', 'success');
          } else {
-            console.log('Thanh toán thất bại');
+            showToast('Thanh toán thất bại', 'error');
          }
       } catch (error) {
          console.error('Lỗi khi tạo hoá đơn: ', error.message);

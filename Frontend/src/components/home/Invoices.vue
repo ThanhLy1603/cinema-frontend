@@ -184,6 +184,16 @@
             </button>
          </div>
       </div>
+
+            <transition name="fade">
+         <div
+            v-if="toast?.message"
+            class="toast-custom"
+            :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
+         >
+            {{ toast?.message }}
+         </div>
+      </transition>
    </div>
 </template>
 
@@ -192,6 +202,7 @@
    import { useRouter } from 'vue-router';
    import { useBookingStore } from '../stores/BookingStore';
    import Header from '../header/Header.vue';
+   import { inject } from 'vue';
    import { jwtDecode } from 'jwt-decode';
    import axios from 'axios';
 
@@ -221,6 +232,30 @@
 
    const token = localStorage.getItem('token');
    const userInfo = jwtDecode(token);
+
+   // Xử lý hiện thị thông báo (Toast)
+   const toast = ref({ message: '', type: '' });
+   const $swal = inject('$swal');
+
+   function showToast(msg, type = 'success') {
+      toast.value = { message: msg, type };
+      setTimeout(() => (toast.value.message = ''), 3000);
+   }
+
+   function showSuccessToast() {
+      const toastConfig = $swal.mixin({
+         toast: true,
+         position: 'top-end',
+         showConfirmButton: false,
+         timerProgressBar: true,
+         timer: 1500,
+      });
+
+      toastConfig.fire({
+         icon: 'success',
+         title: 'Đặt vé thành công',
+      });
+   }
 
    /* ================= API ================= */
 
@@ -345,16 +380,17 @@
 
          showSuccess.value = true;
 
+         showSuccessToast();
+
          setTimeout(function () {
             bookingStore.clearBooking();
-         }, 3000);
+            goHome();
+         }, 1500);
       } catch (err) {
          console.error('Lỗi khi tạo hóa đơn:', err.response?.data || err.message);
          alert(err.response?.data?.message || 'Thanh toán thất bại, vui lòng thử lại!');
          return;
       }
-
-      goHome();
    }
 
    function goHome() {
@@ -394,5 +430,16 @@
    .form-control-lg.rounded-pill {
       padding-left: 1.8rem;
       padding-right: 1.8rem;
+   }
+
+   /* STYLE CỦA TOAST */
+   .toast-custom {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 5px;
+      z-index: 9999;
    }
 </style>

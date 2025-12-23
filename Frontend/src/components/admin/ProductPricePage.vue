@@ -224,7 +224,7 @@
 
    async function fetchProducts() {
       try {
-         const res = await axios.get(`${PRODUCT_API}?size=5000`, {
+         const res = await axios.get(`${PRODUCT_API}`, {
             headers: { Authorization: `Bearer ${token}` },
          });
          products.value = res.data.content || res.data;
@@ -272,15 +272,16 @@
       }
 
       const payload = {
-         product: { id: price.value.productId },
+         productId: price.value.productId,
          price: price.value.price,
          startDate: price.value.startDate,
          endDate: price.value.endDate || null,
       };
 
       try {
+         console.log('payload: ', payload);
          if (isEditing.value) {
-            await axios.put(`${API_URL}/${editingId.value}`, payload, {
+            await axios.put(`${API_URL}`, payload, {
                headers: { Authorization: `Bearer ${token}` },
             });
             showToast('Cập nhật giá sản phẩm thành công!');

@@ -216,7 +216,7 @@
 
    async function getInvoices() {
       try {
-         const response = await axios(`${API_BASE_URL}/admin/invoices`);
+         const response = await axios.get(`${API_BASE_URL}/staff/sell-history`);
          invoices.value = response.data;
 
          console.log('invoices: ', invoices.value);
@@ -227,7 +227,7 @@
 
    async function openDetailModal(invoiceId) {
       try {
-         const response = await axios.get(`${API_BASE_URL}/admin/invoices/${invoiceId}`);
+         const response = await axios.get(`${API_BASE_URL}/staff/sell-history/${invoiceId}`);
          selectedInvoice.value = response.data;
 
          const qrString = selectedInvoice.value.qrCodes?.[0]?.qrCode;
