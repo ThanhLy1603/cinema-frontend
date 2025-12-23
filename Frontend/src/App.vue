@@ -2,12 +2,16 @@
    <div class="container-fluid">
       <router-view />
 
+      <revenue></revenue>
+
    </div>
 </template>
 
 <script setup>
    import { watch } from 'vue';
    import { useRoute } from 'vue-router';
+   import Revenue from './components/admin/Revenue.vue';
+
    
 
    const route = useRoute();

@@ -73,33 +73,33 @@ const router = createRouter({
    },
 });
 
-// ===== Navigation Guard =====
-router.beforeEach((to, from, next) => {
-   const token = localStorage.getItem('token');
-   const userRole = localStorage.getItem('role'); // e.g. ROLE_ADMIN, ROLE_USER
-   const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : '';
 
-   // Nếu đã đăng nhập, chặn truy cập lại trang Login/Register
-   if (token && (to.path === '/login' || to.path === '/register')) {
-      return next('/');
-   }
+// router.beforeEach((to, from, next) => {
+//    const token = localStorage.getItem('token');
+//    const userRole = localStorage.getItem('role'); // e.g. ROLE_ADMIN, ROLE_USER
+//    const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : '';
 
-   // Nếu truy cập tab profile nhưng không có token
-   if (to.query.tab === 'AccountProfile' && !token) {
-      return next({ path: '/', query: { tab: 'Films' } });
-   }
+   
+//    if (token && (to.path === '/login' || to.path === '/register')) {
+//       return next('/');
+//    }
 
-   //  Nếu route yêu cầu đăng nhập mà chưa có token -> quay về login
-   if (to.meta.requiresAuth && !token) {
-      return next('/login');
-   }
+  
+//    if (to.query.tab === 'AccountProfile' && !token) {
+//       return next({ path: '/', query: { tab: 'Films' } });
+//    }
 
-   //  Nếu route yêu cầu quyền admin nhưng user không phải admin
-   if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
-      return next('/');
-   }
+   
+//    if (to.meta.requiresAuth && !token) {
+//       return next('/login');
+//    }
 
-   next();
-});
+   
+//    if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
+//       return next('/');
+//    }
+
+//    next();
+// });
 
 export default router;
