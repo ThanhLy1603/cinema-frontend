@@ -83,7 +83,6 @@ const router = createRouter({
    },
 });
 
-<<<<<<< HEAD
 
 // router.beforeEach((to, from, next) => {
 //    const token = localStorage.getItem('token');
@@ -104,7 +103,7 @@ const router = createRouter({
 //    if (to.meta.requiresAuth && !token) {
 //       return next('/login');
 //    }
-=======
+
 // ===== Navigation Guard =====
 router.beforeEach((to, from, next) => {
    const token = localStorage.getItem('token');
@@ -135,9 +134,10 @@ router.beforeEach((to, from, next) => {
          return next('/');
       }
    }
->>>>>>> d2bf820b091a13bec76a9053f5cc071d0d85d472
 
-   
+   next();
+
+});  
 //    if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
 //       return next('/');
 //    }

@@ -47,6 +47,7 @@
    import ProductPricePage from './ProductPricePage.vue';
    import PriceTicketManager from './PriceTicketManager.vue';
    import InvoiceHistory from './InvoiceHistory.vue';
+   import Revenue from './Revenue.vue';
 
    // Router
    const route = useRoute();
@@ -68,6 +69,7 @@
       ProductPricePage,
       PriceTicketManager,
       InvoiceHistory,
+      Revenue
    };
 
    // Component hiện tại (mặc định là AdminIndex)
@@ -89,6 +91,7 @@
          ProductPricePage: 'Quản Lý Giá Sản Phẩm',
          PriceTicketManager: 'Quản Lý Giá Vé',
          InvoiceHistory: 'Lịch Sử Hóa Đơn',
+         Revenue: 'Thống kê doanh thu'
       };
       return map[activeComponent.value] || '';
    });

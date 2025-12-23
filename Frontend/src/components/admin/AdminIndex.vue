@@ -31,7 +31,8 @@
       { name: 'Khuyến mại', component: 'PromotionManager' },
       { name: 'Giá đồ ăn', component: 'ProductPricePage' },
       { name: 'Giá vé', component: 'PriceTicketManager' },
-      { name: 'Lịch sử giao dịch', component: 'InvoiceHistory'}
+      { name: 'Lịch sử giao dịch', component: 'InvoiceHistory'},
+      { name: 'Thống kê doanh thu', component: 'Revenue'}
    ];
 
    function openComponent(componentName) {
