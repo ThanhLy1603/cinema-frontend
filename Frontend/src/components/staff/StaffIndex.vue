@@ -20,8 +20,9 @@
 
    const managementItems = [
       { name: 'Bán vé', component: 'SellTicket'},
+      { name: 'Bán đồ ăn và đồ uống', component: 'SellProduct'},
       { name: 'Soát vé', component: 'CheckTicket'},
-      { name: 'Show QR Code', component: 'ShowQRCode'}
+      { name: 'Lịch sử bán hàng', component: 'SellHistory'}
    ];
 
    function openComponent(componentName) {

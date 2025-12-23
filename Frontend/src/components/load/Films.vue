@@ -18,7 +18,7 @@
             </section>
 
             <section id="now" class="container-fluid section-films py-5">
-               <h2 class="section-title fw-bold mb-4 display-6 text-center">🎬 Phim đang chiếu</h2>
+               <h2 class="section-title fw-bold mb-4 display-6 text-center">Phim đang chiếu</h2>
 
                <div v-if="loading" class="text-center py-5">
                   <div class="spinner-border text-success" role="status"></div>
@@ -67,15 +67,15 @@
                            <p class="card-text">{{ film.country }} • {{ film.duration }} phút</p>
 
                            <div class="film-buttons d-flex justify-content-center gap-2">
-                              <router-link :to="`/booking/${film.id}`" class="btn-film flex-grow-1"
+                              <router-link :to="`/booking/${film.id}`" class="btn-film flex-grow-1 mx-2 w-50"
                                  >Mua vé</router-link
                               >
-                              <router-link
+                              <!-- <router-link
                                  :to="`/film/${film.id}`"
-                                 class="btn-film-outline flex-grow-1"
+                                 class="btn-film-outline flex-grow-1 mx-2"
                               >
                                  Chi tiết
-                              </router-link>
+                              </router-link> -->
                            </div>
                         </div>
                      </div>
@@ -83,7 +83,7 @@
                </Swiper>
             </section>
 
-            <section id="offers" class="offers-section py-5 text-center">
+            <!-- <section id="offers" class="offers-section py-5 text-center">
                <h2 class="section-title fw-bold mb-4">Ưu đãi & khuyến mãi</h2>
 
                <div class="container-fluid px-4">
@@ -106,10 +106,59 @@
                      </div>
                   </div>
                </div>
+            </section> -->
+
+            <section id="coming" class="container-fluid section-films py-5">
+               <h2 class="section-title fw-bold mb-4 text-center">Combo và đồ uống</h2>
+
+               <div v-if="loading" class="text-center py-5">
+                  <div class="spinner-border text-success" role="status"></div>
+               </div>
+
+               <Swiper
+                  v-else
+                  :modules="modules"
+                  :slides-per-view="4"
+                  :space-between="24"
+                  :loop="true"
+                  :autoplay="{ delay: 4000, disableOnInteraction: false }"
+                  :breakpoints="{
+                     320: { slidesPerView: 1 },
+                     576: { slidesPerView: 2 },
+                     768: { slidesPerView: 3 },
+                     1200: { slidesPerView: 4 },
+                  }"
+                  navigation
+                  pagination
+                  class="mySwiper"
+               >
+                  <SwiperSlide v-for="product in products" :key="product.id">
+                     <div
+                        class="card film-card h-100 border-0"
+                        @mouseenter="hoverFilm = product.id"
+                        @mouseleave="hoverFilm = null"
+                     >
+                        <div class="poster-wrapper position-relative">
+                           <img
+                              :src="posterSrc(product.poster)"
+                              :alt="product.name"
+                              class="card-img-top"
+                           />
+                        
+                        </div>
+
+                        <div class="card-body">
+                           <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                           <p class="card-text">{{ product.description }}</p>
+                           <p class="card-text fw-bold text-primary fs-5">Giá: {{ getProductPrice(product.id).toLocaleString() }} đ</p>
+                        </div>
+                     </div>
+                  </SwiperSlide>
+               </Swiper>
             </section>
 
             <section id="coming" class="container-fluid section-films py-5">
-               <h2 class="section-title fw-bold mb-4 text-center">🎞️ Phim sắp chiếu</h2>
+               <h2 class="section-title fw-bold mb-4 text-center"> Phim sắp chiếu</h2>
 
                <div v-if="loading" class="text-center py-5">
                   <div class="spinner-border text-success" role="status"></div>
@@ -159,15 +208,15 @@
 
                            <div class="film-buttons d-flex justify-content-center gap-2">
                               <router-link 
-                              :to="`/booking/${film.id}`" class="btn-film flex-grow-1"
+                              :to="`/booking/${film.id}`" class="btn-film flex-grow-1 mx-2"
                                  >Mua vé</router-link
                               >
-                              <router-link
+                              <!-- <router-link
                                  :to="`/film/${film.id}`"
-                                 class="btn-film-outline flex-grow-1"
+                                 class="btn-film-outline flex-grow-1 mx-2"
                               >
                                  Chi tiết
-                              </router-link>
+                              </router-link> -->
                            </div>
                         </div>
                      </div>
@@ -220,6 +269,9 @@
    const hoverFilm = ref(null);
    const showTrailer = ref(false);
    const selectedFilm = ref({});
+
+   const products = ref([]);
+   const prices = ref([]);
 
    function openTrailer(film) {
       selectedFilm.value = film;
@@ -287,6 +339,31 @@
       return filterFilms(['upcoming', 'coming_soon']);
    }
 
+   async function getProducts() {
+      try {
+         const url = `${API_BASE_URL}/products`;
+         const response = await axios.get(url);
+         products.value = response.data;
+
+         console.log('Products loaded:', products.value);
+      } catch (error) {
+         console.error('Lỗi khi lấy dữ liệu từ products:', error.message);
+      }
+   }
+
+   async function getPrices() {
+      try {
+         const response = await axios.get(`${API_BASE_URL}/product-prices`);
+         prices.value = response.data;
+      } catch (error) {
+         console.error('Lỗi lấy giá:', error.message);
+      }
+   }
+
+   function getProductPrice(id) {
+      return prices.value.find((p) => p.productId === id)?.price || 0;
+   }
+
    /* =================== HELPERS =================== */
    function posterSrc(poster) {
       if (poster && poster.startsWith('http')) return poster;
@@ -298,6 +375,8 @@
    }
 
    onMounted(() => {
+      getProducts();
+      getPrices();
       getFilms();
    });
 </script>

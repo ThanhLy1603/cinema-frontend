@@ -24,10 +24,19 @@ const routes = [
    { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
    { path: '/film/:id', name: 'FilmDetail', component: FilmDetail },
    { path: '/booking/:filmId', name: 'BookTicket', component: BookTicket },
-   { path: '/bookproducts', name: 'BookProducts', component: BookProducts ,meta: { requiresAuth: true }},
-   { path: '/payment', name: 'Invoices', component: Invoices ,meta: { requiresAuth: true }},
-   { path: '/customer/history', name: 'CustomerHistory', component: CustomerHistory, meta: { requiresAuth: true }},
-
+   {
+      path: '/bookproducts',
+      name: 'BookProducts',
+      component: BookProducts,
+      meta: { requiresAuth: true, role: 'customer' },
+   },
+   { path: '/payment', name: 'Invoices', component: Invoices, meta: { requiresAuth: true } },
+   {
+      path: '/customer/history',
+      name: 'CustomerHistory',
+      component: CustomerHistory,
+      meta: { requiresAuth: true, role: 'customer' },
+   },
 
    // Authenticated user routes
    {
@@ -52,7 +61,8 @@ const routes = [
    {
       path: '/staff',
       name: 'StaffDashboard',
-      component: StaffDashboard
+      component: StaffDashboard,
+      meta: { requiresAuth: true, role: 'staff' },
    },
 
    // Fallback
@@ -76,27 +86,32 @@ const router = createRouter({
 // ===== Navigation Guard =====
 router.beforeEach((to, from, next) => {
    const token = localStorage.getItem('token');
-   const userRole = localStorage.getItem('role'); // e.g. ROLE_ADMIN, ROLE_USER
+   const userRole = localStorage.getItem('role'); // ROLE_ADMIN, ROLE_STAFF, ROLE_USER
    const normalizedRole = userRole ? userRole.replace('ROLE_', '').toLowerCase() : '';
 
-   // Nếu đã đăng nhập, chặn truy cập lại trang Login/Register
+   // 🔹 Nếu đã đăng nhập thì không vào login/register
    if (token && (to.path === '/login' || to.path === '/register')) {
       return next('/');
    }
 
-   // Nếu truy cập tab profile nhưng không có token
-   if (to.query.tab === 'AccountProfile' && !token) {
-      return next({ path: '/', query: { tab: 'Films' } });
-   }
-
-   //  Nếu route yêu cầu đăng nhập mà chưa có token -> quay về login
+   // 🔹 Route yêu cầu login
    if (to.meta.requiresAuth && !token) {
       return next('/login');
    }
 
-   //  Nếu route yêu cầu quyền admin nhưng user không phải admin
-   if (to.meta.role && to.meta.role.toLowerCase() !== normalizedRole) {
-      return next('/');
+   // 🔹 Route có yêu cầu role
+   if (to.meta.role) {
+      if (!normalizedRole) {
+         return next('/login');
+      }
+
+      if (to.meta.role !== normalizedRole) {
+         // 🚫 Sai quyền → đá về trang phù hợp
+         if (normalizedRole === 'admin') return next('/admin');
+         if (normalizedRole === 'staff') return next('/staff');
+         if (normalizedRole === 'customer') return next('/');
+         return next('/');
+      }
    }
 
    next();

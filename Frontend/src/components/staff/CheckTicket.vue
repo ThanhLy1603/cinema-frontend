@@ -64,38 +64,69 @@
                      </div>
                   </div>
 
+                  <!-- DANH SÁCH ĐỒ ĂN VÀ ĐỒ UỐNG -->
+                  <div v-if="detailInvoice.products && detailInvoice.products?.length > 0">
+                     <h5 class="mt-4">Danh sách đồ ăn và đồ uống</h5>
+                     <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                           <thead class="table-light text-center">
+                              <tr>
+                                 <th>#</th>
+                                 <th>Tên sản phẩm</th>
+                                 <th>Số lượng</th>
+                                 <th>Giá</th>
+                                 <th>Thành tiền</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <tr v-for="(product, index) in detailInvoice.products" :key="index">
+                                 <td class="text-center">{{ index + 1 }}</td>
+                                 <td>{{ product.productName }}</td>
+                                 <td class="text-center">{{ product.quantity }}</td>
+                                 <td class="text-end">{{ product.price.toLocaleString() }} đ</td>
+                                 <td class="text-end">
+                                    {{ (product.price * product.quantity).toLocaleString() }} đ
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+
                   <!-- DANH SÁCH VÉ -->
-                  <h5 class="mt-4">Danh sách vé</h5>
-                  <div class="table-responsive">
-                     <table class="table table-sm table-bordered">
-                        <thead class="table-light text-center">
-                           <tr>
-                              <th>Phim</th>
-                              <th>Giờ chiếu</th>
-                              <th>Phòng</th>
-                              <th>Ghế</th>
-                              <th>Giá vé</th>
-                           </tr>
-                        </thead>
-                        <tbody class="text-center">
-                           <tr v-for="ticket in detailInvoice.tickets" :key="ticket.seatPosition">
-                              <td>{{ ticket.movieName }}</td>
-                              <td>{{ ticket.showTime }}</td>
-                              <td>{{ ticket.roomName }}</td>
-                              <td class="fw-bold">{{ ticket.seatPosition }}</td>
-                              <td>{{ ticket.price.toLocaleString('vi-VN') }} ₫</td>
-                           </tr>
-                        </tbody>
-                     </table>
+                  <div v-if="detailInvoice.tickets && detailInvoice.tickets.length > 0">
+                     <h5 class="mt-4">Danh sách vé</h5>
+                     <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                           <thead class="table-light text-center">
+                              <tr>
+                                 <th>Phim</th>
+                                 <th>Giờ chiếu</th>
+                                 <th>Ngày chiếu</th>
+                                 <th>Phòng</th>
+                                 <th>Ghế</th>
+                                 <th>Giá vé</th>
+                              </tr>
+                           </thead>
+                           <tbody class="text-center">
+                              <tr
+                                 v-for="ticket in detailInvoice.tickets"
+                                 :key="ticket.seatPosition"
+                              >
+                                 <td class="text-center">{{ ticket.movieName }}</td>
+                                 <td class="text-center">{{ ticket.showTime }}</td>
+                                 <td class="text-center">{{ ticket }}</td>
+                                 <td class="text-center">{{ ticket.roomName }}</td>
+                                 <td class="fw-bold">{{ ticket.seatPosition }}</td>
+                                 <td class="text-center">{{ ticket.price.toLocaleString('vi-VN') }} ₫</td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
                   </div>
 
                   <div class="container d-flex justify-content-center mt-4">
-                     <img
-                        v-if="qrImage"
-                        :src="qrImage"
-                        width="220"
-                        alt="QR Code"
-                     />
+                     <img v-if="qrImage" :src="qrImage" width="220" alt="QR Code" />
                   </div>
                </div>
 
@@ -103,7 +134,14 @@
                   <div class="container-fluid">
                      <div class="row">
                         <div class="col text-end">
-                           <button v-if="detailInvoice?.status !== 'CHECKED_IN'" type="button" class="btn btn-success" @click="confirmQRCode">Xác nhận</button>
+                           <button
+                              v-if="detailInvoice?.status !== 'CHECKED_IN'"
+                              type="button"
+                              class="btn btn-success"
+                              @click="confirmQRCode"
+                           >
+                              Xác nhận
+                           </button>
                         </div>
 
                         <div class="col text-start">
@@ -133,10 +171,14 @@
    const detailInvoice = ref(null);
    const qrImage = ref(null);
    let html5QrCode = null;
+   let isScannerRunning = false;
    let modalInstance = null;
    const detailModalElement = ref(null);
 
    async function onScanSuccess(decodedText) {
+      if (!isScannerRunning) return;
+
+      isScannerRunning = false;
       scannedResult.value = decodedText; // Ẩn phần quét QR
 
       // Dừng scanner ngay lập tức
@@ -183,12 +225,10 @@
       try {
          const qrCode = detailInvoice.value.qrCodes?.[0]?.qrCode;
 
-         const response = await axios.post(`${API_BASE_URL}/staff/qr/confirm`,
-            {
-               qrCode: qrCode
-            }
-         );
-         
+         const response = await axios.post(`${API_BASE_URL}/staff/qr/confirm`, {
+            qrCode: qrCode,
+         });
+
          closeModal();
          console.log('message: ', response.data.message);
       } catch (error) {
@@ -197,29 +237,39 @@
    }
 
    async function startScanner() {
+      if (html5QrCode && isScannerRunning) return;
+
       html5QrCode = new Html5Qrcode('qr-reader');
 
-      await html5QrCode.start(
-         { facingMode: 'environment' },
-         {
-            fps: 10,
-            qrbox: { width: 300, height: 300 },
-         },
-         onScanSuccess,
-         (error) => {
-            // Có thể bỏ comment để debug lỗi camera
-            // console.warn(error);
-         }
-      );
+      try {
+         await html5QrCode.start(
+            { facingMode: 'environment' },
+            {
+               fps: 10,
+               qrbox: { width: 300, height: 300 },
+            },
+            onScanSuccess
+         );
+         isScannerRunning = true;
+      } catch (err) {
+         console.error('Không thể mở camera:', err.message);
+      }
    }
 
-   function resetScanner() {
+   async function resetScanner() {
       scannedResult.value = null;
       detailInvoice.value = null;
-      if (modalInstance) {
-         modalInstance.hide();
+
+      if (modalInstance) modalInstance.hide();
+
+      if (html5QrCode && isScannerRunning) {
+         try {
+            await html5QrCode.stop();
+         } catch (_) {}
+         isScannerRunning = false;
       }
-      startScanner();
+
+      await startScanner();
    }
 
    function closeModal() {
@@ -234,7 +284,7 @@
       const statusTexts = {
          PENDING: 'Chờ soát vé',
          PAID: 'Đã thanh toán',
-         CHECKED_IN: 'Đã sử dụng'
+         CHECKED_IN: 'Đã sử dụng',
       };
 
       return statusTexts[status] || status;
@@ -244,7 +294,7 @@
       const classes = {
          PENDING: 'bg-warning',
          PAID: 'bg-success',
-         CHECKED_IN: 'bg-danger'
+         CHECKED_IN: 'bg-danger',
       };
 
       return classes[status] || 'bg-secondary';
@@ -270,10 +320,13 @@
       startScanner();
    });
 
-   onBeforeUnmount(() => {
-      if (html5QrCode) {
-         html5QrCode.stop().catch(() => {});
+   onBeforeUnmount(async () => {
+      if (html5QrCode && isScannerRunning) {
+         try {
+            await html5QrCode.stop();
+         } catch (_) {}
       }
+
       if (modalInstance) {
          modalInstance.dispose();
       }

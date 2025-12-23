@@ -57,7 +57,6 @@
                   <!-- <div v-if="error" class="alert alert-danger">{{ error }}</div>
                   <div v-if="success" class="alert alert-success">{{ success }}</div> -->
 
-<<<<<<< HEAD
                   <form @submit.prevent="updateInfo">
                      <div class="row">
                         <div class="col-md-6 mb-3">

@@ -261,7 +261,6 @@
          router.push({
             name: 'BookTicket',
             params: { filmId: film.id },
-            query: { scheduleId: scheduleId.value },
          });
 
          return;
@@ -361,11 +360,18 @@
    async function toggleSeat(seat) {
       const rowLabel = seat.position[0];
 
+      const selectedSeatCount = bookingStore.bookingInfo.selectedSeats.length;
+
       console.log('username: ', currentUser);
       console.log('rowLabel: ', rowLabel);
 
       if (seat.status === 'holding' && seat.holderId !== currentUser) {
          showToast('Ghế này đang giữ bởi người khác', 'error');
+         return;
+      }
+
+      if (seat.status === 'available' && selectedSeatCount >= 9) {
+         showToast('Bạn chỉ được chọn tối đa 9 ghế cho mỗi lần đặt vé', 'error');
          return;
       }
 
@@ -442,46 +448,78 @@
    }
 
    function checkAntiGap(rowLabel) {
-      const row = seatRows.value.find((row) => row.label === rowLabel);
-      console.log('row: ', row);
+      // const row = seatRows.value.find((row) => row.label === rowLabel);
+      // console.log('row: ', row);
+      // if (!row) return false;
+
+      // const orderedSeats = [...row.seats].sort((first, second) =>
+      //    parseInt(first.position.slice(1) - parseInt(second.position.slice(1)))
+      // );
+
+      // console.log('orderedSeats: ', orderedSeats);
+
+      // const holdingIndexes = orderedSeats
+      //    .map((seat, index) => (seat.status === 'holding' ? index : -1))
+      //    .filter((index) => index !== -1);
+
+      // console.log('holdingIndexes: ', holdingIndexes);
+
+      // if (holdingIndexes.length < 2) return false;
+
+      // for (let i = 0; i < holdingIndexes.length - 1; i++) {
+      //    const left = holdingIndexes[i];
+      //    const right = holdingIndexes[i + 1];
+
+      //    const middleSeats = orderedSeats.slice(left + 1, right);
+
+      //    console.log('left: ', left);
+      //    console.log('right: ', right);
+      //    console.log('miidleSeats: ', middleSeats);
+
+      //    if (middleSeats.some((seat) => seat.status === 'available')) {
+      //       return true;
+      //    }
+
+      //    return false;
+      // }
+
+      const row = seatRows.value.find((r) => r.label === rowLabel);
       if (!row) return false;
 
-      const orderedSeats = [...row.seats].sort((first, second) =>
-         parseInt(first.position.slice(1) - parseInt(second.position.slice(1)))
+      const orderedSeats = [...row.seats].sort(
+         (a, b) => parseInt(a.position.slice(1)) - parseInt(b.position.slice(1))
       );
 
-      console.log('orderedSeats: ', orderedSeats);
+      for (let i = 1; i < orderedSeats.length - 1; i++) {
+         const prev = orderedSeats[i - 1];
+         const current = orderedSeats[i];
+         const next = orderedSeats[i + 1];
 
-      const holdingIndexes = orderedSeats
-         .map((seat, index) => (seat.status === 'holding' ? index : -1))
-         .filter((index) => index !== -1);
-
-      console.log('holdingIndexes: ', holdingIndexes);
-
-      if (holdingIndexes.length < 2) return false;
-
-      for (let i = 0; i < holdingIndexes.length - 1; i++) {
-         const left = holdingIndexes[i];
-         const right = holdingIndexes[i + 1];
-
-         const middleSeats = orderedSeats.slice(left + 1, right);
-
-         console.log('left: ', left);
-         console.log('right: ', right);
-         console.log('miidleSeats: ', middleSeats);
-
-         if (middleSeats.some((seat) => seat.status === 'available')) {
+         if (
+            current.status === 'available' &&
+            prev.status !== 'available' &&
+            next.status !== 'available'
+         ) {
             return true;
          }
-
-         return false;
       }
+
+      return false;
    }
 
    function showAntiGapError() {
       antiGapError.value = 'Bạn không được để trống ghé ở giữa khi chọn cùng hàng';
       console.log('Anti Gap: ', antiGapError.value);
    }
+
+   // XỬ LÝ DISABLE ĐẶT VÉ
+   const isDisableBookBtn = computed(() => {
+      if (!priceTicketInfos.value) return true;
+
+      const info = priceTicketInfos.value;
+
+      return (!info.normal && !info.vip && !info.couple) || antiGapError.value;
+   });
 
    // XỬ LÝ GIÁ VÉ VÀ GIỎ VÉ
    const priceTickets = ref([]);
@@ -581,15 +619,6 @@
    function getTotalAmount() {
       return priceBySelectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
    }
-
-   // XỬ LÝ DISABLE ĐẶT VÉ
-   const isDisableBookBtn = computed(() => {
-      if (!priceTicketInfos.value) return true;
-
-      const info = priceTicketInfos.value;
-
-      return (!info.normal && !info.vip && !info.couple) || antiGapError.value;
-   });
 
    // XỬ LÝ WEBSOCKET STOMP
    let stompClient = null;

@@ -86,7 +86,7 @@
    }
 
    .content-wrapper {
-      margin-top: 20%;
+      margin-top: 15%;
       padding: 20px;
       min-height: 400px;
       background-color: #f9f9f9;

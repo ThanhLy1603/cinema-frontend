@@ -22,6 +22,7 @@
                   label="name"
                   :reduce="(film) => film.id"
                   placeholder="Chọn phim"
+                  :append-to-body="true"
                   class="border-primary"
                />
             </div>
@@ -32,6 +33,7 @@
                   :options="[{ id: '', name: 'Tất cả loại ghế' }, ...seatTypes]"
                   label="name"
                   :reduce="(seatType) => seatType.id"
+                  append-to-body
                   placeholder="Chọn loại ghế"
                   class="border-primary"
                />
@@ -44,6 +46,7 @@
                   label="startTime"
                   :reduce="(time) => time.id"
                   placeholder="Chọn giờ chiếu"
+                  :append-to-body="true"
                   class="border-primary"
                />
             </div>
@@ -55,6 +58,7 @@
                   label="label"
                   :reduce="(d) => d.value"
                   placeholder="Chọn loại ngày"
+                  :append-to-body="true"
                   class="border-primary"
                />
             </div>
@@ -103,19 +107,6 @@
          </div>
 
          <!-- Phân trang -->
-         <!-- <nav class="d-flex justify-content-center mt-3">
-        <ul class="pagination">
-          <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="prevPage">Trước</button>
-          </li>
-          <li v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }" class="page-item">
-            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="nextPage">Sau</button>
-          </li>
-        </ul>
-      </nav> -->
          <div class="pagination-wrapper mt-4">
             <div class="pagination-info mb-2 text-center text-muted small">
                Hiển thị {{ (currentPage - 1) * pageSize + 1 }} -
@@ -846,6 +837,7 @@
    .fade-leave-to {
       opacity: 0;
    }
+
    .table thead th {
       position: sticky;
       top: 0;
@@ -853,5 +845,4 @@
       z-index: 20 !important;
       box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
    }
-   
 </style>
