@@ -1,13 +1,15 @@
 <template>
-   <div class="container-fluid">
-      <header class="main-header">
+   <div class="container-fluid fixed-top">
+      <header class="main-header" :class="{ scrolled: isScrolled }">
          <!-- Banner -->
-         <div class="header-banner">
+         <div class="header-banner" :class="{ hidden: isScrolled }">
             <img
                src="/src/assets/header/banner_header.jpg"
                class="header-bg"
                alt="Header background"
             />
+
+            <div class="banner-overlay"></div>
          </div>
 
          <!-- Thanh điều hướng -->
@@ -37,6 +39,7 @@
 
                      <div v-if="profileMenuOpen" class="dropdown-menu">
                         <button @click="emitChange('AccountProfile')">Trang cá nhân</button>
+                        <button @click="goHistory">Lịch sử mua vé</button>
                         <button @click="logout">Đăng xuất</button>
                         <button v-if="isAdmin" @click="goAdmin">Trang quản trị</button>
                      </div>
@@ -57,7 +60,7 @@
 </template>
 
 <script setup>
-   import { ref, onMounted } from 'vue';
+   import { ref, onMounted, onBeforeMount } from 'vue';
    import { useRouter } from 'vue-router';
    import { inject } from 'vue';
    import { jwtDecode } from 'jwt-decode';
@@ -66,6 +69,7 @@
    const router = useRouter();
    const $swal = inject('$swal');
    const isAdmin = ref(false);
+   const isScrolled = ref(false);
 
    const menuOpen = ref(false);
    const profileMenuOpen = ref(false);
@@ -128,44 +132,86 @@
       setTimeout(() => window.location.reload(), 500);
    }
 
+
+   function goHistory() {
+      router.push('/customer/history');
+      profileMenuOpen.value = false;
+   }
    // Đi tới trang quản trị
    function goAdmin() {
       router.push('/admin');
       profileMenuOpen.value = false;
    }
 
+   function handleScroll() {
+      const scrolled = window.scrollY > 100;
+      isScrolled.value = scrolled;
+      document.body.classList.toggle('header-scrolled', scrolled);
+   }
+
    // Debug log
    onMounted(() => {
+      window.addEventListener('scroll', handleScroll);
       if (token) {
          const decoded = jwtDecode(token);
          console.log('Thông tin token:', decoded);
          isAdmin.value = decoded.roles?.includes('ROLE_ADMIN');
       }
    });
+
+   onBeforeMount(() => {
+      window.removeEventListener('scroll', handleScroll);
+   });
 </script>
 
 <style scoped>
+   /* ==================== HEADER CHUNG ==================== */
    .main-header {
-      width: 100%;
-      overflow: visible !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
    }
 
    /* === Banner === */
 
    .header-banner {
-      position: relative;
-      width: 100%;
       height: 150px;
-      background: linear-gradient(to right, #7cc9ff, #54a3ff);
+      overflow: hidden;
+      position: relative;
+      transition:
+         height 0.5s ease,
+         opacity 0.5s ease;
+   }
+
+   .header-banner.hidden {
+      height: 0;
+      opacity: 0;
    }
 
    .header-bg {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.6s ease;
    }
 
-   /* === Dash bar === */
+   .main-header.scrolled .header-bg {
+      transform: scale(1.1);
+   }
+
+   .banner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), transparent 50%);
+   }
+
+   /* ==================== THANH ĐIỀU HƯỚNG (luôn cố định) ==================== */
    .header-dash {
       background-color: white;
       border-top: 2px solid #ccc;
@@ -173,6 +219,17 @@
       padding: 10px 0;
       position: relative;
       z-index: 10;
+   }
+
+   .main-header.scrolled .header-dash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
    }
 
    .header-content {
@@ -189,7 +246,11 @@
       height: 70px;
    }
 
-   /* === Menu === */
+   .main-header.scrolled .logo img {
+      height: 58px;
+   }
+
+   /* ==================== MENU CHÍNH ==================== */
    .menu {
       display: flex;
       gap: 25px;
@@ -213,7 +274,7 @@
       box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
    }
 
-   /* === Đăng nhập & Hồ sơ === */
+   /* ==================== NÚT ĐĂNG NHẬP / HỒ SƠ ==================== */
    .login-btn {
       background-color: #94e900;
       color: #000;
@@ -244,6 +305,14 @@
       z-index: 1000;
       animation: fadeIn 0.2s ease-in-out;
    }
+
+   .profileMenuOpen + .dropdown-menu,
+   .dropdown-menu[style*='block'] {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+   }
+
    .dropdown-menu button {
       background: none;
       border: none;
@@ -262,7 +331,7 @@
       position: relative;
    }
 
-   /* === Menu di động === */
+   /* ==================== MENU MOBILE ==================== */
    .menu-toggle {
       display: none;
       cursor: pointer;
@@ -270,52 +339,66 @@
       font-weight: bold;
       user-select: none;
       transition: transform 0.3s ease;
-      line-height: 1; 
+      line-height: 1;
    }
    .menu-toggle:hover {
       transform: scale(1.1);
    }
 
-   /* Responsive */
+   /* ==================== RESPONSIVE ==================== */
    @media (max-width: 992px) {
-      .logo img {
-         height: 60px;
+      .menu {
+         gap: 20px;
       }
-      .login-btn {
-         padding: 6px 12px;
+      .menu button {
+         font-size: 15px;
+         padding: 8px 12px;
       }
    }
    @media (max-width: 768px) {
       .header-banner {
          height: 100px;
       }
-      .logo img {
-         height: 45px;
-      }
-      .menu {
-         position: absolute;
-         top: 60px;
-         right: 10px;
-         flex-direction: column;
-         gap: 0;
-         width: 200px;
-         background: white;
-         border-radius: 10px;
-         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      .header-dash {
          padding: 10px 0;
+      }
+
+      .menu {
+         position: fixed;
+         top: 80px;
+         right: 20px;
+         background: white;
+         flex-direction: column;
+         width: 220px;
+         border-radius: 18px;
+         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.22);
+         padding: 16px 0;
          opacity: 0;
          pointer-events: none;
-         transform: translateY(-10px);
-         transition: all 0.3s ease;
-         z-index: 9999; 
+         transform: translateY(-20px);
+         transition: all 0.4s ease;
+         z-index: 9999;
       }
+
       .menu.active {
-         opacity: 1 !important;
+         opacity: 1;
          pointer-events: auto;
          transform: translateY(0);
       }
+
+      .menu button {
+         width: 100%;
+         text-align: left;
+         padding: 14px 28px;
+         border-radius: 0;
+      }
+
       .menu-toggle {
          display: block;
+      }
+
+      .main-header.scrolled .logo img {
+         height: 52px;
       }
    }
    @media (max-width: 480px) {
@@ -323,23 +406,14 @@
          height: 80px;
       }
       .logo img {
-         height: 40px;
+         height: 48px;
+      }
+      .main-header.scrolled .logo img {
+         height: 46px;
       }
       .login-btn {
-         padding: 5px 8px;
-         font-size: 12px;
-      }
-   }
-
-   /* Animation */
-   @keyframes fadeIn {
-      from {
-         opacity: 0;
-         transform: translateY(-5px);
-      }
-      to {
-         opacity: 1;
-         transform: translateY(0);
+         padding: 8px 14px;
+         font-size: 13px;
       }
    }
 </style>

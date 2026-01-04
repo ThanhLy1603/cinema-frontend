@@ -1,0 +1,349 @@
+<div class="container-fluid">
+   <Header></Header>
+   <main>
+      <!-- THÔNG TIN PHIM -->
+      <div class="container-fluid w-75">
+         <div class="movie-card">
+            <div class="movie-poster">
+               <img :src="posterSrc(film.poster)" alt="J-HOPE TOUR: HOPE ON THE STAGE THE MOVIE" />
+            </div>
+
+            <div class="movie-info">
+               <h3 class="movie-title">
+                  <a href="">{{ film.name }}</a>
+               </h3>
+
+               <p class="movie-desc">{{ film.description }}</p>
+
+               <div class="movie-meta">
+                  <div class="meta-item">
+                     <strong>Đạo diễn:</strong>
+                     <a class="mx-2" href="">{{ film.director }}</a>
+                  </div>
+                  <div class="meta-item">
+                     <strong>Diễn viên:</strong>
+                     <a class="mx-2" href="">{{ film.actor }}</a>
+                  </div>
+                  <div class="meta-item">
+                     <strong>Thể loại:</strong>
+                     <a class="mx-2" href="">{{ categoryNames }}</a>
+                  </div>
+                  <div class="meta-item">
+                     <strong>Khởi chiếu: </strong>{{ formatYYYYMMDD(film.releaseDate) }}
+                  </div>
+                  <div class="meta-item"><strong>Thời lượng: </strong>{{ film.duration }} phút</div>
+               </div>
+
+               <div class="movie-actions">
+                  <a href="http://localhost:5173/?tab=Films" class="btn-back"> ← Chọn phim khác </a>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- CÁC BƯỚC ĐỂ ĐẶT VÉ -->
+      <div class="order-steps fixed-top" :style="`--current-step:${step}`">
+         <div class="step" :class="{ active: step === 1, passed: step > 1 }" data-step="1">
+            <label>01</label>
+            <span class="step-label">Chọn suất chiếu</span>
+         </div>
+
+         <div class="step" :class="{ active: step === 2, passed: step > 2 }" data-step="2">
+            <label>02</label>
+            <span class="step-label">Chọn ghế ngồi</span>
+         </div>
+
+         <div class="step" :class="{ active: step === 3, passed: step > 3 }" data-step="3">
+            <label>03</label>
+            <span class="step-label">Chọn đồ uống</span>
+         </div>
+
+         <div class="step" :class="{ active: step === 4, passed: step > 4 }" data-step="4">
+            <label>04</label>
+            <span class="step-label">Thanh toán</span>
+         </div>
+      </div>
+
+      <!-- LỊCH CHIẾU -->
+      <div class="container-fluid w-75">
+         <section class="showtime-section">
+            <div class="container">
+               <!-- Tiêu đề -->
+               <h3 class="section-title"><i class="bi bi-calendar3 mx-2"></i> LỊCH CHIẾU</h3>
+
+               <div class="row g-5">
+                  <!-- Bên trái: Danh sách suất chiếu -->
+                  <div class="col-lg-8">
+                     <div
+                        v-if="filteredSchedules.length === 0"
+                        class="no-showtime text-center py-5"
+                     >
+                        <i class="bi bi-emoji-frown display-4 text-muted d-block mb-3"></i>
+                        <p class="text-muted fs-5">Không có suất chiếu trong ngày này</p>
+                     </div>
+
+                     <div v-else class="showtime-grid">
+                        <button
+                           v-for="schedule in filteredSchedules"
+                           :key="schedule.id"
+                           @click="selectSchedule(schedule)"
+                           class="showtime-card"
+                           :class="{ selected: selectedSchedule?.id === schedule.id }"
+                        >
+                           <div class="time">{{ schedule.showTime }}</div>
+                           <small class="room" v-if="schedule.room"
+                              >Phòng {{ schedule.room }}</small
+                           >
+                        </button>
+                     </div>
+                  </div>
+
+                  <!-- Bên phải: Lịch chọn ngày -->
+                  <div class="col-lg-4">
+                     <div class="calendar-card">
+                        <div class="calendar-header">
+                           <button @click="prevMonth" class="nav-btn">
+                              <i class="bi bi-chevron-left"></i>
+                           </button>
+                           <h5 class="month-year">{{ formatMonthYear(currentMonth) }}</h5>
+                           <button @click="nextMonth" class="nav-btn">
+                              <i class="bi bi-chevron-right"></i>
+                           </button>
+                        </div>
+
+                        <div class="calendar-weekdays">
+                           <span
+                              v-for="day in ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']"
+                              :key="day"
+                           >
+                              {{ day }}
+                           </span>
+                        </div>
+
+                        <div class="calendar-days">
+                           <div
+                              v-for="cell in calendarDays"
+                              :key="cell.key"
+                              class="day-cell"
+                              :class="{
+                                    empty: !cell.date,
+                                    today: cell.date && isToday(cell.date),
+                                    selected: cell.date && isSameDay(cell.date, selectedDate),
+                                    'has-showtime': cell.hasShowtime,
+                                    clickable: cell.date,
+                                 }"
+                              @click="cell.date && selectDate(cell.date)"
+                           >
+                              <span v-if="cell.date">{{ formatDay(cell.date) }}</span>
+                              <div v-if="cell.hasShowtime" class="dot"></div>
+                           </div>
+                        </div>
+
+                        <div class="selected-info">
+                           <i class="bi bi-calendar-check"></i>
+                           <span>{{ formatDateWithDay(selectedDate) }}</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Nút mua vé -->
+               <!-- <div class="text-center mt-5" v-if="selectedSchedule">
+                     <button @click="buyTicket" class="btn-buy-ticket">
+                        <i class="bi bi-ticket-perforated me-2"></i>
+                        MUA VÉ NGAY
+                     </button>
+                  </div> -->
+            </div>
+         </section>
+      </div>
+
+      <!-- GHẾ NGỒI -->
+      <div class="container-fluid w-75 my-5">
+         <div class="row">
+            <div class="col-lg-8">
+               <div class="cinema-map">
+                  <div class="screen"></div>
+
+                  <div class="legend">
+                     <div class="legend-column">
+                        <div><span class="seat-item standard"></span> Ghế thường</div>
+                        <div><span class="seat-item vip"></span> Ghế VIP</div>
+                     </div>
+                     <div class="legend-column">
+                        <div><span class="seat-item couple"></span> Ghế đôi</div>
+                        <div><span class="seat-item selected"></span> Đang chọn</div>
+                     </div>
+                     <div class="legend-column">
+                        <div>
+                           <span class="seat-item seat-holding-other"></span> Đang chọn bởi người
+                           khác
+                        </div>
+                        <div><span class="seat-item disabled"></span> Đã bán</div>
+                     </div>
+                  </div>
+
+                  <table>
+                     <tr v-for="row in seatRows" :key="row.label">
+                        <td
+                           v-for="seat in row.seats"
+                           :key="seat.seatId"
+                           :colspan="seat.seatType === 'Ghế Couple' ? 2 : 1"
+                           class="seat-td"
+                        >
+                           <div
+                              class="seat-wrapper"
+                              :class="{ 'couple-wrapper': seat.seatType === 'Ghế Couple' }"
+                           >
+                              <div
+                                 vdebit
+                                 v-if="seat.seatType !== 'Ghế Couple'"
+                                 :class="[
+                                       'seat-item',
+                                       { standard: seat.seatType === 'Ghế Thường' },
+                                       { vip: seat.seatType === 'Ghế VIP' },
+                                       {
+                                          selected:
+                                             seat.status === 'holding' &&
+                                             seat.holderId === currentUser,
+                                       },
+                                       { disabled: seat.status === 'booked' },
+                                       {
+                                          'holding-other':
+                                             seat.status === 'holding' &&
+                                             seat.holderId !== currentUser,
+                                       },
+                                    ]"
+                                 @click="toggleSeat(seat)"
+                              ></div>
+
+                              <div v-else class="couple-seat-pair">
+                                 <div
+                                    v-for="n in 2"
+                                    :key="n"
+                                    :class="[
+                                          'seat-item',
+                                          'couple-single',
+                                          {
+                                             selected:
+                                                seat.status === 'holding' &&
+                                                seat.holderId === currentUser,
+                                          },
+                                          { disabled: seat.status === 'booked' },
+                                          {
+                                             'holding-other':
+                                                seat.status === 'holding' &&
+                                                seat.holderId !== currentUser &&
+                                                seat.holderId != null,
+                                          },
+                                       ]"
+                                    @click="toggleSeat(seat)"
+                                 ></div>
+                              </div>
+                           </div>
+                        </td>
+                     </tr>
+                  </table>
+               </div>
+            </div>
+
+            <!-- Giỏ vé -->
+            <div class="col-lg-4">
+               <div class="ticket-cart">
+                  <!-- Card chính -->
+                  <div class="cart-card">
+                     <!-- Thông tin rạp & suất chiếu -->
+                     <div class="cinema-header">
+                        <h3 class="cinema-name">{{ selectedSchedule.roomName }}</h3>
+                        <p class="session-details">
+                           <span class="hall"></span> • {{
+                           formatYYYYMMDD(selectedSchedule.scheduleDate) }} • Suất chiếu: {{
+                           selectedSchedule.showTime }}
+                        </p>
+                     </div>
+
+                     <hr class="divider" />
+
+                     <!-- Tên phim -->
+                     <h2 class="movie-title">{{ film.name?.toUpperCase() }}</h2>
+
+                     <!-- Tag thông tin -->
+                     <div class="movie-tags">
+                        <span class="age-rating T16">{{ film.country }}</span>
+                        <span class="tag">{{ film.director }}</span>
+                        <span class="tag">{{ film.duration }} phút</span>
+                     </div>
+
+                     <!-- Danh sách vé -->
+                     <div class="ticket-items">
+                        <div
+                           class="ticket-row"
+                           v-for="(item, index) in priceTicketInfos"
+                           :key="index"
+                        >
+                           <div class="ticket-info">
+                              <strong>{{ item.quantity }} x {{ item.seatType }}</strong>
+                              <p class="seats">Ghế: {{ item.postions }}</p>
+                           </div>
+                           <div class="ticket-price">
+                              {{ item.subTotal.toLocaleString().replace('.', ',') }} VND
+                           </div>
+                        </div>
+                     </div>
+
+                     <hr class="divider" />
+
+                     <!-- Tổng tiền -->
+                     <div class="total-section">
+                        <div class="total-label">Tổng tiền</div>
+                        <div class="total-amount">
+                           {{ getTotalAmount().toLocaleString().replace('.', ',') }} VND
+                        </div>
+                     </div>
+
+                     <div
+                        class="error-message show"
+                        :class="{show: errorMessage}"
+                        v-if="errorMessage"
+                     >
+                        {{errorMessage}}
+                     </div>
+
+                     <!-- Nút hành động -->
+                     <div class="action-buttons">
+                        <button 
+                           class="btn-food" 
+                           @click="goToProducts()" 
+                           :disabled="isDisableBookBtn"
+                        >
+                           Chọn đồ ăn <span class="step-counter">(2/4)</span>
+                        </button>
+
+                        <a href="#" class="btn-back"> ← Trở lại chọn ghế </a>
+
+                        <!-- Đếm ngược -->
+                        <div class="countdown-timer">
+                           Còn lại <span class="timer">{{ timeLeft }}</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </main>
+
+   <footer class="text-center py-4 bg-dark text-white">
+      <p class="mb-0">© 2025 VietCine. All Rights Reserved.</p>
+   </footer>
+
+   <transition name="fade">
+      <div
+         v-if="toast?.message"
+         class="toast-custom"
+         :class="toast.type === 'error' ? 'bg-danger' : 'bg-success'"
+      >
+         {{ toast?.message }}
+      </div>
+   </transition>
+</div>

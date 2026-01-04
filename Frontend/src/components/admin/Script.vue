@@ -1,325 +1,192 @@
 <template>
    <div class="container-fluid">
-      <div class="promotion-wizard">
-         <!-- Steps -->
-         <el-steps :active="step" finish-status="success" class="mb-6">
-            <el-step title="Thông tin chương trình" />
-            <el-step title="Chọn sản phẩm" />
-            <el-step title="Luật khuyến mãi" />
-            <el-step title="Hoàn tất" />
-         </el-steps>
+      <h1 class="my-4">Lịch sử giao dịch</h1>
 
-         <div class="wizard-card">
-            <!-- STEP 1: Thông tin -->
-            <div v-show="step === 0" class="space-y-6 animate-fade">
-               <h2 class="text-2xl font-bold text-gray-800">Thông tin chương trình</h2>
-
-               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                     <label class="form-label"
-                        >Tên chương trình <span class="text-red-500">*</span></label
+      <div class="table-responsive">
+         <table class="table table-bordered table-hover align-middle">
+            <thead class="table-warning text-center">
+               <tr>
+                  <th>STT</th>
+                  <th>Người tạo</th>
+                  <th>Tên khách hàng</th>
+                  <th>Số điện thoại</th>
+                  <th>Tổng tiền</th>
+                  <th>Ngày tạo</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+               </tr>
+            </thead>
+            <tbody class="text-center">
+               <tr v-for="(invoice, index) in invoices" :key="invoice.invoiceId">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ invoice.createdBy }}</td>
+                  <td>{{ invoice.customerName || '-' }}</td>
+                  <td>{{ invoice.customerPhone || '-' }}</td>
+                  <td>{{ invoice.finalAmount.toLocaleString('vi-VN') }} ₫</td>
+                  <td>{{ formatDate(invoice.createdAt) }}</td>
+                  <td>
+                     <span class="badge" :class="getStatusClass(invoice.status)">
+                        {{ getStatusText(invoice.status) }}
+                     </span>
+                  </td>
+                  <td>
+                     <!-- Button kích hoạt modal bằng data-bs attributes -->
+                     <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#detailModal"
+                        @click="loadInvoiceDetail(invoice.invoiceId)"
                      >
-                     <el-input v-model="promotion.name" placeholder="VD: Black Friday 60%" clearable />
-                  </div>
-                  <div>
-                     <label class="form-label">Poster (khuyến khích 600x400)</label>
-                  <div class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer" @click="$refs.file.click()">
-                     <input type="file" ref="file" @change="e=>promotion.posterFile=e.target.files[0]" class="hidden" accept="image/*">
-                     <el-icon size="50">
-                        <div class="flex justify-between mt-10 pt-6 border-t">
-  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
-  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
-    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
-  </el-button>
-</div>
-                     </el-icon>
-                     <p class="mt-2">Click để tải poster</p>
-                  </div>
-                  </div>
+                        Xem chi tiết
+                     </button>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+
+      <!-- Modal chi tiết hóa đơn -->
+      <div
+         class="modal fade"
+         id="detailModal"
+         tabindex="-1"
+         aria-labelledby="detailModalLabel"
+         aria-hidden="true"
+      >
+         <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h5 class="modal-title" id="detailModalLabel">
+                     Chi tiết hóa đơn
+                     <span v-if="selectedInvoice?.invoiceId">
+                        #{{ selectedInvoice.invoiceId.substring(0, 8) }}...
+                     </span>
+                  </h5>
+                  <button
+                     type="button"
+                     class="btn-close"
+                     data-bs-dismiss="modal"
+                     aria-label="Close"
+                  ></button>
                </div>
 
-               <div>
-                  <label class="form-label">Mô tả</label>
-                  <el-input
-                     v-model="promotion.description"
-                     type="textarea"
-                     :rows="3"
-                     placeholder="Mô tả ngắn gọn chương trình..."
-                  />
-               </div>
-
-               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                     <label class="form-label">Ngày bắt đầu</label>
-                     <el-date-picker
-                        v-model="promotion.startDate"
-                        type="datetime"
-                        placeholder="Chọn ngày giờ"
-                        class="w-full"
-                     />
-                  </div>
-                  <div>
-                     <label class="form-label">Ngày kết thúc</label>
-                     <el-date-picker
-                        v-model="promotion.endDate"
-                        type="datetime"
-                        placeholder="Chọn ngày giờ"
-                        class="w-full"
-                     />
-                  </div>
-               </div>
-
-<div class="flex justify-between mt-10 pt-6 border-t">
-  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
-  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
-    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
-  </el-button>
-</div>
-            </div>
-
-            <!-- STEP 2: Chọn sản phẩm -->
-            <div v-show="step === 1" class="animate-fade">
-               <h2 class="text-2xl font-bold text-gray-800 mb-5">Chọn sản phẩm áp dụng</h2>
-
-               <div class="flex items-center gap-4 mb-5">
-                  <el-input
-                     v-model="searchQuery"
-                     placeholder="Tìm kiếm sản phẩm..."
-                     prefix-icon="Search"
-                     clearable
-                     class="max-w-md"
-                  />
-                  <div class="text-sm text-gray-600">
-                     Đã chọn: <strong>{{ selectedProducts.length }}</strong> sản phẩm
-                  </div>
-               </div>
-
-               <div
-                  v-if="loadingProducts"
-                  class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-               >
-                  <el-skeleton v-for="n in 8" :key="n" class="product-skeleton" animated>
-                     <template #template>
-                        <el-skeleton-item variant="image" class="w-full h-48 rounded-xl" />
-                        <el-skeleton-item variant="text" class="mt-3 w-4/5" />
-                     </template>
-                  </el-skeleton>
-               </div>
-
-               <div v-else class="product-grid">
-                  <div
-                     v-for="p in paginatedProducts"
-                     :key="p.id"
-                     class="product-card"
-                     :class="{ selected: selectedProducts.includes(p.id) }"
-                     @click="toggleProduct(p.id)"
-                  >
-                     <div class="img-wrapper">
-                        <img :src="IMG + p.poster" alt="" />
-                        <div class="overlay">
-                           <el-icon v-if="selectedProducts.includes(p.id)" size="28"
-                              ><Check
-                           /></el-icon>
-                        </div>
-                     </div>
-                     <div class="p-3">
-                        <h4 class="font-medium text-sm line-clamp-2">{{ p.name }}</h4>
-                        <el-input
-                           v-if="selectedProducts.includes(p.id)"
-                           v-model="productNotes[p.id]"
-                           size="small"
-                           placeholder="Ghi chú..."
-                           class="mt-2"
-                        />
-                     </div>
-                  </div>
-               </div>
-
-               <el-pagination
-                  v-if="totalPages > 1"
-                  class="mt-6 justify-center"
-                  v-model:current-page="currentPage"
-                  :page-size="itemsPerPage"
-                  :total="filteredProducts.length"
-                  layout="prev, pager, next"
-                  background
-               />
-
-<div class="flex justify-between mt-10 pt-6 border-t">
-  <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
-  <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
-    {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
-  </el-button>
-</div>
-            </div>
-
-            <!-- STEP 3: Luật khuyến mãi -->
-            <div v-show="step === 2" class="animate-fade space-y-6">
-               <h2 class="text-2xl font-bold text-gray-800">Luật khuyến mãi</h2>
-
-               <div class="rule-builder-card">
-                  <h3 class="text-lg font-semibold mb-4">Thêm luật mới</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                     <div class="md:col-span-3">
-                        <el-select
-                           v-model="newRule.ruleType"
-                           placeholder="Chọn loại luật"
-                           class="w-full"
-                        >
-                           <el-option
-                              v-for="rt in ruleTypes"
-                              :key="rt.value"
-                              :value="rt.value"
-                              :label="rt.label"
-                           />
-                        </el-select>
-                     </div>
-
-                     <div class="md:col-span-7">
-                        <!-- PERCENT / TOTAL_PERCENT -->
-                        <div v-if="/PERCENT/.test(newRule.ruleType)" class="flex items-end gap-3">
-                           <el-input-number
-                              v-model="newRule.percent"
-                              :min="1"
-                              :max="99"
-                              class="w-32"
-                           />
-                           <span class="text-lg">%</span>
-                           <span class="text-gray-600">giảm giá</span>
-                        </div>
-
-                        <!-- BUY_X_GET_Y -->
-                        <div v-if="newRule.ruleType === 'BUY_X_GET_Y'" class="flex items-center gap-4">
-                           <span>Mua</span>
-                           <el-input-number v-model="newRule.buy" :min="1" class="w-24" />
-                           <span>→ Tặng</span>
-                           <el-input-number v-model="newRule.get" :min="1" class="w-24" />
-                        </div>
-
-                        <!-- FIXED_COMBO -->
-                        <div v-if="newRule.ruleType === 'FIXED_COMBO'">
-                           <div class="combo-preview mb-3">
-                              <el-tag
-                                 v-for="item in newRule.items"
-                                 :key="item.name"
-                                 closable
-                                 @close="removeComboItem(item)"
-                                 class="mr-2"
-                              >
-                                 {{ item.name }}
-                              </el-tag>
-                              <el-tag v-if="newRule.items.length === 0" type="info"
-                                 >Chưa chọn sản phẩm</el-tag
-                              >
-                           </div>
-                           <el-input-number
-                              v-model="newRule.price"
-                              :min="1000"
-                              placeholder="Giá combo"
-                           />
-                        </div>
-                     </div>
-
-                     <div class="md:col-span-2">
-                        <el-button
-                           type="success"
-                           :disabled="!canAddRule"
-                           @click="addNewRule"
-                           class="w-full"
-                        >
-                           <el-icon><Plus /></el-icon> Thêm
-                        </el-button>
-                     </div>
-                  </div>
-               </div>
-
-               <!-- Danh sách rule đã thêm -->
-               <div v-if="rules.length" class="space-y-3">
-                  <div v-for="r in rules" :key="r.id" class="rule-item">
-                     <div class="flex-1">
-                        <strong>{{ r.label }}</strong>
-                        <span class="text-sm text-gray-600 ml-3">
-                           <template v-if="r.label.includes('giảm')"
-                              >{{ r.condition.percent }}%</template
-                           >
-                           <template v-else-if="r.label === 'Mua X tặng Y'"
-                              >Mua {{ r.condition.buy }} tặng {{ r.condition.get }}</template
-                           >
-                           <template v-else
-                              >Combo {{ r.condition.items?.length }} món →
-                              {{ formatPrice(r.condition.price) }}</template
-                           >
+               <div class="modal-body" v-if="selectedInvoice">
+                  <!-- Thông tin chung -->
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Trạng thái:</div>
+                     <div class="col-sm-8">
+                        <span class="badge" :class="getStatusClass(selectedInvoice.status)">
+                           {{ getStatusText(selectedInvoice.status) }}
                         </span>
                      </div>
-                     <div>
-                        <el-button v-if="r.isNew" size="small" type="primary" @click="applyRule(r.id)"
-                           >Áp dụng</el-button
-                        >
-                        <el-button size="small" type="danger" @click="removeRule(r)">Xóa</el-button>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Người tạo:</div>
+                     <div class="col-sm-8">{{ selectedInvoice.createdBy }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Ngày tạo:</div>
+                     <div class="col-sm-8">{{ formatDate(selectedInvoice.createdAt) }}</div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Tổng tiền gốc:</div>
+                     <div class="col-sm-8">
+                        {{ selectedInvoice.totalAmount.toLocaleString('vi-VN') }} ₫
                      </div>
                   </div>
-               </div>
+                  <div class="row mb-3">
+                     <div class="col-sm-4 fw-bold">Giảm giá:</div>
+                     <div class="col-sm-8">
+                        {{ selectedInvoice.discountAmount.toLocaleString('vi-VN') }} ₫
+                     </div>
+                  </div>
+                  <div class="row mb-4 border-top pt-3">
+                     <div class="col-sm-4 fw-bold text-danger">Thành tiền:</div>
+                     <div class="col-sm-8 text-danger fw-bold">
+                        {{ selectedInvoice.finalAmount.toLocaleString('vi-VN') }} ₫
+                     </div>
+                  </div>
 
-            <div class="flex justify-between mt-10 pt-6 border-t">
-               <el-button @click="step > 0 ? step-- : emit('close')">Quay lại</el-button>
-               <el-button type="success" :loading="loading" @click="step < 3 ? step++ : finishPromotion()">
-                  {{ step === 3 ? 'Hoàn tất' : 'Tiếp theo' }}
-               </el-button>
-            </div>
-            </div>
+                  <!-- Danh sách vé -->
+                  <h5 class="mt-4">Danh sách vé ({{ selectedInvoice.tickets.length }})</h5>
+                  <div class="table-responsive">
+                     <table class="table table-sm table-bordered">
+                        <thead class="table-light text-center">
+                           <tr>
+                              <th>Phim</th>
+                              <th>Giờ chiếu</th>
+                              <th>Phòng</th>
+                              <th>Ghế</th>
+                              <th>Giá vé</th>
+                              <th>Đã sử dụng</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <tr v-for="ticket in selectedInvoice.tickets" :key="ticket.seatPosition">
+                              <td>{{ ticket.movieName }}</td>
+                              <td class="text-center">{{ ticket.showTime }}</td>
+                              <td class="text-center">{{ ticket.roomName }}</td>
+                              <td class="text-center fw-bold">{{ ticket.seatPosition }}</td>
+                              <td class="text-end">{{ ticket.price.toLocaleString('vi-VN') }} ₫</td>
+                              <td class="text-center">
+                                 <span
+                                    class="badge"
+                                    :class="ticket.isUsed ? 'bg-success' : 'bg-secondary'"
+                                 >
+                                    {{ ticket.isUsed ? 'Có' : 'Chưa' }}
+                                 </span>
+                              </td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
 
-            <!-- STEP 4: Tóm tắt & Hoàn tất -->
-            <div v-show="step === 3" class="animate-fade">
-               <h2 class="text-2xl font-bold text-success mb-6 text-center">
-                  Xác nhận chương trình khuyến mãi
-               </h2>
-
-               <div class="summary-grid">
-                  <div class="summary-card">
-                     <img v-if="posterPreview" :src="posterPreview" class="summary-poster" />
-                     <div v-else class="bg-gray-200 border-2 border-dashed rounded-xl w-full h-48" />
-                     <div class="mt-4 text-center">
-                        <h3 class="text-xl font-bold">{{ promotion.name || 'Chưa đặt tên' }}</h3>
-                        <p class="text-sm text-gray-600 mt-1">
-                           {{ promotion.description || 'Không có mô tả' }}
+                  <!-- Mã QR Codes -->
+                  <h5
+                     class="mt-5"
+                     v-if="selectedInvoice.qrCodes && selectedInvoice.qrCodes.length > 0"
+                  >
+                     Mã QR vé ({{ selectedInvoice.qrCodes.length }} mã)
+                  </h5>
+                  <div
+                     class="row g-4 justify-content-start"
+                     v-if="selectedInvoice.qrCodes && selectedInvoice.qrCodes.length > 0"
+                  >
+                     <div
+                        class="col-md-4 col-lg-3 text-center"
+                        v-for="(qrData, index) in selectedInvoice.qrCodes"
+                        :key="index"
+                     >
+                        <p class="mb-2">
+                           <strong>QR #{{ index + 1 }}</strong>
+                        </p>
+                        <qrcode-canvas
+                           :value="qrData"
+                           :size="200"
+                           level="H"
+                           class="border p-3 bg-white shadow-sm d-inline-block rounded"
+                        />
+                        <p class="mt-2 small text-muted text-truncate" style="max-width: 200px">
+                           {{ qrData }}
                         </p>
                      </div>
                   </div>
 
-                  <div class="summary-info">
-                     <div class="info-item">
-                        <span>Thời gian</span>
-                        <strong
-                           >{{ formatDate(promotion.startDate) }} →
-                           {{ formatDate(promotion.endDate) }}</strong
-                        >
-                     </div>
-                     <div class="info-item">
-                        <span>Sản phẩm áp dụng</span>
-                        <el-tag type="success">{{ selectedProducts.length }} sản phẩm</el-tag>
-                     </div>
-                     <div class="info-item">
-                        <span>Luật khuyến mãi</span>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                           <el-tag v-for="r in rules" :key="r.id" type="warning">
-                              {{ r.label }} {{ r.condition.percent ? r.condition.percent + '%' : '' }}
-                           </el-tag>
-                           <el-tag v-if="!rules.length" type="info">Chưa có luật</el-tag>
-                        </div>
-                     </div>
-                  </div>
+                  <div v-else class="alert alert-info mt-4">Không có mã QR cho hóa đơn này.</div>
                </div>
 
-               <div class="text-center mt-8">
-                  <el-button
-                     type="primary"
-                     size="large"
-                     :loading="loading"
-                     @click="finishPromotion"
-                     class="px-12"
-                  >
-                     Hoàn tất tạo chương trình
-                  </el-button>
+               <div class="modal-body text-center text-muted" v-else>
+                  <div class="spinner-border" role="status">
+                     <span class="visually-hidden">Đang tải...</span>
+                  </div>
+                  <p class="mt-3">Đang tải chi tiết hóa đơn...</p>
+               </div>
+
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                     Đóng
+                  </button>
                </div>
             </div>
          </div>
@@ -328,378 +195,76 @@
 </template>
 
 <script setup>
-   import { ref, computed, watch, onMounted } from 'vue';
    import axios from 'axios';
-   import { ElMessage, ElMessageBox } from 'element-plus';
-   import { Check, Plus, Search } from '@element-plus/icons-vue';
+   import { ref, onMounted } from 'vue';
+   import { QrcodeCanvas } from 'qrcode.vue'; // Thư viện QR code
 
-   const props = defineProps({ promotionData: Object });
-   const emit = defineEmits(['saved', 'close', 'reload']);
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-   const step = ref(0);
-   const loading = ref(false);
-   const loadingProducts = ref(true);
+   const invoices = ref([]);
+   const selectedInvoice = ref(null);
 
-   const API_PROMO = `${import.meta.env.VITE_API_BASE_URL}/admin/promotions`;
-   const API_PRODUCT = `${import.meta.env.VITE_API_BASE_URL}/admin/products`;
-   const IMG = import.meta.env.VITE_IMAGE_URL;
-
-   // Dữ liệu form
-   const promotion = ref({
-      id: null,
-      name: '',
-      description: '',
-      startDate: null,
-      endDate: null,
-      posterFile: null,
-   });
-   const posterPreview = ref('');
-
-   const products = ref([]);
-   const selectedProducts = ref([]);
-   const productNotes = ref({});
-   const searchQuery = ref('');
-   const currentPage = ref(1);
-   const itemsPerPage = 12;
-
-   const rules = ref([]);
-   const newRule = ref({ ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 });
-
-   const ruleTypes = [
-      { value: 'PERCENT', label: 'Giảm % theo sản phẩm' },
-      { value: 'TOTAL_PERCENT', label: 'Giảm % tổng bill' },
-      { value: 'BUY_X_GET_Y', label: 'Mua X tặng Y' },
-      { value: 'FIXED_COMBO', label: 'Combo giá cố định' },
-   ];
-
-   // ========== COMPUTED ==========
-   const filteredProducts = computed(() => {
-      const q = searchQuery.value.toLowerCase();
-      return q ? products.value.filter((p) => p.name.toLowerCase().includes(q)) : products.value;
-   });
-   const paginatedProducts = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage;
-      return filteredProducts.value.slice(start, start + itemsPerPage);
-   });
-   const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
-
-   const canAddRule = computed(() => {
-      const r = newRule.value;
-      if (['PERCENT', 'TOTAL_PERCENT'].includes(r.ruleType)) return r.percent > 0;
-      if (r.ruleType === 'BUY_X_GET_Y') return r.buy > 0 && r.get > 0;
-      if (r.ruleType === 'FIXED_COMBO') return r.items.length >= 2 && r.price > 0;
-      return false;
-   });
-
-   // ========== HÀM RESET FORM (QUAN TRỌNG) ==========
-   function resetForm() {
-      promotion.value = {
-         id: null,
-         name: '',
-         description: '',
-         startDate: null,
-         endDate: null,
-         posterFile: null,
-      };
-      posterPreview.value = '';
-      selectedProducts.value = [];
-      productNotes.value = {};
-      rules.value = [];
-      newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
-      step.value = 0;
-   }
-
-   // ========== WATCH EDIT MODE ==========
-   watch(
-      () => props.promotionData,
-      (data) => {
-         if (!data) {
-            resetForm();
-            return;
-         }
-
-         // Load dữ liệu khi edit
-         promotion.value = {
-            ...data,
-            startDate: data.startDate ? new Date(data.startDate) : null,
-            endDate: data.endDate ? new Date(data.endDate) : null,
-            posterFile: null,
-         };
-         if (data.poster) posterPreview.value = IMG + data.poster;
-
-         selectedProducts.value = data.items?.map((i) => i.productId) || [];
-         productNotes.value = {};
-         data.items?.forEach((i) => {
-            productNotes.value[i.productId] = i.note || '';
-         });
-
-         rules.value = (data.rules || []).map((r) => {
-            let condition = typeof r.ruleValue === 'string' ? JSON.parse(r.ruleValue) : r.ruleValue;
-            if (r.ruleType === 'FIXED_COMBO' && condition.items) {
-               condition.items = condition.items.map((name) => {
-                  const p = products.value.find((x) => x.name === name);
-                  return { name, poster: p?.poster || '' };
-               });
-            }
-            const label = ruleTypes.find((rt) => rt.value === r.ruleType)?.label || r.ruleType;
-            return { id: r.id, label, condition, isNew: false };
-         });
-
-         step.value = 0;
-      },
-      { immediate: true }
-   );
-
-   // ========== LIFECYCLE ==========
-   onMounted(() => {
-      axios.get(API_PRODUCT).then((r) => {
-         products.value = r.data;
-         loadingProducts.value = false;
-      });
-   });
-
-   // ========== CÁC HÀM CHÍNH ==========
-   const toast = (msg, type = 'success') => ElMessage({ message: msg, type });
-
-   function savePromotion() {
-      if (!promotion.value.name) return ElMessage.error('Nhập tên chương trình');
-      loading.value = true;
-
-      const fd = new FormData();
-      fd.append('name', promotion.value.name);
-      fd.append('description', promotion.value.description || '');
-      fd.append('startDate', promotion.value.startDate?.toISOString().slice(0, 10) || '');
-      fd.append('endDate', promotion.value.endDate?.toISOString().slice(0, 10) || '');
-      if (promotion.value.posterFile) fd.append('posterFile', promotion.value.posterFile);
-
-      const req = promotion.value.id
-         ? axios.put(`${API_PROMO}/${promotion.value.id}`, fd)
-         : axios.post(API_PROMO, fd).then((r) => {
-              promotion.value.id = r.data.id;
-           });
-
-      req.then(() => {
-         toast('Lưu thành công');
-         step.value = 1;
-      })
-         .catch(() => toast('Lỗi hệ thống', 'error'))
-         .finally(() => (loading.value = false));
-   }
-
-   function applyProducts() {
-      loading.value = true;
-      const payload = selectedProducts.value.map((id) => ({
-         productId: id,
-         note: productNotes.value[id] || '',
-      }));
-
-      axios
-         .put(`${API_PROMO}/${promotion.value.id}/items`, payload)
-         .then(() => {
-            toast('Cập nhật sản phẩm thành công');
-            step.value = 2;
-         })
-         .catch(() => toast('Lỗi cập nhật sản phẩm', 'error'))
-         .finally(() => (loading.value = false));
-   }
-
-   function addNewRule() {
-      if (!canAddRule.value) return;
-
-      let condition = {};
-      const type = newRule.value.ruleType;
-      if (['PERCENT', 'TOTAL_PERCENT'].includes(type))
-         condition = { percent: newRule.value.percent };
-      else if (type === 'BUY_X_GET_Y')
-         condition = { buy: newRule.value.buy, get: newRule.value.get };
-      else if (type === 'FIXED_COMBO')
-         condition = { items: newRule.value.items.map((i) => i.name), price: newRule.value.price };
-
-      rules.value.push({
-         id: Date.now(),
-         label: ruleTypes.find((rt) => rt.value === type).label,
-         condition,
-         isNew: true,
-      });
-
-      newRule.value = { ruleType: 'PERCENT', percent: 0, buy: 0, get: 0, items: [], price: 0 };
-      toast('Đã thêm luật');
-   }
-
-   function applyRule(id) {
-      const rule = rules.value.find((r) => r.id === id);
-      if (!rule) return;
-
-      const payload = [
-         {
-            ruleType: ruleTypes.find((rt) => rt.label === rule.label)?.value,
-            ruleValue: rule.condition,
-         },
-      ];
-
-      axios
-         .post(`${API_PROMO}/${promotion.value.id}/rules`, payload)
-         .then(() => {
-            rule.isNew = false;
-            toast('Áp dụng luật thành công');
-         })
-         .catch(() => toast('Lỗi', 'error'));
-   }
-
-   function removeRule(rule) {
-      if (rule.isNew) {
-         rules.value = rules.value.filter((r) => r.id !== rule.id);
-         return;
+   async function getInvoices() {
+      try {
+         const response = await axios.get(`${API_BASE_URL}/admin/invoices`);
+         invoices.value = response.data;
+      } catch (error) {
+         console.error('Lỗi khi lấy danh sách hóa đơn:', error);
+         alert('Không thể tải danh sách hóa đơn');
       }
-      ElMessageBox.confirm('Xóa luật này?', 'Xác nhận', { type: 'warning' }).then(() => {
-         axios.delete(`${API_PROMO}/rules/${rule.id}`).then(() => {
-            rules.value = rules.value.filter((r) => r.id !== rule.id);
-            toast('Đã xóa');
-         });
+   }
+
+   // Hàm này được gọi khi click nút "Xem chi tiết" → load dữ liệu trước khi modal hiện
+   async function loadInvoiceDetail(invoiceId) {
+      selectedInvoice.value = null; // Hiển thị loading
+      try {
+         const response = await axios.get(`${API_BASE_URL}/admin/invoices/${invoiceId}`);
+         selectedInvoice.value = response.data;
+      } catch (error) {
+         console.error('Lỗi khi lấy chi tiết hóa đơn:', error);
+         alert('Không thể tải chi tiết hóa đơn');
+         selectedInvoice.value = null;
+      }
+   }
+
+   // Helper functions
+   function formatDate(isoString) {
+      if (!isoString) return '-';
+      return new Date(isoString).toLocaleString('vi-VN', {
+         day: '2-digit',
+         month: '2-digit',
+         year: 'numeric',
+         hour: '2-digit',
+         minute: '2-digit',
+         second: '2-digit',
       });
    }
 
-   function toggleProduct(id) {
-      selectedProducts.value.includes(id)
-         ? (selectedProducts.value = selectedProducts.value.filter((x) => x !== id))
-         : selectedProducts.value.push(id);
+   function getStatusText(status) {
+      const map = {
+         PENDING: 'Chờ thanh toán',
+         PAID: 'Đã thanh toán',
+         CANCELLED: 'Đã hủy',
+      };
+      return map[status] || status;
    }
 
-   function removeComboItem(item) {
-      newRule.value.items = newRule.value.items.filter((i) => i.name !== item.name);
+   function getStatusClass(status) {
+      const classes = {
+         PENDING: 'bg-warning text-dark',
+         PAID: 'bg-success',
+         CANCELLED: 'bg-danger',
+      };
+      return classes[status] || 'bg-secondary';
    }
 
-   function finishPromotion() {
-      ElMessageBox.alert('Chương trình khuyến mãi đã được tạo thành công!', 'Hoàn tất', {
-         type: 'success',
-      }).then(() => {
-         emit('saved');
-         emit('reload');
-         emit('close');
-      });
-   }
-
-   // Format helper
-   function formatDate(date) {
-      return date ? new Date(date).toLocaleString('vi-VN') : '—';
-   }
-   function formatPrice(price) {
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-   }
+   onMounted(async () => {
+      await getInvoices();
+   });
 </script>
 
 <style scoped>
-   /* Đẹp như app bán hàng */
-   .promotion-wizard {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
-   }
-   .wizard-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-   }
-
-   .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #1f2937;
-   }
-
-   /* Grid sản phẩm */
-   .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
-   }
-   .product-card {
-      border: 2px solid #e5e7eb;
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.3s;
-   }
-   .product-card:hover {
-      border-color: #2ecc71;
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.15);
-   }
-   .product-card.selected {
-      border-color: #2ecc71;
-      background: #f0fdf4;
-   }
-   .img-wrapper {
-      position: relative;
-      height: 160px;
-   }
-   .img-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-   }
-   .overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(46, 204, 113, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: 0.3s;
-   }
-   .product-card.selected .overlay {
-      opacity: 1;
-   }
-
-   /* Summary */
-   .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      align-items: start;
-   }
-   .summary-poster {
-      width: 100%;
-      height: 280px;
-      object-fit: cover;
-      border-radius: 16px;
-   }
-   .summary-info {
-      background: #f9fafb;
-      padding: 24px;
-      border-radius: 16px;
-   }
-   .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #e5e7eb;
-   }
-
-   /* Footer */
-   .footer-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-   }
-
-   /* Animation */
-   .animate-fade {
-      animation: fadeIn 0.4s ease;
-   }
-   @keyframes fadeIn {
-      from {
-         opacity: 0;
-         transform: translateY(10px);
-      }
-      to {
-         opacity: 1;
-         transform: none;
-      }
+   .badge {
+      font-size: 0.9em;
    }
 </style>

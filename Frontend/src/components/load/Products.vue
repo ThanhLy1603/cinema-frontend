@@ -6,7 +6,7 @@
          <div
             v-for="product in products"
             :key="product.id"
-            class="col-12 col-sm-6 col-md-4 col-lg-3"
+            class="col-12 col-sm-6 col-md-4 col-lg-3 my-4"
          >
             <!-- Card sản phẩm -->
             <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
@@ -28,6 +28,12 @@
                   <p class="card-text text-muted small flex-grow-1 mb-3">
                      {{ product.description || 'Không có mô tả' }}
                   </p>
+
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                     <span class="product-price fw-bold text-primary fs-4">
+                        Giá sản phẩm: {{ getProductPrice(product.id).toLocaleString('vi-VN') }} ₫
+                     </span>
+                  </div>
 
                   <!-- Nút "Chi Tiết" -->
                   <div class="mt-auto">
@@ -59,9 +65,10 @@
    const IMAGE_URL = import.meta.env.VITE_IMAGE_URL;
 
    const products = ref([]);
+   const prices = ref([]);
    const router = useRouter(); // <-- Khởi tạo router
 
-   async function getproducts() {
+   async function getProducts() {
       try {
          const url = `${API_BASE_URL}/products`;
          const response = await axios.get(url);
@@ -71,6 +78,19 @@
       } catch (error) {
          console.error('Lỗi khi lấy dữ liệu từ products:', error.message);
       }
+   }
+
+   async function getPrices() {
+      try {
+         const response = await axios.get(`${API_BASE_URL}/product-prices`);
+         prices.value = response.data;
+      } catch (error) {
+         console.error('Lỗi lấy giá:', error.message);
+      }
+   }
+
+   function getProductPrice(id) {
+      return prices.value.find((p) => p.productId === id)?.price || 0;
    }
 
    function posterSrc(poster) {
@@ -87,7 +107,8 @@
    }
 
    onMounted(() => {
-      getproducts();
+      getProducts();
+      getPrices();
    });
 </script>
 
